@@ -1,0 +1,865 @@
+{
+  "nextOrderSeq": 1046,
+  "categories": [
+    {
+      "id": "cat_encens",
+      "name": "Encens & Résines",
+      "slug": "encens-resines",
+      "description": "Bâtons roulés à la main, bois de cèdre sacré et résines pures de purification.",
+      "image": "/src/assets/images/product_incense_cedar_1794851466386.jpg",
+      "order": 1,
+      "visible": true,
+      "createdAt": "2026-10-07T10:15:00.000Z"
+    },
+    {
+      "id": "cat_huiles",
+      "name": "Huiles & Élixirs",
+      "slug": "huiles-elixirs",
+      "description": "Extraits botaniques pressés à froid et huiles d’onction préparées en petites séries.",
+      "image": "/src/assets/images/product_elixir_oil_1794851466718.jpg",
+      "order": 2,
+      "visible": true,
+      "createdAt": "2026-10-09T10:15:00.000Z"
+    },
+    {
+      "id": "cat_bougies",
+      "name": "Bougies Rituelles",
+      "slug": "bougies-rituelles",
+      "description": "Cire d’abeille sauvage coulée en céramique artisanale pour la veille contemplative.",
+      "image": "/src/assets/images/product_candle_beeswax_1794851466573.jpg",
+      "order": 3,
+      "visible": true,
+      "createdAt": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "cat_pierres",
+      "name": "Pierres & Méditation",
+      "slug": "pierres-meditation",
+      "description": "Minéraux polis sélectionnés pour l’ancrage, la clarté mentale et la pratique silencieuse.",
+      "image": "/src/assets/images/product_stone_labradorite_1794851467208.jpg",
+      "order": 4,
+      "visible": true,
+      "createdAt": "2026-10-15T10:15:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_encens_cedre",
+      "reference": "EV-ENC-001",
+      "name": "Encens Cèdre de l’Atlas & Oliban",
+      "slug": "encens-cedre-atlas-oliban",
+      "price": 34,
+      "categoryId": "cat_encens",
+      "description": "Roulés selon une méthode traditionnelle sans liant synthétique, ces bâtons marient le cœur de cèdre de l’Atlas aux larmes d’oliban pur. Leur combustion lente installe un climat de recueillement profond.",
+      "additionalInfo": "Boîte de 24 bâtons · Combustion environ 45 minutes par bâton · Origine : Atlas & Oman · Support en basalte vendu séparément.",
+      "images": [
+        "/src/assets/images/product_incense_cedar_1794851466386.jpg"
+      ],
+      "availability": "En stock",
+      "stockCount": 28,
+      "featured": true,
+      "active": true,
+      "orderCount": 19,
+      "createdAt": "2026-10-17T10:15:00.000Z",
+      "updatedAt": "2026-11-14T10:15:00.000Z"
+    },
+    {
+      "id": "prod_huile_sauge",
+      "reference": "EV-HUI-004",
+      "name": "Élixir Botanique de Sauge Blanche",
+      "slug": "elixir-botanique-sauge-blanche",
+      "price": 58,
+      "categoryId": "cat_huiles",
+      "description": "Macération lente de sauge blanche et de néroli dans une huile de jojoba vierge. Quelques gouttes sur les poignets ou sur pierre poreuse accompagnent l’ouverture de la pratique matinale.",
+      "additionalInfo": "Flacon en verre ambré 30 ml · Compte-gouttes en laiton brossé · Sans conservateur ni parfum de synthèse.",
+      "images": [
+        "/src/assets/images/product_elixir_oil_1794851466718.jpg"
+      ],
+      "availability": "En stock",
+      "stockCount": 16,
+      "featured": true,
+      "active": true,
+      "orderCount": 14,
+      "createdAt": "2026-10-19T10:15:00.000Z",
+      "updatedAt": "2026-11-13T10:15:00.000Z"
+    },
+    {
+      "id": "prod_bougie_cire",
+      "reference": "EV-BOU-002",
+      "name": "Bougie de Veille Cire d’Abeille & Grès",
+      "slug": "bougie-veille-cire-abeille-gres",
+      "price": 46,
+      "categoryId": "cat_bougies",
+      "description": "Coulée à la main dans un calice de grès tourné en atelier, cette bougie de cire d’abeille brute diffuse une lueur chaude et une note subtile de miel sauvage, propice au silence du soir.",
+      "additionalInfo": "Cire d’abeille 100 % pure · Mèche en coton non blanchi · 55 heures de combustion · Contenant réutilisable.",
+      "images": [
+        "/src/assets/images/product_candle_beeswax_1794851466573.jpg"
+      ],
+      "availability": "En stock",
+      "stockCount": 22,
+      "featured": true,
+      "active": true,
+      "orderCount": 16,
+      "createdAt": "2026-10-22T10:15:00.000Z",
+      "updatedAt": "2026-11-15T10:15:00.000Z"
+    },
+    {
+      "id": "prod_pierres_ancrage",
+      "reference": "EV-PIE-007",
+      "name": "Duo d’Ancrage Labradorite & Quartz Fumé",
+      "slug": "duo-ancrage-labradorite-quartz-fume",
+      "price": 65,
+      "categoryId": "cat_pierres",
+      "description": "Deux galets de paume polis à la main, choisis par le Maître pour leur densité et leur toucher apaisant. Livrés dans leur pochette de lin brut pour accompagner l’assise quotidienne.",
+      "additionalInfo": "Labradorite de Madagascar & Quartz Fumé alpin · Poids moyen du duo : 260 g · Pièces naturelles uniques.",
+      "images": [
+        "/src/assets/images/product_stone_labradorite_1794851467208.jpg"
+      ],
+      "availability": "Édition limitée",
+      "stockCount": 7,
+      "featured": true,
+      "active": true,
+      "orderCount": 11,
+      "createdAt": "2026-10-27T10:15:00.000Z",
+      "updatedAt": "2026-11-12T10:15:00.000Z"
+    },
+    {
+      "id": "prod_encens_sanctuaire",
+      "reference": "EV-ENC-009",
+      "name": "Coffret Rituel du Sanctuaire",
+      "slug": "coffret-rituel-du-sanctuaire",
+      "price": 112,
+      "categoryId": "cat_encens",
+      "description": "Réunit notre brûleur sculpté en basalte et travertin, une réserve de bâtons au cèdre et le carnet de pratique quotidienne en papier coton.",
+      "additionalInfo": "Composition complète : Porte-encens bi-matière, 24 bâtons de cèdre, carnet cousu main · Préparation sous 48h.",
+      "images": [
+        "/src/assets/images/product_incense_cedar_1794851466386.jpg",
+        "/src/assets/images/article_sacred_ritual_1794851468079.jpg"
+      ],
+      "availability": "Sur commande",
+      "stockCount": 5,
+      "featured": false,
+      "active": true,
+      "orderCount": 8,
+      "createdAt": "2026-11-01T10:15:00.000Z",
+      "updatedAt": "2026-11-14T10:15:00.000Z"
+    },
+    {
+      "id": "prod_bol_contemplation",
+      "reference": "EV-MED-012",
+      "name": "Carnet de Silence & Bol d’Ouverture",
+      "slug": "carnet-silence-bol-ouverture",
+      "price": 89,
+      "categoryId": "cat_pierres",
+      "description": "Ensemble dédié à l’écriture méditative du matin : un carnet artisanal à tranche brute accompagné d’un petit bol chantant en laiton martelé à la tonalité claire et durable.",
+      "additionalInfo": "Bol diamètre 10 cm avec mailloche en bois de noyer · Carnet 120 pages papier coton 180 g/m².",
+      "images": [
+        "/src/assets/images/article_sacred_ritual_1794851468079.jpg"
+      ],
+      "availability": "En stock",
+      "stockCount": 12,
+      "featured": false,
+      "active": true,
+      "orderCount": 6,
+      "createdAt": "2026-11-04T10:15:00.000Z",
+      "updatedAt": "2026-11-15T10:15:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_1045",
+      "orderNumber": "CMD-1045",
+      "createdAt": "2026-11-16T09:15:00.000Z",
+      "updatedAt": "2026-11-16T09:15:00.000Z",
+      "status": "Nouvelle",
+      "customerId": "cust_1",
+      "customerFirstName": "Claire",
+      "customerLastName": "Morel",
+      "customerPhone": "+33 6 14 28 73 90",
+      "customerEmail": "claire.morel@exemple.fr",
+      "deliveryAddress": "14 Rue des Archives, 75004 Paris",
+      "message": "Merci de joindre un mot de guidance pour offrir.",
+      "items": [
+        {
+          "productId": "prod_huile_sauge",
+          "productName": "Élixir Botanique de Sauge Blanche",
+          "productRef": "EV-HUI-004",
+          "unitPrice": 58,
+          "quantity": 1,
+          "image": "/src/assets/images/product_elixir_oil_1794851466718.jpg"
+        },
+        {
+          "productId": "prod_encens_cedre",
+          "productName": "Encens Cèdre de l’Atlas & Oliban",
+          "productRef": "EV-ENC-001",
+          "unitPrice": 34,
+          "quantity": 1,
+          "image": "/src/assets/images/product_incense_cedar_1794851466386.jpg"
+        }
+      ],
+      "indicativeTotal": 92,
+      "adminNotes": "",
+      "history": [
+        {
+          "status": "Nouvelle",
+          "date": "2026-11-16T09:15:00.000Z",
+          "note": "Demande de commande reçue depuis la boutique.",
+          "actor": "Visiteur"
+        }
+      ]
+    },
+    {
+      "id": "ord_1044",
+      "orderNumber": "CMD-1044",
+      "createdAt": "2026-11-15T15:15:00.000Z",
+      "updatedAt": "2026-11-15T17:15:00.000Z",
+      "status": "En cours",
+      "customerId": "cust_2",
+      "customerFirstName": "Marc",
+      "customerLastName": "Lefèvre",
+      "customerPhone": "+33 6 72 41 19 04",
+      "customerEmail": "marc.lefevre@exemple.fr",
+      "deliveryAddress": "8 Place Bellecour, 69002 Lyon",
+      "message": "Disponible par téléphone après 18h pour confirmer la livraison.",
+      "items": [
+        {
+          "productId": "prod_pierres_ancrage",
+          "productName": "Duo d’Ancrage Labradorite & Quartz Fumé",
+          "productRef": "EV-PIE-007",
+          "unitPrice": 65,
+          "quantity": 1,
+          "image": "/src/assets/images/product_stone_labradorite_1794851467208.jpg"
+        }
+      ],
+      "indicativeTotal": 65,
+      "adminNotes": "Appel prévu ce soir à 18h30.",
+      "history": [
+        {
+          "status": "Nouvelle",
+          "date": "2026-11-15T15:15:00.000Z",
+          "note": "Demande de commande enregistrée.",
+          "actor": "Visiteur"
+        },
+        {
+          "status": "En cours",
+          "date": "2026-11-15T17:15:00.000Z",
+          "note": "Sélection des deux pierres en cours à l’atelier.",
+          "actor": "Maître Élias Varenne"
+        }
+      ]
+    },
+    {
+      "id": "ord_1043",
+      "orderNumber": "CMD-1043",
+      "createdAt": "2026-11-14T16:15:00.000Z",
+      "updatedAt": "2026-11-14T18:15:00.000Z",
+      "status": "Confirmée",
+      "customerId": "cust_4",
+      "customerFirstName": "Antoine",
+      "customerLastName": "Rousseau",
+      "customerPhone": "+33 7 81 04 66 21",
+      "customerEmail": "",
+      "deliveryAddress": "3 Rue Sainte-Catherine, 33000 Bordeaux",
+      "message": "",
+      "items": [
+        {
+          "productId": "prod_bougie_cire",
+          "productName": "Bougie de Veille Cire d’Abeille & Grès",
+          "productRef": "EV-BOU-002",
+          "unitPrice": 46,
+          "quantity": 1,
+          "image": "/src/assets/images/product_candle_beeswax_1794851466573.jpg"
+        },
+        {
+          "productId": "prod_encens_cedre",
+          "productName": "Encens Cèdre de l’Atlas & Oliban",
+          "productRef": "EV-ENC-001",
+          "unitPrice": 34,
+          "quantity": 1,
+          "image": "/src/assets/images/product_incense_cedar_1794851466386.jpg"
+        }
+      ],
+      "indicativeTotal": 80,
+      "adminNotes": "Confirmé par téléphone, expédition demain.",
+      "history": [
+        {
+          "status": "Nouvelle",
+          "date": "2026-11-14T16:15:00.000Z",
+          "note": "Demande de commande enregistrée.",
+          "actor": "Visiteur"
+        },
+        {
+          "status": "Confirmée",
+          "date": "2026-11-14T18:15:00.000Z",
+          "note": "Adresse et créneau validés avec le client.",
+          "actor": "Maître Élias Varenne"
+        }
+      ]
+    },
+    {
+      "id": "ord_1042",
+      "orderNumber": "CMD-1042",
+      "createdAt": "2026-11-13T11:15:00.000Z",
+      "updatedAt": "2026-11-14T10:15:00.000Z",
+      "status": "Terminée",
+      "customerId": "cust_3",
+      "customerFirstName": "Nadia",
+      "customerLastName": "Benali",
+      "customerPhone": "+33 6 55 83 12 47",
+      "customerEmail": "nadia.benali@exemple.fr",
+      "deliveryAddress": "27 Avenue Jean Médecin, 06000 Nice",
+      "message": "Pour notre cercle de méditation mensuel.",
+      "items": [
+        {
+          "productId": "prod_encens_sanctuaire",
+          "productName": "Coffret Rituel du Sanctuaire",
+          "productRef": "EV-ENC-009",
+          "unitPrice": 112,
+          "quantity": 1,
+          "image": "/src/assets/images/product_incense_cedar_1794851466386.jpg"
+        }
+      ],
+      "indicativeTotal": 112,
+      "adminNotes": "Colis remis en main propre.",
+      "history": [
+        {
+          "status": "Nouvelle",
+          "date": "2026-11-13T11:15:00.000Z",
+          "note": "Demande reçue.",
+          "actor": "Visiteur"
+        },
+        {
+          "status": "Terminée",
+          "date": "2026-11-14T10:15:00.000Z",
+          "note": "Commande livrée et clôturée.",
+          "actor": "Maître Élias Varenne"
+        }
+      ]
+    },
+    {
+      "id": "ord_1041",
+      "orderNumber": "CMD-1041",
+      "createdAt": "2026-11-10T14:15:00.000Z",
+      "updatedAt": "2026-11-12T12:15:00.000Z",
+      "status": "Terminée",
+      "customerId": "cust_1",
+      "customerFirstName": "Claire",
+      "customerLastName": "Morel",
+      "customerPhone": "+33 6 14 28 73 90",
+      "customerEmail": "claire.morel@exemple.fr",
+      "deliveryAddress": "14 Rue des Archives, 75004 Paris",
+      "message": "",
+      "items": [
+        {
+          "productId": "prod_bougie_cire",
+          "productName": "Bougie de Veille Cire d’Abeille & Grès",
+          "productRef": "EV-BOU-002",
+          "unitPrice": 46,
+          "quantity": 1,
+          "image": "/src/assets/images/product_candle_beeswax_1794851466573.jpg"
+        }
+      ],
+      "indicativeTotal": 54,
+      "adminNotes": "",
+      "history": [
+        {
+          "status": "Nouvelle",
+          "date": "2026-11-10T14:15:00.000Z",
+          "note": "Demande reçue.",
+          "actor": "Visiteur"
+        },
+        {
+          "status": "Terminée",
+          "date": "2026-11-12T12:15:00.000Z",
+          "note": "Livrée.",
+          "actor": "Maître Élias Varenne"
+        }
+      ]
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1",
+      "firstName": "Claire",
+      "lastName": "Morel",
+      "phone": "+33 6 14 28 73 90",
+      "email": "claire.morel@exemple.fr",
+      "address": "14 Rue des Archives, 75004 Paris",
+      "notes": "Apprécie les livraisons en fin d’après-midi.",
+      "createdAt": "2026-11-02T10:15:00.000Z",
+      "lastOrderAt": "2026-11-16T09:15:00.000Z",
+      "orderCount": 2,
+      "totalIndicative": 146
+    },
+    {
+      "id": "cust_2",
+      "firstName": "Marc",
+      "lastName": "Lefèvre",
+      "phone": "+33 6 72 41 19 04",
+      "email": "marc.lefevre@exemple.fr",
+      "address": "8 Place Bellecour, 69002 Lyon",
+      "notes": "",
+      "createdAt": "2026-11-07T10:15:00.000Z",
+      "lastOrderAt": "2026-11-15T15:15:00.000Z",
+      "orderCount": 1,
+      "totalIndicative": 65
+    },
+    {
+      "id": "cust_3",
+      "firstName": "Nadia",
+      "lastName": "Benali",
+      "phone": "+33 6 55 83 12 47",
+      "email": "nadia.benali@exemple.fr",
+      "address": "27 Avenue Jean Médecin, 06000 Nice",
+      "notes": "Demande régulière de coffrets pour retraite.",
+      "createdAt": "2026-11-11T10:15:00.000Z",
+      "lastOrderAt": "2026-11-13T11:15:00.000Z",
+      "orderCount": 1,
+      "totalIndicative": 112
+    },
+    {
+      "id": "cust_4",
+      "firstName": "Antoine",
+      "lastName": "Rousseau",
+      "phone": "+33 7 81 04 66 21",
+      "email": "",
+      "address": "3 Rue Sainte-Catherine, 33000 Bordeaux",
+      "notes": "",
+      "createdAt": "2026-11-13T10:15:00.000Z",
+      "lastOrderAt": "2026-11-14T16:15:00.000Z",
+      "orderCount": 1,
+      "totalIndicative": 80
+    }
+  ],
+  "articleCategories": [
+    {
+      "id": "ac_enseignements",
+      "name": "Enseignements",
+      "slug": "enseignements"
+    },
+    {
+      "id": "ac_reflexions",
+      "name": "Réflexions",
+      "slug": "reflexions"
+    },
+    {
+      "id": "ac_pratique",
+      "name": "Pratique & Rituels",
+      "slug": "pratique-rituels"
+    },
+    {
+      "id": "ac_actualites",
+      "name": "Actualités du Sanctuaire",
+      "slug": "actualites"
+    }
+  ],
+  "articles": [
+    {
+      "id": "art_silence_interieur",
+      "title": "Habiter le silence avant que le monde ne s’éveille",
+      "slug": "habiter-le-silence-avant-le-monde",
+      "excerpt": "Pourquoi les vingt premières minutes du matin déterminent la qualité de notre attention, et comment aménager un espace de clarté sans rupture avec la vie moderne.",
+      "content": "Le silence n’est pas l’absence de bruit ; il est la présence d’une écoute sans précipitation. Lorsque nous ouvrons les yeux le matin, notre esprit cherche aussitôt un appui extérieur : une tâche, un message, une inquiétude héritée de la veille.\n\nAménager un seuil entre le sommeil et l’action transforme radicalement notre rapport au temps. Il ne s’agit pas de fuir nos responsabilités, mais d’entrer dans la journée depuis un centre stable. Asseyez-vous face à une lumière sobre, respirez trois fois profondément sans chercher à corriger le souffle, puis observez simplement ce qui demande à être apaisé.\n\nUn objet familier — une tasse de thé tiède, une flamme de cire pure, une pierre fraîche dans la paume — agit alors comme un repère sensoriel. Il rappelle au corps que rien n’exige votre dispersion immédiate.",
+      "image": "/src/assets/images/article_inner_silence_1794851467763.jpg",
+      "author": "Maître Élias Varenne",
+      "categoryId": "ac_enseignements",
+      "status": "Publié",
+      "featured": true,
+      "publishedAt": "2026-11-12T10:15:00.000Z",
+      "createdAt": "2026-11-11T10:15:00.000Z",
+      "updatedAt": "2026-11-12T10:15:00.000Z",
+      "likesCount": 18,
+      "likedByKeys": []
+    },
+    {
+      "id": "art_rituel_ecriture",
+      "title": "L’écriture contemplative comme miroir de discernement",
+      "slug": "ecriture-contemplative-miroir-discernement",
+      "excerpt": "Poser ses pensées sur papier coton libère la mémoire vive et révèle les intentions véritables derrière nos hésitations quotidiennes.",
+      "content": "Écrire à la main ralentit le débit de la pensée jusqu’à la vitesse de la respiration. Dans ce ralentissement apparaît une honnêteté que le tumulte intérieur dissimulait.\n\nChaque soir, consacrez dix minutes à noter trois observations sans jugement : ce qui vous a donné de l’élan, ce qui a troublé votre paix, et ce que vous choisissez de déposer avant le sommeil. Nul besoin de style littéraire ; la simplicité du trait suffit.\n\nAvec les semaines, ces feuillets deviennent une cartographie fidèle de votre évolution intérieure. Vous cessez de répéter les mêmes impasses parce que vous apprenez à en reconnaître les premiers signes.",
+      "image": "/src/assets/images/article_sacred_ritual_1794851468079.jpg",
+      "author": "Maître Élias Varenne",
+      "categoryId": "ac_pratique",
+      "status": "Publié",
+      "featured": true,
+      "publishedAt": "2026-11-06T10:15:00.000Z",
+      "createdAt": "2026-11-05T10:15:00.000Z",
+      "updatedAt": "2026-11-06T10:15:00.000Z",
+      "likesCount": 14,
+      "likedByKeys": []
+    },
+    {
+      "id": "art_matiere_sacree",
+      "title": "La sobriété des objets qui nous entourent",
+      "slug": "sobriete-des-objets-qui-nous-entourent",
+      "excerpt": "Ce que nous touchons façonne notre état d’esprit. Réflexion sur les matières nobles — bois, pierre, argile — et leur rôle dans l’équilibre du foyer.",
+      "content": "Nous vivons entourés d’objets anonymes, légers et jetables qui n’appellent aucun soin. Pourtant, l’être humain entretient un dialogue silencieux avec la matière qui l’environne.\n\nChoisir un brûleur en pierre brute ou une bougie façonnée par une main patiente n’est pas un luxe décoratif : c’est une manière d’honorer le geste. Chaque fois que vous allumez un encens véritable, vous signifiez à votre espace qu’un temps différent commence.\n\nEntourez-vous de peu d’objets, mais veillez à ce que chacun porte une intention claire, une origine lisible et une durée qui dépasse l’instant.",
+      "image": "/src/assets/images/hero_sanctuary_1794851465479.jpg",
+      "author": "Maître Élias Varenne",
+      "categoryId": "ac_reflexions",
+      "status": "Publié",
+      "featured": true,
+      "publishedAt": "2026-10-30T10:15:00.000Z",
+      "createdAt": "2026-10-29T10:15:00.000Z",
+      "updatedAt": "2026-10-30T10:15:00.000Z",
+      "likesCount": 9,
+      "likedByKeys": []
+    },
+    {
+      "id": "art_retraite_hiver",
+      "title": "Notes préparatoires pour la veille du solstice d’hiver",
+      "slug": "notes-preparatoires-solstice-hiver",
+      "excerpt": "Brouillon de travail consacré aux lectures et temps de silence qui rythmeront la rencontre de décembre au Sanctuaire.",
+      "content": "Document de préparation interne pour les participants de la retraite d’hiver. Horaires envisagés : ouverture à 7h30, marche silencieuse à 11h00, entretien collectif à 17h00.",
+      "image": "/src/assets/images/product_candle_beeswax_1794851466573.jpg",
+      "author": "Maître Élias Varenne",
+      "categoryId": "ac_actualites",
+      "status": "Brouillon",
+      "featured": false,
+      "publishedAt": "2026-11-15T10:15:00.000Z",
+      "createdAt": "2026-11-15T10:15:00.000Z",
+      "updatedAt": "2026-11-15T10:15:00.000Z",
+      "likesCount": 0,
+      "likedByKeys": []
+    }
+  ],
+  "videos": [
+    {
+      "id": "vid_1",
+      "title": "Entretien sur la paix intérieure et l’art de la présence",
+      "youtubeUrl": "https://www.youtube.com/watch?v=inpok4MKVLM",
+      "youtubeId": "inpok4MKVLM",
+      "thumbnail": "https://img.youtube.com/vi/inpok4MKVLM/hqdefault.jpg",
+      "description": "Une méditation guidée de cinq minutes pour retrouver votre ancrage au cœur de la journée.",
+      "duration": "05:12",
+      "visible": true,
+      "featured": true,
+      "sortOrder": 1,
+      "createdAt": "2026-11-04T10:15:00.000Z"
+    },
+    {
+      "id": "vid_2",
+      "title": "Respiration consciente et apaisement du système nerveux",
+      "youtubeUrl": "https://www.youtube.com/watch?v=ZToicYcHIOU",
+      "youtubeId": "ZToicYcHIOU",
+      "thumbnail": "https://img.youtube.com/vi/ZToicYcHIOU/hqdefault.jpg",
+      "description": "Pratique vocale et silencieuse pour relâcher les tensions accumulées avant le repos nocturne.",
+      "duration": "10:05",
+      "visible": true,
+      "featured": true,
+      "sortOrder": 2,
+      "createdAt": "2026-10-26T10:15:00.000Z"
+    },
+    {
+      "id": "vid_3",
+      "title": "Le discernement face aux cycles de changement",
+      "youtubeUrl": "https://www.youtube.com/watch?v=O-6f5wQXSu8",
+      "youtubeId": "O-6f5wQXSu8",
+      "thumbnail": "https://img.youtube.com/vi/O-6f5wQXSu8/hqdefault.jpg",
+      "description": "Enseignement d’ouverture sur l’accueil des transitions personnelles avec lucidité et douceur.",
+      "duration": "10:18",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 3,
+      "createdAt": "2026-10-17T10:15:00.000Z"
+    }
+  ],
+  "media": [
+    {
+      "id": "med_hero",
+      "name": "Sanctuaire Matin Lumière",
+      "url": "/src/assets/images/hero_sanctuary_1794851465479.jpg",
+      "folder": "site",
+      "sizeLabel": "16:9 · Éditorial",
+      "createdAt": "2026-10-07T10:15:00.000Z"
+    },
+    {
+      "id": "med_master",
+      "name": "Portrait Maître Élias Varenne",
+      "url": "/src/assets/images/master_portrait_1794851465814.jpg",
+      "folder": "site",
+      "sizeLabel": "3:4 · Portrait",
+      "createdAt": "2026-10-07T10:15:00.000Z"
+    },
+    {
+      "id": "med_incense",
+      "name": "Encens Cèdre & Basalte",
+      "url": "/src/assets/images/product_incense_cedar_1794851466386.jpg",
+      "folder": "produits",
+      "sizeLabel": "4:3 · Produit",
+      "createdAt": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "med_oil",
+      "name": "Élixir Sauge Blanche",
+      "url": "/src/assets/images/product_elixir_oil_1794851466718.jpg",
+      "folder": "produits",
+      "sizeLabel": "4:3 · Produit",
+      "createdAt": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "med_candle",
+      "name": "Bougie Cire & Grès",
+      "url": "/src/assets/images/product_candle_beeswax_1794851466573.jpg",
+      "folder": "produits",
+      "sizeLabel": "4:3 · Produit",
+      "createdAt": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "med_stones",
+      "name": "Pierres Labradorite & Quartz",
+      "url": "/src/assets/images/product_stone_labradorite_1794851467208.jpg",
+      "folder": "produits",
+      "sizeLabel": "4:3 · Produit",
+      "createdAt": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "med_art1",
+      "name": "Cérémonie du Thé & Silence",
+      "url": "/src/assets/images/article_inner_silence_1794851467763.jpg",
+      "folder": "articles",
+      "sizeLabel": "4:3 · Article",
+      "createdAt": "2026-10-27T10:15:00.000Z"
+    },
+    {
+      "id": "med_art2",
+      "name": "Carnet Coton & Bol Laiton",
+      "url": "/src/assets/images/article_sacred_ritual_1794851468079.jpg",
+      "folder": "articles",
+      "sizeLabel": "4:3 · Article",
+      "createdAt": "2026-10-27T10:15:00.000Z"
+    }
+  ],
+  "siteContent": {
+    "hero": {
+      "visible": true,
+      "title": "Bienvenue dans votre espace de clarté et de présence",
+      "subtitle": "Découvrez les enseignements contemporains de Maître Élias Varenne, rejoignez les échanges de la communauté et commandez des objets rituels façonnés avec sobriété.",
+      "image": "/src/assets/images/hero_sanctuary_1794851465479.jpg",
+      "primaryButtonLabel": "Découvrir la boutique",
+      "primaryButtonTarget": "/boutique",
+      "secondaryButtonLabel": "Rejoindre la communauté",
+      "secondaryButtonTarget": "/communaute"
+    },
+    "master": {
+      "visible": true,
+      "photo": "/src/assets/images/master_portrait_1794851465814.jpg",
+      "name": "Maître Élias Varenne",
+      "title": "Fondateur du Sanctuaire & Guide contemplatif",
+      "shortBio": "Après vingt années consacrées à l’étude des traditions contemplatives et à l’accompagnement individuel, Élias Varenne transmet une spiritualité incarnée, libre de tout artifice et profondément ancrée dans la vie quotidienne.",
+      "approach": "Son approche unit la rigueur du silence, l’écoute attentive et la valeur des gestes simples. Chaque enseignement et chaque objet proposé au sein de la maison répondent à une exigence d’authenticité, de mesure et de respect.",
+      "buttonLabel": "En savoir plus"
+    },
+    "homeSections": {
+      "showFeaturedProducts": true,
+      "featuredProductsTitle": "Découvrez notre sélection",
+      "featuredProductsSubtitle": "Objets de pratique et créations naturelles préparés en séries limitées, disponibles uniquement sur demande directe.",
+      "featuredProductIds": [
+        "prod_encens_cedre",
+        "prod_huile_sauge",
+        "prod_bougie_cire",
+        "prod_pierres_ancrage"
+      ],
+      "showCommunityArticles": true,
+      "featuredArticlesTitle": "Derniers enseignements & écrits",
+      "featuredArticleIds": [
+        "art_silence_interieur",
+        "art_rituel_ecriture",
+        "art_matiere_sacree"
+      ],
+      "showCommunityVideos": true,
+      "featuredVideosTitle": "Vidéos & méditations guidées",
+      "featuredVideoIds": [
+        "vid_1",
+        "vid_2"
+      ],
+      "sectionOrder": [
+        "master",
+        "products",
+        "articles",
+        "videos",
+        "testimonials"
+      ],
+      "showTestimonials": true,
+      "featuredTestimonialsTitle": "Paroles & Témoignages"
+    },
+    "aboutPage": {
+      "heroTitle": "Une voie contemplative ancrée dans le réel",
+      "heroSubtitle": "Le Sanctuaire Élias Varenne réunit transmission écrite, pratique audio-visuelle et artisanat sacré au service de l’équilibre intérieur.",
+      "philosophyTitle": "Notre philosophie de transmission",
+      "philosophyBody": "Nous croyons qu’une démarche spirituelle authentique se mesure à la paix qu’elle apporte dans les gestes ordinaires : la parole juste, l’attention portée aux autres, et la sobriété de nos habitudes.\n\nRefusant tout folklore ostentatoire, notre espace privilégie la clarté, l’étude patiente et l’accompagnement humain direct. C’est également la raison pour laquelle chaque commande fait l’objet d’un échange personnel avant préparation.",
+      "lineageTitle": "L’atelier des matières nobles",
+      "lineageBody": "Tous les encens, huiles botaniques, bougies en cire d’abeille et minéraux sont sélectionnés ou formulés auprès d’artisans indépendants respectueux des cycles naturels. Aucun paiement automatisé n’est requis en ligne : votre demande est reçue, vérifiée et confirmée personnellement par notre équipe.",
+      "image": "/src/assets/images/master_portrait_1794851465814.jpg",
+      "commitments": [
+        {
+          "title": "Sérénité & Transparence",
+          "description": "Chaque objet est décrit avec exactitude quant à son origine, sa composition et son usage réel."
+        },
+        {
+          "title": "Relation Humaine Directe",
+          "description": "Vos demandes de commande sont traitées individuellement pour garantir disponibilité et conseil adapté."
+        },
+        {
+          "title": "Communauté Ouverte",
+          "description": "Articles, enseignements et vidéos restent librement accessibles afin de nourrir votre pratique."
+        }
+      ]
+    },
+    "contactPage": {
+      "title": "Entrer en relation avec le Sanctuaire",
+      "subtitle": "Pour toute question concernant un enseignement, une demande de commande personnalisée ou une orientation, notre équipe vous répond avec attention.",
+      "sanctuaryHours": "Accueil & réponses du lundi au vendredi, de 9h30 à 18h30",
+      "consultationNote": "Les demandes de commande passées en boutique sont confirmées par téléphone ou courriel sous 24 heures ouvrées."
+    }
+  },
+  "settings": {
+    "general": {
+      "siteName": "Élias Varenne",
+      "tagline": "Spiritualité, Enseignements & Objets Sacrés",
+      "logoUrl": "",
+      "faviconUrl": "",
+      "currencySymbol": "€",
+      "orderNotificationEmail": "commandes@eliasvarenne.fr"
+    },
+    "contact": {
+      "email": "bonjour@eliasvarenne.fr",
+      "phone": "+33 1 84 60 29 14",
+      "address": "18 Cloître Saint-Merri",
+      "city": "75004 Paris",
+      "country": "France"
+    },
+    "socials": {
+      "youtube": "https://www.youtube.com",
+      "instagram": "https://www.instagram.com",
+      "facebook": "",
+      "telegram": ""
+    },
+    "orderSettings": {
+      "confirmationMessage": "Votre demande de commande a bien été transmise au Sanctuaire. Notre équipe vous contactera sous peu pour confirmer la disponibilité et les modalités de remise.",
+      "deliveryZones": "France métropolitaine, Belgique, Suisse, Luxembourg et retrait au Sanctuaire (Paris)",
+      "requireEmail": false,
+      "allowMultiProductCart": true
+    }
+  },
+  "admins": [
+    {
+      "id": "adm_1",
+      "name": "Maître Élias Varenne",
+      "email": "admin@eliasvarenne.fr",
+      "role": "Super Administrateur",
+      "passwordHash": "b1d61ac09edf0e9d5d5c66f6a394ea1502a224f22417cdb8bd9f5aab7cbd83ba61648040bf49fb4962db84070239d3f9d8922254ee3d5bd4ec8d0279ecb953a4",
+      "salt": "ec9921aac41d30b6dd10bdde2e9dc981",
+      "createdAt": "2026-09-17T10:15:00.000Z",
+      "lastLoginAt": "2026-11-16T22:21:04.126Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act_959ad34ecfdf",
+      "actorName": "Maître Élias Varenne",
+      "action": "Témoignage supprimé",
+      "target": "Test Visiteur",
+      "category": "contenu",
+      "createdAt": "2026-11-16T19:42:35.757Z"
+    },
+    {
+      "id": "act_2289f3cf4fe6",
+      "actorName": "Test Visiteur",
+      "action": "Nouveau témoignage publié",
+      "target": "Un enseignement clair et apaisant au quotidien.",
+      "category": "contenu",
+      "createdAt": "2026-11-16T19:42:35.694Z"
+    },
+    {
+      "id": "act_1",
+      "actorName": "Claire Morel",
+      "action": "Nouvelle demande de commande enregistrée",
+      "target": "CMD-1045 (92 €)",
+      "category": "commande",
+      "createdAt": "2026-11-16T09:15:00.000Z"
+    },
+    {
+      "id": "act_2",
+      "actorName": "Maître Élias Varenne",
+      "action": "Statut mis à jour vers En cours",
+      "target": "CMD-1044 · Marc Lefèvre",
+      "category": "commande",
+      "createdAt": "2026-11-15T17:15:00.000Z"
+    },
+    {
+      "id": "act_3",
+      "actorName": "Maître Élias Varenne",
+      "action": "Article publié dans Communauté",
+      "target": "Habiter le silence avant que le monde ne s’éveille",
+      "category": "contenu",
+      "createdAt": "2026-11-12T10:15:00.000Z"
+    },
+    {
+      "id": "act_4",
+      "actorName": "Maître Élias Varenne",
+      "action": "Produit mis à jour",
+      "target": "Bougie de Veille Cire d’Abeille & Grès",
+      "category": "produit",
+      "createdAt": "2026-11-15T11:15:00.000Z"
+    }
+  ],
+  "contactMessages": [
+    {
+      "id": "msg_1",
+      "name": "Hélène Laurent",
+      "email": "helene.laurent@exemple.fr",
+      "phone": "+33 6 42 19 88 10",
+      "subject": "Question sur la prochaine retraite silencieuse",
+      "message": "Bonjour, je souhaiterais connaître les dates des prochaines rencontres d’hiver ainsi que la disponibilité du coffret du Sanctuaire.",
+      "read": false,
+      "createdAt": "2026-11-15T14:15:00.000Z"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "test_1",
+      "authorName": "Claire Morel",
+      "authorLocation": "Paris · Bougie & Élixir",
+      "rating": 5,
+      "content": "La qualité de l’encens au cèdre et l’attention portée à chaque demande de commande créent une véritable relation de confiance. Le suivi téléphonique avant l’envoi est d’une grande délicatesse.",
+      "status": "Publié",
+      "featured": true,
+      "visitorId": "vis_1",
+      "createdAt": "2026-11-13T10:15:00.000Z"
+    },
+    {
+      "id": "test_2",
+      "authorName": "Marc Lefèvre",
+      "authorLocation": "Lyon · Duo Labradorite",
+      "rating": 5,
+      "content": "Les textes publiés dans la communauté m’accompagnent chaque matin avant le travail. Sans jamais tomber dans l’excès, les enseignements de Maître Élias apportent une clarté immédiate.",
+      "status": "Publié",
+      "featured": true,
+      "createdAt": "2026-11-08T10:15:00.000Z"
+    },
+    {
+      "id": "test_3",
+      "authorName": "Nadia Benali",
+      "authorLocation": "Nice · Coffret du Sanctuaire",
+      "rating": 5,
+      "content": "Notre cercle de lecture utilise le carnet de silence et la bougie de cire d’abeille depuis plusieurs mois. Les matières sont sobres, durables et fidèles à l’esprit du Sanctuaire.",
+      "status": "Publié",
+      "featured": true,
+      "createdAt": "2026-11-01T10:15:00.000Z"
+    }
+  ],
+  "visitors": [
+    {
+      "id": "vis_1",
+      "firstName": "Claire",
+      "lastName": "Morel",
+      "email": "claire.morel@exemple.fr",
+      "phone": "+33 6 14 28 73 90",
+      "address": "14 Rue des Archives, 75004 Paris",
+      "passwordHash": "7e3b792ce85fce1bb9467506d036a26fa7ca96b96fdcf82bb704e0a58be169e7ba62667c4aea4480bf6ee95377ad1bf5deb2d3eed1b334c491475fad79eab808",
+      "salt": "2287b8588c3b055ce07d313898021b29",
+      "createdAt": "2026-11-02T10:15:00.000Z"
+    }
+  ]
+}
