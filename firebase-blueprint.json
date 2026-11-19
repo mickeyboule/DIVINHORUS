@@ -1,0 +1,363 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Shop catalog category stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "image": { "type": "string", "maxLength": 350000 },
+        "order": { "type": "number" },
+        "visible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "order", "visible", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Shop product stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reference": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "price": { "type": "number" },
+        "categoryId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "maxLength": 8000 },
+        "additionalInfo": { "type": "string", "maxLength": 4000 },
+        "images": { "type": "array" },
+        "availability": { "type": "string", "enum": ["En stock", "Sur commande", "Édition limitée", "Rupture"] },
+        "stockCount": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "orderCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "reference", "name", "slug", "price", "categoryId", "images", "availability", "stockCount", "featured", "active", "orderCount", "createdAt", "updatedAt"]
+    },
+    "ArticleCategory": {
+      "title": "ArticleCategory",
+      "description": "Community article category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "createdAt", "updatedAt"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Community spiritual teaching article",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 220 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "excerpt": { "type": "string", "maxLength": 1200 },
+        "content": { "type": "string", "maxLength": 50000 },
+        "image": { "type": "string", "maxLength": 350000 },
+        "author": { "type": "string", "maxLength": 140 },
+        "categoryId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "status": { "type": "string", "enum": ["Publié", "Brouillon"] },
+        "featured": { "type": "boolean" },
+        "likesCount": { "type": "number" },
+        "likedByKeys": { "type": "array" },
+        "publishedAt": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "slug", "content", "author", "categoryId", "status", "featured", "likesCount", "likedByKeys", "createdAt", "updatedAt"]
+    },
+    "VideoItem": {
+      "title": "VideoItem",
+      "description": "YouTube teaching video",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 220 },
+        "youtubeUrl": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "youtubeId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "thumbnail": { "type": "string", "maxLength": 350000 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "duration": { "type": "string", "maxLength": 32 },
+        "visible": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "sortOrder": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "youtubeUrl", "youtubeId", "visible", "featured", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Community testimonial submitted by members",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "authorLocation": { "type": "string", "maxLength": 120 },
+        "rating": { "type": "number" },
+        "content": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "status": { "type": "string", "enum": ["Publié", "En attente", "Masqué"] },
+        "featured": { "type": "boolean" },
+        "visitorId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "authorName", "rating", "content", "status", "featured", "createdAt", "updatedAt"]
+    },
+    "MediaItem": {
+      "title": "MediaItem",
+      "description": "Uploaded or external media image persisted in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "url": { "type": "string", "minLength": 1, "maxLength": 750000 },
+        "folder": { "type": "string", "enum": ["produits", "articles", "categories", "site"] },
+        "sizeLabel": { "type": "string", "maxLength": 64 },
+        "uploadedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "url", "folder", "sizeLabel", "uploadedByUid", "createdAt", "updatedAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "CRM customer record (PII protected, Admin only)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "firstName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "lastName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 60 },
+        "email": { "type": "string", "maxLength": 160 },
+        "country": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 400 },
+        "notes": { "type": "string", "maxLength": 4000 },
+        "lastOrderAt": { "type": "string", "maxLength": 64 },
+        "orderCount": { "type": "number" },
+        "totalIndicative": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "firstName", "lastName", "phone", "email", "address", "notes", "orderCount", "totalIndicative", "createdAt", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order record with invoice and status history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "orderNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "status": { "type": "string", "enum": ["Nouvelle", "En cours", "Confirmée", "En expédition", "Terminée", "Annulée"] },
+        "customerId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "visitorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "customerFirstName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "customerLastName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "customerPhone": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "customerEmail": { "type": "string", "maxLength": 160 },
+        "customerCountry": { "type": "string", "maxLength": 80 },
+        "deliveryAddress": { "type": "string", "maxLength": 500 },
+        "message": { "type": "string", "maxLength": 2000 },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "shippingFee": { "type": "number" },
+        "indicativeTotal": { "type": "number" },
+        "displayCurrencyCode": { "type": "string", "maxLength": 16 },
+        "displayCurrencySymbol": { "type": "string", "maxLength": 16 },
+        "displayTotal": { "type": "number" },
+        "adminNotes": { "type": "string", "maxLength": 4000 },
+        "history": { "type": "array" },
+        "invoice": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orderNumber", "status", "customerId", "visitorId", "customerFirstName", "customerLastName", "customerPhone", "deliveryAddress", "items", "indicativeTotal", "adminNotes", "history", "createdAt", "updatedAt"]
+    },
+    "OrderTracking": {
+      "title": "OrderTracking",
+      "description": "Public safe status-only order tracking projection (no products, no invoice)",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "status": { "type": "string", "enum": ["Nouvelle", "En cours", "Confirmée", "En expédition", "Terminée", "Annulée"] },
+        "customerFirstName": { "type": "string", "maxLength": 100 },
+        "customerLastName": { "type": "string", "maxLength": 100 },
+        "contactHash": { "type": "string", "maxLength": 128 },
+        "history": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderNumber", "status", "history", "createdAt", "updatedAt"]
+    },
+    "VisitorMember": {
+      "title": "VisitorMember",
+      "description": "Visitor account profile stored under their Firebase UID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "firstName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "lastName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "email": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 60 },
+        "address": { "type": "string", "maxLength": 400 },
+        "country": { "type": "string", "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "firstName", "lastName", "email", "phone", "address", "createdAt", "updatedAt"]
+    },
+    "SiteContentDoc": {
+      "title": "SiteContentDoc",
+      "description": "Global site content configuration document",
+      "type": "object",
+      "properties": {
+        "hero": { "type": "object" },
+        "master": { "type": "object" },
+        "homeSections": { "type": "object" },
+        "aboutPage": { "type": "object" },
+        "contactPage": { "type": "object" },
+        "welcomeAnnouncement": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["hero", "master", "homeSections", "aboutPage", "contactPage", "updatedAt"]
+    },
+    "SiteSettingsDoc": {
+      "title": "SiteSettingsDoc",
+      "description": "Global site settings document (general, contact, socials, youtubeSync, orderSettings)",
+      "type": "object",
+      "properties": {
+        "general": { "type": "object" },
+        "contact": { "type": "object" },
+        "socials": { "type": "object" },
+        "youtubeSync": { "type": "object" },
+        "orderSettings": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["general", "contact", "socials", "orderSettings", "updatedAt"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "Visitor contact form message (Admin readable)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "senderUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "email": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 60 },
+        "subject": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "senderUid", "name", "email", "message", "read", "createdAt", "updatedAt"]
+    },
+    "AdminMember": {
+      "title": "AdminMember",
+      "description": "Registered administrator record keyed by Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "role": { "type": "string", "enum": ["Super Administrateur", "Éditeur"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email", "role", "createdAt", "updatedAt"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Admin audit trail log entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "action": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "target": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "enum": ["commande", "produit", "contenu", "parametre", "securite"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "actorName", "action", "target", "category", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Boutique product categories"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Boutique products"
+    },
+    "/article_categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/ArticleCategory" },
+      "description": "Community article categories"
+    },
+    "/articles/{articleId}": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "Community spiritual articles"
+    },
+    "/videos/{videoId}": {
+      "schema": { "$ref": "#/entities/VideoItem" },
+      "description": "YouTube teaching videos"
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": { "$ref": "#/entities/Testimonial" },
+      "description": "Community testimonials"
+    },
+    "/media/{mediaId}": {
+      "schema": { "$ref": "#/entities/MediaItem" },
+      "description": "Uploaded and referenced images stored in Firebase"
+    },
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "CRM customer records (Admin only)"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders and invoices (Owner read + Admin full access)"
+    },
+    "/order_tracking/{orderNumber}": {
+      "schema": { "$ref": "#/entities/OrderTracking" },
+      "description": "Public safe order status lookup without products or invoice"
+    },
+    "/visitors/{visitorId}": {
+      "schema": { "$ref": "#/entities/VisitorMember" },
+      "description": "Authenticated visitor accounts"
+    },
+    "/site_content/{docId}": {
+      "schema": { "$ref": "#/entities/SiteContentDoc" },
+      "description": "Site editorial content (master, hero, about, contact, announcement)"
+    },
+    "/site_settings/{docId}": {
+      "schema": { "$ref": "#/entities/SiteSettingsDoc" },
+      "description": "Site global settings (general, logo, favicon, contact, socials, orderSettings)"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ContactMessage" },
+      "description": "Contact form messages"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminMember" },
+      "description": "Authorized admin role registry"
+    },
+    "/activities/{activityId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Admin activity log"
+    }
+  }
+}

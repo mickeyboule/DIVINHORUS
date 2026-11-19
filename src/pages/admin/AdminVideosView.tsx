@@ -6,6 +6,7 @@ import {
   EyeOff,
   Link2,
   Plus,
+  RefreshCw,
   Star,
   Trash2,
   X,
@@ -14,17 +15,22 @@ import { useState, type FormEvent } from 'react';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { SafeImage } from '../../components/SafeImage';
 import { adminApi } from '../../lib/api';
-import type { VideoItem } from '../../types/cms';
+import { formatDateTimeFr } from '../../lib/format';
+import type { SiteSettings, VideoItem } from '../../types/cms';
 
 interface AdminVideosViewProps {
   videos: VideoItem[];
+  youtubeSync?: SiteSettings['youtubeSync'];
   onVideosChanged: (videos: VideoItem[]) => void;
+  onYoutubeSyncChanged?: (sync: NonNullable<SiteSettings['youtubeSync']>) => void;
   onNotify: (type: 'success' | 'error', message: string) => void;
 }
 
 export function AdminVideosView({
   videos,
+  youtubeSync,
   onVideosChanged,
+  onYoutubeSyncChanged,
   onNotify,
 }: AdminVideosViewProps) {
   const [editing, setEditing] = useState<Partial<VideoItem> | null>(null);
@@ -32,7 +38,51 @@ export function AdminVideosView({
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<VideoItem | null>(null);
 
+  const [channelUrl, setChannelUrl] = useState(youtubeSync?.channelUrl || '');
+  const [autoSync, setAutoSync] = useState(youtubeSync?.autoSync ?? true);
+  const [syncingChannel, setSyncingChannel] = useState(false);
+
   const sorted = [...videos].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const handleSyncChannel = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!channelUrl.trim()) {
+      onNotify('error', 'Veuillez coller le lien de votre chaîne YouTube.');
+      return;
+    }
+    setSyncingChannel(true);
+    try {
+      const res = await adminApi.syncYoutubeChannel(channelUrl.trim(), autoSync);
+      onVideosChanged(res.videos);
+      onYoutubeSyncChanged?.(res.youtubeSync);
+      onNotify(
+        'success',
+        res.addedCount > 0
+          ? `${res.addedCount} nouvelle${res.addedCount > 1 ? 's' : ''} vidéo${res.addedCount > 1 ? 's' : ''} importée${res.addedCount > 1 ? 's' : ''} depuis la chaîne.`
+          : 'Chaîne synchronisée : toutes les dernières vidéos sont déjà présentes.',
+      );
+    } catch (err) {
+      onNotify('error', err instanceof Error ? err.message : 'Erreur de synchronisation.');
+    } finally {
+      setSyncingChannel(false);
+    }
+  };
+
+  const handleToggleAutoSync = async (checked: boolean) => {
+    setAutoSync(checked);
+    try {
+      const res = await adminApi.updateYoutubeSyncSettings({ autoSync: checked });
+      onYoutubeSyncChanged?.(res.youtubeSync);
+      onNotify(
+        'success',
+        checked
+          ? 'Synchronisation automatique activée.'
+          : 'Synchronisation automatique mise en pause.',
+      );
+    } catch (err) {
+      onNotify('error', err instanceof Error ? err.message : 'Erreur de mise à jour.');
+    }
+  };
 
   const handleLookupYoutube = async () => {
     if (!editing?.youtubeUrl) return;
@@ -129,7 +179,7 @@ export function AdminVideosView({
         <div>
           <h2 className="text-xl font-semibold text-[#141413]">Vidéos YouTube</h2>
           <p className="text-xs text-[#5C5A55] mt-0.5">
-            Collez un lien YouTube pour récupérer automatiquement la miniature et le titre.
+            Renseignez le lien de votre chaîne pour importer et synchroniser automatiquement toutes vos vidéos.
           </p>
         </div>
         <button
@@ -146,12 +196,70 @@ export function AdminVideosView({
               featured: false,
             })
           }
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg self-start"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-[#D9D6CF] hover:border-[#141413] text-[#141413] text-xs font-semibold rounded-lg self-start"
         >
           <Plus className="w-4 h-4" />
-          <span>Ajouter une vidéo YouTube</span>
+          <span>Ajouter une vidéo isolée</span>
         </button>
       </div>
+
+      {/* Automatic YouTube Channel Sync Card */}
+      <form
+        onSubmit={handleSyncChannel}
+        className="bg-white border border-[#E3E3E6] rounded-xl p-5 space-y-4 text-xs"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-[#141413]">
+              Synchronisation automatique par chaîne YouTube
+            </h3>
+            <p className="text-[#5C5A55] mt-0.5">
+              Collez une seule fois l’adresse de votre chaîne (ex : https://www.youtube.com/@VotreChaine). Chaque nouvelle vidéo publiée apparaîtra automatiquement ici et dans la Communauté.
+            </p>
+          </div>
+          {youtubeSync?.lastSyncAt && (
+            <span className="text-[11px] font-mono tabular-nums text-[#6B6860] shrink-0">
+              Dernière synchro : {formatDateTimeFr(youtubeSync.lastSyncAt)}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <input
+            type="text"
+            value={channelUrl}
+            onChange={(e) => setChannelUrl(e.target.value)}
+            placeholder="https://www.youtube.com/@VotreChaine ou https://www.youtube.com/channel/UC..."
+            className="flex-1 px-3.5 py-2.5 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={syncingChannel}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg whitespace-nowrap"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncingChannel ? 'animate-spin' : ''}`} />
+            <span>{syncingChannel ? 'Synchronisation...' : 'Synchroniser la chaîne'}</span>
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <label className="inline-flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoSync}
+              onChange={(e) => void handleToggleAutoSync(e.target.checked)}
+            />
+            <span className="font-medium text-[#141413]">
+              Importer automatiquement les nouvelles vidéos publiées sur la chaîne
+            </span>
+          </label>
+          {youtubeSync?.channelId && (
+            <span className="font-mono text-[11px] text-[#6B6860]">
+              ID Chaîne : {youtubeSync.channelId}
+            </span>
+          )}
+        </div>
+      </form>
 
       <div className="bg-white border border-[#E3E3E6] rounded-xl divide-y divide-[#F0EFEA]">
         {sorted.map((vid, idx) => (

@@ -1,5 +1,6 @@
 import { Star, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { publicApi } from '../lib/api';
 import type { Testimonial, VisitorMemberPublic } from '../types/cms';
 
@@ -16,6 +17,7 @@ export function TestimonialModal({
   visitorUser,
   onCreated,
 }: TestimonialModalProps) {
+  const { t } = useLanguage();
   const [authorName, setAuthorName] = useState('');
   const [authorLocation, setAuthorLocation] = useState('');
   const [rating, setRating] = useState(5);
@@ -35,7 +37,7 @@ export function TestimonialModal({
     e.preventDefault();
     setError('');
     if (!authorName.trim() || content.trim().length < 10) {
-      setError('Veuillez renseigner votre nom et un témoignage d’au moins 10 caractères.');
+      setError(t('testimonialModal.errValidation'));
       return;
     }
     setSubmitting(true);
@@ -52,7 +54,7 @@ export function TestimonialModal({
       setRating(5);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible d’enregistrer votre témoignage.');
+      setError(err instanceof Error ? err.message : t('testimonialModal.errGeneric'));
     } finally {
       setSubmitting(false);
     }
@@ -63,7 +65,7 @@ export function TestimonialModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Laisser un témoignage"
+      aria-label={t('testimonialModal.ariaLabel')}
     >
       <div
         className="fixed inset-0 bg-black/45 backdrop-blur-[2px]"
@@ -74,16 +76,14 @@ export function TestimonialModal({
         <div className="px-6 py-4 bg-white border-b border-[#E6E4DF] flex items-center justify-between">
           <div>
             <h2 className="font-display text-2xl font-semibold text-[#141413]">
-              Partager un témoignage
+              {t('testimonialModal.title')}
             </h2>
-            <p className="text-xs text-[#5C5A55] mt-0.5">
-              Votre expérience des enseignements ou des objets du Sanctuaire
-            </p>
+            <p className="text-xs text-[#5C5A55] mt-0.5">{t('testimonialModal.subtitle')}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t('common.close')}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5C5A55] hover:bg-[#F3F2EE]"
           >
             <X className="w-4 h-4" />
@@ -100,40 +100,46 @@ export function TestimonialModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-[#3F3E3A] mb-1">
-                Votre nom <span className="text-red-700">*</span>
+                {t('testimonialModal.yourName')} <span className="text-red-700">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="Ex : Claire Morel"
+                placeholder={t('testimonialModal.yourNamePlaceholder')}
                 className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
               />
             </div>
             <div>
               <label className="block font-medium text-[#3F3E3A] mb-1">
-                Ville ou objet reçu (facultatif)
+                {t('testimonialModal.locationOrProduct')}
               </label>
               <input
                 type="text"
                 value={authorLocation}
                 onChange={(e) => setAuthorLocation(e.target.value)}
-                placeholder="Ex : Paris · Encens Cèdre"
+                placeholder={t('testimonialModal.locationPlaceholder')}
                 className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-medium text-[#3F3E3A] mb-1.5">Appréciation</label>
+            <label className="block font-medium text-[#3F3E3A] mb-1.5">
+              {t('testimonialModal.ratingLabel')}
+            </label>
             <div className="flex items-center gap-1.5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+                  aria-label={
+                    star > 1
+                      ? t('testimonialModal.starAriaPlural', { count: star })
+                      : t('testimonialModal.starAriaSingle', { count: star })
+                  }
                   className="p-1 rounded hover:bg-[#EFECE6] transition-colors"
                 >
                   <Star
@@ -151,14 +157,14 @@ export function TestimonialModal({
 
           <div>
             <label className="block font-medium text-[#3F3E3A] mb-1">
-              Votre témoignage <span className="text-red-700">*</span>
+              {t('testimonialModal.yourTestimonial')} <span className="text-red-700">*</span>
             </label>
             <textarea
               rows={4}
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Décrivez ce que ces enseignements ou créations vous ont apporté..."
+              placeholder={t('testimonialModal.testimonialPlaceholder')}
               className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none resize-none"
             />
           </div>
@@ -169,14 +175,14 @@ export function TestimonialModal({
               onClick={onClose}
               className="px-4 py-2 border border-[#D9D6CF] bg-white rounded-lg font-medium text-[#3F3E3A]"
             >
-              Annuler
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-5 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white rounded-lg font-semibold"
             >
-              {submitting ? 'Publication...' : 'Publier mon témoignage'}
+              {submitting ? t('testimonialModal.submitting') : t('testimonialModal.submit')}
             </button>
           </div>
         </form>

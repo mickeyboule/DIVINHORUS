@@ -1,9 +1,20 @@
-import { ArrowDown, ArrowUp, Save } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { ArrowDown, ArrowUp, Eye, Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
 import { SafeImage } from '../../components/SafeImage';
+import { WelcomeAnnouncementModal } from '../../components/WelcomeAnnouncementModal';
 import { adminApi } from '../../lib/api';
-import type { Article, MediaItem, Product, SiteContent, VideoItem } from '../../types/cms';
+import type {
+  Article,
+  FaqCategory,
+  FaqItem,
+  MediaItem,
+  Product,
+  SiteContent,
+  VideoItem,
+  WelcomeAnnouncement,
+  WelcomeAnnouncementType,
+} from '../../types/cms';
 
 interface AdminSiteContentViewProps {
   siteContent: SiteContent;
@@ -26,6 +37,20 @@ const SECTION_NAMES: Record<SectionKey, string> = {
   testimonials: 'Témoignages de la communauté',
 };
 
+const DEFAULT_ANNOUNCEMENT: WelcomeAnnouncement = {
+  enabled: true,
+  type: 'welcome',
+  kicker: 'Mot d’accueil',
+  title: 'Bienvenue dans l’espace DIVIN HORUS',
+  message:
+    'Nous sommes heureux de vous accueillir. Découvrez nos enseignements, méditations guidées et objets rituels façonnés avec sobriété.',
+  buttonLabel: 'Découvrir la boutique',
+  buttonTarget: '/boutique',
+  image: '',
+  displayFrequency: 'every_visit',
+  version: 'v1',
+};
+
 export function AdminSiteContentView({
   siteContent,
   products,
@@ -37,22 +62,56 @@ export function AdminSiteContentView({
   onNotify,
 }: AdminSiteContentViewProps) {
   const [draft, setDraft] = useState<SiteContent>(siteContent);
-  const [tab, setTab] = useState<'hero' | 'master' | 'home' | 'about' | 'contact'>('hero');
-  const [pickerTarget, setPickerTarget] = useState<'hero' | 'master' | 'about' | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [tab, setTab] = useState<'hero' | 'announcement' | 'master' | 'home' | 'about' | 'contact'>(
+    'hero',
+  );
+  const [pickerTarget, setPickerTarget] = useState<
+    'hero' | 'master' | 'about' | 'announcement' | null
+  >(null);
+  const [previewAnnouncementOpen, setPreviewAnnouncementOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async (e: FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!isDirty) {
+      setDraft(siteContent);
+    }
+  }, [siteContent, isDirty]);
+
+  const updateDraft = (updater: SiteContent | ((prev: SiteContent) => SiteContent)) => {
+    setIsDirty(true);
+    setDraft(updater);
+  };
+
+  const persistSiteContent = async (nextContent: SiteContent, successMessage: string) => {
     setSaving(true);
     try {
-      const res = await adminApi.updateSiteContent(draft);
+      const res = await adminApi.updateSiteContent(nextContent);
+      setDraft(res.siteContent);
+      setIsDirty(false);
       onSiteContentChanged(res.siteContent);
-      onNotify('success', 'Contenu du site mis à jour et publié.');
+      onNotify('success', successMessage);
     } catch (err) {
       onNotify('error', err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const announcementDraft: WelcomeAnnouncement = draft.welcomeAnnouncement || DEFAULT_ANNOUNCEMENT;
+  const updateAnnouncement = (patch: Partial<WelcomeAnnouncement>) => {
+    updateDraft((prev) => ({
+      ...prev,
+      welcomeAnnouncement: {
+        ...(prev.welcomeAnnouncement || DEFAULT_ANNOUNCEMENT),
+        ...patch,
+      },
+    }));
+  };
+
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    await persistSiteContent(draft, 'Contenu du site mis à jour et publié.');
   };
 
   const toggleInList = (list: string[], id: string): string[] =>
@@ -64,9 +123,55 @@ export function AdminSiteContentView({
     if (target < 0 || target >= order.length) return;
     const [moved] = order.splice(idx, 1);
     order.splice(target, 0, moved);
-    setDraft({
+    updateDraft({
       ...draft,
       homeSections: { ...draft.homeSections, sectionOrder: order },
+    });
+  };
+
+  const faqsList = draft.aboutPage.faqs || [];
+
+  const updateFaqItem = (idx: number, patch: Partial<FaqItem>) => {
+    const next = faqsList.map((item, i) => (i === idx ? { ...item, ...patch } : item));
+    updateDraft({
+      ...draft,
+      aboutPage: { ...draft.aboutPage, faqs: next },
+    });
+  };
+
+  const addFaqItem = () => {
+    const created: FaqItem = {
+      id: `faq_${Date.now().toString(36)}`,
+      question: '',
+      answer: '',
+      category: 'Enseignements',
+      visible: true,
+    };
+    updateDraft({
+      ...draft,
+      aboutPage: { ...draft.aboutPage, faqs: [...faqsList, created] },
+    });
+  };
+
+  const removeFaqItem = (idx: number) => {
+    updateDraft({
+      ...draft,
+      aboutPage: {
+        ...draft.aboutPage,
+        faqs: faqsList.filter((_, i) => i !== idx),
+      },
+    });
+  };
+
+  const moveFaqItem = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= faqsList.length) return;
+    const next = [...faqsList];
+    const [moved] = next.splice(idx, 1);
+    next.splice(target, 0, moved);
+    updateDraft({
+      ...draft,
+      aboutPage: { ...draft.aboutPage, faqs: next },
     });
   };
 
@@ -79,20 +184,28 @@ export function AdminSiteContentView({
             Modifiez textes, images, sections visibles et sélections de la page d’accueil sans toucher au code.
           </p>
         </div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg self-start"
-        >
-          <Save className="w-4 h-4" />
-          <span>{saving ? 'Enregistrement...' : 'Publier les modifications'}</span>
-        </button>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {isDirty && (
+            <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
+              Modifications non publiées
+            </span>
+          )}
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+          >
+            <Save className="w-4 h-4" />
+            <span>{saving ? 'Enregistrement...' : 'Publier les modifications'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-1.5">
         {[
           { id: 'hero', label: 'Hero d’accueil' },
+          { id: 'announcement', label: 'Message d’accueil & Annonce' },
           { id: 'master', label: 'Présentation du Maître' },
           { id: 'home', label: 'Sections & Sélections Accueil' },
           { id: 'about', label: 'Page À propos' },
@@ -113,6 +226,287 @@ export function AdminSiteContentView({
         ))}
       </div>
 
+      {/* WELCOME / ANNOUNCEMENT TAB */}
+      {tab === 'announcement' && (
+        <div className="bg-white border border-[#E3E3E6] rounded-xl p-6 space-y-5 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EFECE6]">
+            <div>
+              <h3 className="text-sm font-semibold text-[#141413]">
+                Fenêtre d’information à l’ouverture du site
+              </h3>
+              <p className="text-[11px] text-[#5C5A55] mt-0.5">
+                Dès qu’un visiteur ouvre le site, ce message s’affiche automatiquement (mot de bienvenue ou grande information concernant la boutique).
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewAnnouncementOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#F6F6F7] hover:bg-[#ECEAE4] border border-[#D9D6CF] text-[#141413] font-semibold rounded-lg"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Aperçu visiteur</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateAnnouncement({ version: `v_${Date.now().toString(36)}` });
+                  onNotify(
+                    'success',
+                    'Version renouvelée : cliquez sur « Publier les modifications » pour réafficher ce message à tous les visiteurs.',
+                  );
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF9F6] border border-[#D9D6CF] text-[#3F3E3A] font-medium rounded-lg"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Rediffuser à tous</span>
+              </button>
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={announcementDraft.enabled}
+              onChange={(e) => updateAnnouncement({ enabled: e.target.checked })}
+            />
+            <span className="font-semibold text-[#141413]">
+              Activer le message automatique dès l’ouverture du site
+            </span>
+          </label>
+
+          <div>
+            <label className="block font-medium text-[#3F3E3A] mb-2">Type de message</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {(
+                [
+                  { id: 'welcome', label: 'Message de bienvenue', defaultKicker: 'Mot d’accueil' },
+                  { id: 'info', label: 'Information boutique', defaultKicker: 'Information boutique' },
+                  { id: 'important', label: 'Annonce importante', defaultKicker: 'Annonce importante' },
+                ] as Array<{ id: WelcomeAnnouncementType; label: string; defaultKicker: string }>
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    const currentKicker = (announcementDraft.kicker || '').trim();
+                    const isDefaultKicker =
+                      !currentKicker ||
+                      currentKicker === 'Mot d’accueil' ||
+                      currentKicker === 'Information boutique' ||
+                      currentKicker === 'Annonce importante';
+                    updateAnnouncement({
+                      type: opt.id,
+                      ...(isDefaultKicker ? { kicker: opt.defaultKicker } : {}),
+                    });
+                  }}
+                  className={`px-3.5 py-2.5 rounded-lg border text-left font-medium transition-colors ${
+                    announcementDraft.type === opt.id
+                      ? 'bg-[#2A4036] text-white border-[#2A4036]'
+                      : 'bg-[#FAF9F6] text-[#3F3E3A] border-[#D9D6CF] hover:border-[#141413]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-medium text-[#3F3E3A] mb-1">Sur-titre (optionnel)</label>
+              <input
+                type="text"
+                value={announcementDraft.kicker || ''}
+                onChange={(e) => updateAnnouncement({ kicker: e.target.value })}
+                placeholder="Ex : Mot d’accueil, Fermeture annuelle, Nouveauté..."
+                className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-[#3F3E3A] mb-1">Fréquence d’affichage</label>
+              <select
+                value={announcementDraft.displayFrequency}
+                onChange={(e) =>
+                  updateAnnouncement({
+                    displayFrequency: e.target.value as WelcomeAnnouncement['displayFrequency'],
+                  })
+                }
+                className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+              >
+                <option value="every_visit">À chaque ouverture du site (par session)</option>
+                <option value="once_per_update">
+                  Une fois par visiteur jusqu’à la prochaine annonce
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-[#3F3E3A] mb-1">Titre du message</label>
+            <input
+              type="text"
+              value={announcementDraft.title}
+              onChange={(e) => updateAnnouncement({ title: e.target.value })}
+              placeholder="Ex : Bienvenue dans la boutique DIVIN HORUS"
+              className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium text-[#3F3E3A] mb-1">
+              Contenu du message envoyé aux visiteurs
+            </label>
+            <textarea
+              rows={4}
+              value={announcementDraft.message}
+              onChange={(e) => updateAnnouncement({ message: e.target.value })}
+              placeholder="Rédigez votre message de bienvenue ou l’information importante concernant la boutique (délais, nouvel arrivage, promotion, horaires...)."
+              className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-medium text-[#3F3E3A] mb-1">
+                Libellé du bouton d’action (optionnel)
+              </label>
+              <input
+                type="text"
+                value={announcementDraft.buttonLabel || ''}
+                onChange={(e) => updateAnnouncement({ buttonLabel: e.target.value })}
+                placeholder="Ex : Découvrir la boutique"
+                className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-[#3F3E3A] mb-1">
+                Page de destination du bouton
+              </label>
+              <input
+                type="text"
+                value={announcementDraft.buttonTarget || ''}
+                onChange={(e) => updateAnnouncement({ buttonTarget: e.target.value })}
+                placeholder="/boutique, /communaute, /contact..."
+                className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+              />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {[
+                  { label: 'Boutique', path: '/boutique' },
+                  { label: 'Communauté', path: '/communaute' },
+                  { label: 'Suivi commande', path: '/suivi-commande' },
+                  { label: 'Contact', path: '/contact' },
+                ].map((preset) => (
+                  <button
+                    key={preset.path}
+                    type="button"
+                    onClick={() => updateAnnouncement({ buttonTarget: preset.path })}
+                    className="px-2 py-1 text-[11px] bg-[#FAF9F6] hover:bg-[#EFECE6] border border-[#E3E3E6] rounded text-[#3F3E3A]"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <details className="rounded-lg border border-[#E6E4DF] bg-[#FAF9F6] p-4">
+            <summary className="cursor-pointer font-semibold text-[#141413] select-none">
+              Version anglaise du message (optionnel — affichée aux visiteurs anglophones)
+            </summary>
+            <div className="mt-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium text-[#3F3E3A] mb-1">
+                    Sur-titre (EN, optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    value={announcementDraft.kickerEn || ''}
+                    onChange={(e) => updateAnnouncement({ kickerEn: e.target.value })}
+                    placeholder="Ex: Welcome note, Shop information..."
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-[#3F3E3A] mb-1">
+                    Libellé du bouton (EN, optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    value={announcementDraft.buttonLabelEn || ''}
+                    onChange={(e) => updateAnnouncement({ buttonLabelEn: e.target.value })}
+                    placeholder="Ex: Explore the shop"
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-medium text-[#3F3E3A] mb-1">
+                  Titre du message (EN, optionnel)
+                </label>
+                <input
+                  type="text"
+                  value={announcementDraft.titleEn || ''}
+                  onChange={(e) => updateAnnouncement({ titleEn: e.target.value })}
+                  placeholder="Ex: Welcome to DIVIN HORUS"
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-[#3F3E3A] mb-1">
+                  Contenu du message (EN, optionnel)
+                </label>
+                <textarea
+                  rows={3}
+                  value={announcementDraft.messageEn || ''}
+                  onChange={(e) => updateAnnouncement({ messageEn: e.target.value })}
+                  placeholder="English version of your announcement..."
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                />
+              </div>
+            </div>
+          </details>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="font-medium text-[#3F3E3A]">
+                Image d’illustration (optionnel)
+              </label>
+              <div className="flex items-center gap-2">
+                {announcementDraft.image && (
+                  <button
+                    type="button"
+                    onClick={() => updateAnnouncement({ image: '' })}
+                    className="px-3 py-1.5 bg-white border border-[#D9D6CF] rounded-lg text-red-700 hover:bg-red-50 font-medium"
+                  >
+                    Retirer l’image
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPickerTarget('announcement')}
+                  className="px-3 py-1.5 bg-[#F6F6F7] border border-[#D9D6CF] rounded-lg font-semibold"
+                >
+                  Choisir une image
+                </button>
+              </div>
+            </div>
+            {announcementDraft.image ? (
+              <SafeImage
+                src={announcementDraft.image}
+                alt="Aperçu de l’annonce"
+                className="w-full max-w-md aspect-video rounded-lg object-cover border border-[#E3E3E6]"
+              />
+            ) : (
+              <p className="text-[11px] text-[#8A877E]">
+                Aucune image sélectionnée (le message s’affichera dans une présentation épurée centrée sur le texte).
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* HERO TAB */}
       {tab === 'hero' && (
         <div className="bg-white border border-[#E3E3E6] rounded-xl p-6 space-y-5 text-xs">
@@ -121,7 +515,7 @@ export function AdminSiteContentView({
               type="checkbox"
               checked={draft.hero.visible}
               onChange={(e) =>
-                setDraft({ ...draft, hero: { ...draft.hero, visible: e.target.checked } })
+                updateDraft({ ...draft, hero: { ...draft.hero, visible: e.target.checked } })
               }
             />
             <span className="font-semibold text-[#141413]">Afficher la bannière Hero sur l’accueil</span>
@@ -133,7 +527,7 @@ export function AdminSiteContentView({
               type="text"
               value={draft.hero.title}
               onChange={(e) =>
-                setDraft({ ...draft, hero: { ...draft.hero, title: e.target.value } })
+                updateDraft({ ...draft, hero: { ...draft.hero, title: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -145,7 +539,7 @@ export function AdminSiteContentView({
               rows={3}
               value={draft.hero.subtitle}
               onChange={(e) =>
-                setDraft({ ...draft, hero: { ...draft.hero, subtitle: e.target.value } })
+                updateDraft({ ...draft, hero: { ...draft.hero, subtitle: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -158,7 +552,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.hero.primaryButtonLabel}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     hero: { ...draft.hero, primaryButtonLabel: e.target.value },
                   })
@@ -172,7 +566,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.hero.secondaryButtonLabel}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     hero: { ...draft.hero, secondaryButtonLabel: e.target.value },
                   })
@@ -210,7 +604,7 @@ export function AdminSiteContentView({
               type="checkbox"
               checked={draft.master.visible}
               onChange={(e) =>
-                setDraft({ ...draft, master: { ...draft.master, visible: e.target.checked } })
+                updateDraft({ ...draft, master: { ...draft.master, visible: e.target.checked } })
               }
             />
             <span className="font-semibold text-[#141413]">
@@ -225,7 +619,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.master.name}
                 onChange={(e) =>
-                  setDraft({ ...draft, master: { ...draft.master, name: e.target.value } })
+                  updateDraft({ ...draft, master: { ...draft.master, name: e.target.value } })
                 }
                 className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
               />
@@ -236,7 +630,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.master.title}
                 onChange={(e) =>
-                  setDraft({ ...draft, master: { ...draft.master, title: e.target.value } })
+                  updateDraft({ ...draft, master: { ...draft.master, title: e.target.value } })
                 }
                 className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
               />
@@ -249,7 +643,7 @@ export function AdminSiteContentView({
               rows={3}
               value={draft.master.shortBio}
               onChange={(e) =>
-                setDraft({ ...draft, master: { ...draft.master, shortBio: e.target.value } })
+                updateDraft({ ...draft, master: { ...draft.master, shortBio: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -261,7 +655,7 @@ export function AdminSiteContentView({
               rows={3}
               value={draft.master.approach}
               onChange={(e) =>
-                setDraft({ ...draft, master: { ...draft.master, approach: e.target.value } })
+                updateDraft({ ...draft, master: { ...draft.master, approach: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -274,7 +668,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.master.buttonLabel}
                 onChange={(e) =>
-                  setDraft({ ...draft, master: { ...draft.master, buttonLabel: e.target.value } })
+                  updateDraft({ ...draft, master: { ...draft.master, buttonLabel: e.target.value } })
                 }
                 className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
               />
@@ -344,7 +738,7 @@ export function AdminSiteContentView({
                 type="checkbox"
                 checked={draft.homeSections.showFeaturedProducts}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: { ...draft.homeSections, showFeaturedProducts: e.target.checked },
                   })
@@ -362,7 +756,7 @@ export function AdminSiteContentView({
                   type="text"
                   value={draft.homeSections.featuredProductsTitle}
                   onChange={(e) =>
-                    setDraft({
+                    updateDraft({
                       ...draft,
                       homeSections: {
                         ...draft.homeSections,
@@ -379,7 +773,7 @@ export function AdminSiteContentView({
                   type="text"
                   value={draft.homeSections.featuredProductsSubtitle}
                   onChange={(e) =>
-                    setDraft({
+                    updateDraft({
                       ...draft,
                       homeSections: {
                         ...draft.homeSections,
@@ -406,7 +800,7 @@ export function AdminSiteContentView({
                       type="checkbox"
                       checked={draft.homeSections.featuredProductIds.includes(p.id)}
                       onChange={() =>
-                        setDraft({
+                        updateDraft({
                           ...draft,
                           homeSections: {
                             ...draft.homeSections,
@@ -432,7 +826,7 @@ export function AdminSiteContentView({
                 type="checkbox"
                 checked={draft.homeSections.showCommunityArticles}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -452,7 +846,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.homeSections.featuredArticlesTitle}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -476,7 +870,7 @@ export function AdminSiteContentView({
                       type="checkbox"
                       checked={draft.homeSections.featuredArticleIds.includes(a.id)}
                       onChange={() =>
-                        setDraft({
+                        updateDraft({
                           ...draft,
                           homeSections: {
                             ...draft.homeSections,
@@ -501,7 +895,7 @@ export function AdminSiteContentView({
                 type="checkbox"
                 checked={draft.homeSections.showCommunityVideos}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -521,7 +915,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.homeSections.featuredVideosTitle}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -545,7 +939,7 @@ export function AdminSiteContentView({
                       type="checkbox"
                       checked={draft.homeSections.featuredVideoIds.includes(v.id)}
                       onChange={() =>
-                        setDraft({
+                        updateDraft({
                           ...draft,
                           homeSections: {
                             ...draft.homeSections,
@@ -570,7 +964,7 @@ export function AdminSiteContentView({
                 type="checkbox"
                 checked={draft.homeSections.showTestimonials}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -590,7 +984,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.homeSections.featuredTestimonialsTitle}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     homeSections: {
                       ...draft.homeSections,
@@ -614,7 +1008,7 @@ export function AdminSiteContentView({
               type="text"
               value={draft.aboutPage.heroTitle}
               onChange={(e) =>
-                setDraft({ ...draft, aboutPage: { ...draft.aboutPage, heroTitle: e.target.value } })
+                updateDraft({ ...draft, aboutPage: { ...draft.aboutPage, heroTitle: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -625,7 +1019,7 @@ export function AdminSiteContentView({
               rows={2}
               value={draft.aboutPage.heroSubtitle}
               onChange={(e) =>
-                setDraft({
+                updateDraft({
                   ...draft,
                   aboutPage: { ...draft.aboutPage, heroSubtitle: e.target.value },
                 })
@@ -640,7 +1034,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.aboutPage.philosophyTitle}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     aboutPage: { ...draft.aboutPage, philosophyTitle: e.target.value },
                   })
@@ -651,7 +1045,7 @@ export function AdminSiteContentView({
                 rows={5}
                 value={draft.aboutPage.philosophyBody}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     aboutPage: { ...draft.aboutPage, philosophyBody: e.target.value },
                   })
@@ -665,7 +1059,7 @@ export function AdminSiteContentView({
                 type="text"
                 value={draft.aboutPage.lineageTitle}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     aboutPage: { ...draft.aboutPage, lineageTitle: e.target.value },
                   })
@@ -676,7 +1070,7 @@ export function AdminSiteContentView({
                 rows={5}
                 value={draft.aboutPage.lineageBody}
                 onChange={(e) =>
-                  setDraft({
+                  updateDraft({
                     ...draft,
                     aboutPage: { ...draft.aboutPage, lineageBody: e.target.value },
                   })
@@ -703,6 +1097,152 @@ export function AdminSiteContentView({
               className="w-32 h-40 rounded-lg object-cover border border-[#E3E3E6]"
             />
           </div>
+
+          {/* FAQ Editor */}
+          <div className="pt-5 border-t border-[#E3E3E6] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-[#141413]">
+                  Foire aux questions (FAQ) — Page À propos
+                </h3>
+                <p className="text-xs text-[#5C5A55] mt-0.5">
+                  Gérez les questions fréquentes sur les enseignements et la boutique. Pensez à cliquer sur « Publier les modifications ».
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addFaqItem}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#141413] text-white font-semibold rounded-lg hover:bg-[#2A4036] transition-colors self-start"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Ajouter une question</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium text-[#3F3E3A] mb-1">Titre de la section FAQ</label>
+                <input
+                  type="text"
+                  value={draft.aboutPage.faqTitle ?? 'Questions fréquentes'}
+                  onChange={(e) =>
+                    updateDraft({
+                      ...draft,
+                      aboutPage: { ...draft.aboutPage, faqTitle: e.target.value },
+                    })
+                  }
+                  className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-[#3F3E3A] mb-1">Sous-titre FAQ</label>
+                <input
+                  type="text"
+                  value={draft.aboutPage.faqSubtitle ?? ''}
+                  onChange={(e) =>
+                    updateDraft({
+                      ...draft,
+                      aboutPage: { ...draft.aboutPage, faqSubtitle: e.target.value },
+                    })
+                  }
+                  className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {faqsList.length === 0 ? (
+                <p className="text-xs text-[#6B6860] py-4 text-center border border-dashed border-[#D9D6CF] rounded-lg">
+                  Aucune question configurée. Cliquez sur « Ajouter une question » pour commencer.
+                </p>
+              ) : (
+                faqsList.map((faq, idx) => (
+                  <div
+                    key={faq.id}
+                    className="p-4 bg-[#FAF9F6] border border-[#E3E3E6] rounded-xl space-y-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[#6B6860] tabular-nums">
+                          #{String(idx + 1).padStart(2, '0')}
+                        </span>
+                        <select
+                          value={faq.category}
+                          onChange={(e) =>
+                            updateFaqItem(idx, { category: e.target.value as FaqCategory })
+                          }
+                          className="px-2.5 py-1 text-xs font-medium bg-white border border-[#D9D6CF] rounded-md"
+                        >
+                          <option value="Enseignements">Enseignements</option>
+                          <option value="Boutique">Boutique</option>
+                          <option value="Général">Général</option>
+                        </select>
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-[#3F3E3A]">
+                          <input
+                            type="checkbox"
+                            checked={faq.visible !== false}
+                            onChange={(e) => updateFaqItem(idx, { visible: e.target.checked })}
+                          />
+                          <span>Visible</span>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveFaqItem(idx, -1)}
+                          title="Monter"
+                          className="p-1.5 rounded border border-[#E3E3E6] bg-white disabled:opacity-35"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === faqsList.length - 1}
+                          onClick={() => moveFaqItem(idx, 1)}
+                          title="Descendre"
+                          className="p-1.5 rounded border border-[#E3E3E6] bg-white disabled:opacity-35"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeFaqItem(idx)}
+                          title="Supprimer cette question"
+                          className="p-1.5 rounded border border-[#E3E3E6] bg-white text-[#B42318] hover:bg-[#FEF3F2]"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-medium text-[#3F3E3A] mb-1">Question</label>
+                      <input
+                        type="text"
+                        value={faq.question}
+                        onChange={(e) => updateFaqItem(idx, { question: e.target.value })}
+                        placeholder="Ex. Comment suivre l’avancement de ma commande ?"
+                        className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-medium text-[#3F3E3A] mb-1">Réponse</label>
+                      <textarea
+                        rows={3}
+                        value={faq.answer}
+                        onChange={(e) => updateFaqItem(idx, { answer: e.target.value })}
+                        placeholder="Rédigez une réponse claire et précise..."
+                        className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -715,7 +1255,7 @@ export function AdminSiteContentView({
               type="text"
               value={draft.contactPage.title}
               onChange={(e) =>
-                setDraft({ ...draft, contactPage: { ...draft.contactPage, title: e.target.value } })
+                updateDraft({ ...draft, contactPage: { ...draft.contactPage, title: e.target.value } })
               }
               className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg"
             />
@@ -726,7 +1266,7 @@ export function AdminSiteContentView({
               rows={2}
               value={draft.contactPage.subtitle}
               onChange={(e) =>
-                setDraft({
+                updateDraft({
                   ...draft,
                   contactPage: { ...draft.contactPage, subtitle: e.target.value },
                 })
@@ -740,7 +1280,7 @@ export function AdminSiteContentView({
               type="text"
               value={draft.contactPage.sanctuaryHours}
               onChange={(e) =>
-                setDraft({
+                updateDraft({
                   ...draft,
                   contactPage: { ...draft.contactPage, sanctuaryHours: e.target.value },
                 })
@@ -754,7 +1294,7 @@ export function AdminSiteContentView({
               rows={2}
               value={draft.contactPage.consultationNote}
               onChange={(e) =>
-                setDraft({
+                updateDraft({
                   ...draft,
                   contactPage: { ...draft.contactPage, consultationNote: e.target.value },
                 })
@@ -765,22 +1305,61 @@ export function AdminSiteContentView({
         </div>
       )}
 
+      <div className="bg-white border border-[#E3E3E6] rounded-xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <span className="text-xs text-[#5C5A55]">
+          {isDirty
+            ? 'Vous avez des modifications non publiées sur cette page.'
+            : 'Les images choisies via « Changer la photo » sont enregistrées automatiquement.'}
+        </span>
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+        >
+          <Save className="w-4 h-4" />
+          <span>{saving ? 'Enregistrement...' : 'Publier les modifications'}</span>
+        </button>
+      </div>
+
       <MediaPickerModal
         open={Boolean(pickerTarget)}
         media={media}
         defaultFolder="site"
         onMediaAdded={onMediaAdded}
         onSelect={(url) => {
-          if (pickerTarget === 'hero') {
-            setDraft({ ...draft, hero: { ...draft.hero, image: url } });
-          } else if (pickerTarget === 'master') {
-            setDraft({ ...draft, master: { ...draft.master, photo: url } });
-          } else if (pickerTarget === 'about') {
-            setDraft({ ...draft, aboutPage: { ...draft.aboutPage, image: url } });
-          }
+          const target = pickerTarget;
           setPickerTarget(null);
+          if (!target) return;
+          let nextDraft: SiteContent = draft;
+          let msg = 'Image enregistrée et publiée.';
+          if (target === 'hero') {
+            nextDraft = { ...draft, hero: { ...draft.hero, image: url } };
+            msg = 'Image d’accueil enregistrée et publiée.';
+          } else if (target === 'master') {
+            nextDraft = { ...draft, master: { ...draft.master, photo: url } };
+            msg = 'Portrait du Maître enregistré et publié.';
+          } else if (target === 'about') {
+            nextDraft = { ...draft, aboutPage: { ...draft.aboutPage, image: url } };
+            msg = 'Image À propos enregistrée et publiée.';
+          } else if (target === 'announcement') {
+            nextDraft = {
+              ...draft,
+              welcomeAnnouncement: { ...announcementDraft, image: url },
+            };
+            msg = 'Image d’annonce enregistrée et publiée.';
+          }
+          setDraft(nextDraft);
+          void persistSiteContent(nextDraft, msg);
         }}
         onClose={() => setPickerTarget(null)}
+      />
+
+      <WelcomeAnnouncementModal
+        open={previewAnnouncementOpen}
+        announcement={announcementDraft}
+        siteName="DIVIN HORUS"
+        onClose={() => setPreviewAnnouncementOpen(false)}
+        onNavigate={() => setPreviewAnnouncementOpen(false)}
       />
     </form>
   );

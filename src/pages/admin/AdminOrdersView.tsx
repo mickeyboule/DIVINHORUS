@@ -1,27 +1,45 @@
-import { Search, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { FileText, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { SafeImage } from '../../components/SafeImage';
+import { InvoiceModal } from '../../components/admin/InvoiceModal';
 import { adminApi } from '../../lib/api';
+import { formatAmountWithCurrency, getCurrencyOptionByCode } from '../../lib/currency';
 import { formatDateTimeFr, formatPrice, getOrderStatusStyle } from '../../lib/format';
-import type { Order, OrderStatus } from '../../types/cms';
+import { getCountryDisplayName } from '../../lib/shipping';
+import type { MediaItem, Order, OrderStatus, SiteSettings } from '../../types/cms';
 
 interface AdminOrdersViewProps {
   orders: Order[];
   currencySymbol: string;
+  settings: SiteSettings;
+  media: MediaItem[];
   selectedOrderId: string | null;
   onSelectOrder: (id: string | null) => void;
   onOrderUpdated: (order: Order) => void;
+  onMediaAdded: (item: MediaItem) => void;
+  onSettingsChanged?: (settings: SiteSettings) => void;
   onNotify: (type: 'success' | 'error', message: string) => void;
 }
 
-const ALL_STATUSES: OrderStatus[] = ['Nouvelle', 'En cours', 'Confirmée', 'Terminée', 'Annulée'];
+const ALL_STATUSES: OrderStatus[] = [
+  'Nouvelle',
+  'En cours',
+  'Confirmée',
+  'En expédition',
+  'Terminée',
+  'Annulée',
+];
 
 export function AdminOrdersView({
   orders,
   currencySymbol,
+  settings,
+  media,
   selectedOrderId,
   onSelectOrder,
   onOrderUpdated,
+  onMediaAdded,
+  onSettingsChanged,
   onNotify,
 }: AdminOrdersViewProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all');
@@ -33,6 +51,15 @@ export function AdminOrdersView({
   const [statusNote, setStatusNote] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [invoiceOrderTarget, setInvoiceOrderTarget] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setPendingStatus(selectedOrder.status);
+      setAdminNotes(selectedOrder.adminNotes);
+      setStatusNote('');
+    }
+  }, [selectedOrder?.id]);
 
   const openOrder = (order: Order) => {
     setPendingStatus(order.status);
@@ -194,13 +221,30 @@ export function AdminOrdersView({
                       {formatPrice(order.indicativeTotal, currencySymbol)}
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded border text-[11px] font-medium ${st.bg} ${st.text} ${st.border}`}
-                      >
-                        {st.label}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded border text-[11px] font-medium ${st.bg} ${st.text} ${st.border}`}
+                        >
+                          {st.label}
+                        </span>
+                        {order.invoice?.status === 'Envoyée' && (
+                          <span className="inline-block px-1.5 py-0.5 rounded border border-[#2A4036]/30 bg-[#2A4036]/8 text-[#2A4036] text-[10px] font-medium">
+                            Facturée
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInvoiceOrderTarget(order);
+                        }}
+                        className="text-xs font-semibold text-[#5C5A55] hover:text-[#141413] mr-3"
+                      >
+                        Facture
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -269,6 +313,14 @@ export function AdminOrdersView({
                     <span className="text-[#141413]">{selectedOrder.customerEmail}</span>
                   </p>
                 )}
+                {selectedOrder.customerCountry && (
+                  <p>
+                    <span className="text-[#6B6860]">Pays de livraison :</span>{' '}
+                    <span className="text-[#141413]">
+                      {getCountryDisplayName(selectedOrder.customerCountry)} ({selectedOrder.customerCountry})
+                    </span>
+                  </p>
+                )}
                 <p>
                   <span className="text-[#6B6860]">Adresse / Zone :</span>{' '}
                   <span className="text-[#141413]">{selectedOrder.deliveryAddress}</span>
@@ -307,12 +359,53 @@ export function AdminOrdersView({
                       </span>
                     </div>
                   ))}
+                  {typeof selectedOrder.shippingFee === 'number' && (
+                    <>
+                      <div className="px-3 py-2 bg-[#FAFAFA] flex items-center justify-between text-xs text-[#5C5A55]">
+                        <span>Sous-total produits</span>
+                        <span className="font-mono tabular-nums text-[#141413]">
+                          {formatPrice(
+                            selectedOrder.subtotal ??
+                              Math.max(0, selectedOrder.indicativeTotal - selectedOrder.shippingFee),
+                            currencySymbol,
+                          )}
+                        </span>
+                      </div>
+                      <div className="px-3 py-2 bg-[#FAFAFA] flex items-center justify-between text-xs text-[#5C5A55]">
+                        <span>
+                          Livraison ({getCountryDisplayName(selectedOrder.customerCountry)})
+                        </span>
+                        <span className="font-mono tabular-nums text-[#141413]">
+                          {selectedOrder.shippingFee === 0
+                            ? 'Offerte'
+                            : formatPrice(selectedOrder.shippingFee, currencySymbol)}
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div className="p-3 bg-[#FAFAFA] flex items-center justify-between text-xs font-semibold">
-                    <span>Montant indicatif total</span>
+                    <span>Somme totale</span>
                     <span className="font-mono tabular-nums text-[#141413]">
                       {formatPrice(selectedOrder.indicativeTotal, currencySymbol)}
                     </span>
                   </div>
+                  {typeof selectedOrder.displayTotal === 'number' &&
+                    selectedOrder.displayCurrencySymbol &&
+                    selectedOrder.displayCurrencySymbol !== currencySymbol && (
+                      <div className="px-3 py-2 bg-[#FAFAFA] flex items-center justify-between text-[11px] text-[#5C5A55]">
+                        <span>Montant affiché au client ({selectedOrder.displayCurrencyCode || ''})</span>
+                        <span className="font-mono tabular-nums text-[#141413]">
+                          {formatAmountWithCurrency(
+                            selectedOrder.displayTotal,
+                            selectedOrder.displayCurrencySymbol,
+                            getCurrencyOptionByCode(
+                              selectedOrder.displayCurrencyCode,
+                              selectedOrder.displayCurrencySymbol,
+                            ).decimals,
+                          )}
+                        </span>
+                      </div>
+                    )}
                 </div>
               </div>
 
@@ -370,6 +463,73 @@ export function AdminOrdersView({
                 </button>
               </div>
 
+              {/* Invoice & Payment Method Card */}
+              <div className="bg-[#FAF9F6] border border-[#2A4036]/25 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#2A4036]" />
+                    <h4 className="text-xs font-semibold text-[#141413]">
+                      Facture &amp; Moyen de paiement
+                    </h4>
+                  </div>
+                  {selectedOrder.invoice && (
+                    <span
+                      className={`px-2 py-0.5 rounded border text-[10px] font-semibold ${
+                        selectedOrder.invoice.status === 'Envoyée'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {selectedOrder.invoice.status === 'Envoyée'
+                        ? `Envoyée (${selectedOrder.invoice.paymentStatus})`
+                        : 'Brouillon'}
+                    </span>
+                  )}
+                </div>
+
+                {selectedOrder.invoice ? (
+                  <div className="text-xs text-[#5C5A55] space-y-1">
+                    <p>
+                      <strong className="text-[#141413] font-mono">
+                        {selectedOrder.invoice.invoiceNumber}
+                      </strong>{' '}
+                      · Total :{' '}
+                      <strong className="text-[#141413] font-mono tabular-nums">
+                        {formatPrice(
+                          selectedOrder.invoice.total,
+                          selectedOrder.invoice.currencySymbol,
+                        )}
+                      </strong>
+                    </p>
+                    <p>Moyen de paiement : {selectedOrder.invoice.paymentMethod}</p>
+                    {selectedOrder.invoice.sentAt && (
+                      <p className="text-[11px] text-[#6B6860] font-mono tabular-nums">
+                        Transmise le {formatDateTimeFr(selectedOrder.invoice.sentAt)}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#5C5A55]">
+                    {selectedOrder.status === 'Confirmée'
+                      ? 'La commande est confirmée : créez, personnalisez et envoyez la facture avec votre signature et le moyen de paiement au client.'
+                      : 'Préparez une facture personnalisée avec le moyen de paiement et votre signature pour le client.'}
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setInvoiceOrderTarget(selectedOrder)}
+                  className="w-full py-2.5 px-4 bg-[#141413] hover:bg-[#2A4036] text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>
+                    {selectedOrder.invoice
+                      ? 'Modifier / Envoyer la facture'
+                      : 'Créer & Envoyer la facture'}
+                  </span>
+                </button>
+              </div>
+
               {/* Chronological History */}
               <div>
                 <h4 className="text-xs font-semibold text-[#141413] mb-3">
@@ -397,6 +557,19 @@ export function AdminOrdersView({
           </div>
         </div>
       )}
+
+      <InvoiceModal
+        order={invoiceOrderTarget}
+        settings={settings}
+        media={media}
+        onMediaAdded={onMediaAdded}
+        onSaved={(updatedOrder, updatedSettings) => {
+          onOrderUpdated(updatedOrder);
+          if (updatedSettings) onSettingsChanged?.(updatedSettings);
+        }}
+        onNotify={onNotify}
+        onClose={() => setInvoiceOrderTarget(null)}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import {
+  Cloud,
+  CloudOff,
   ExternalLink,
   FileText,
   FolderTree,
@@ -17,6 +19,10 @@ import {
   X,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
+import { useFirebase } from '../../contexts/FirebaseContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { authApi } from '../../lib/api';
 import type { AdminUserPublic } from '../../types/cms';
 
 export type AdminSection =
@@ -42,23 +48,9 @@ interface AdminLayoutProps {
   unreadMessagesCount: number;
   onLogout: () => void;
   onViewPublicSite: () => void;
+  onFirebaseConnected?: () => void;
   children: ReactNode;
 }
-
-const SECTION_LABELS: Record<AdminSection, string> = {
-  dashboard: 'Tableau de bord',
-  orders: 'Commandes',
-  products: 'Produits',
-  categories: 'Catégories',
-  customers: 'Clients',
-  articles: 'Communauté · Articles',
-  videos: 'Vidéos YouTube',
-  testimonials: 'Témoignages',
-  media: 'Bibliothèque média',
-  'site-content': 'Contenu du site',
-  messages: 'Messages de contact',
-  settings: 'Paramètres',
-};
 
 export function AdminLayout({
   activeSection,
@@ -69,44 +61,79 @@ export function AdminLayout({
   unreadMessagesCount,
   onLogout,
   onViewPublicSite,
+  onFirebaseConnected,
   children,
 }: AdminLayoutProps) {
+  const { t } = useLanguage();
+  const { authReady, isFirebaseAdmin } = useFirebase();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [connectingFirebase, setConnectingFirebase] = useState(false);
+  const [firebaseBannerError, setFirebaseBannerError] = useState('');
+
+  const handleConnectFirebase = async () => {
+    setFirebaseBannerError('');
+    setConnectingFirebase(true);
+    try {
+      await authApi.loginWithGoogle();
+      onFirebaseConnected?.();
+    } catch (err) {
+      setFirebaseBannerError(
+        err instanceof Error ? err.message : 'Impossible de connecter Firebase.',
+      );
+    } finally {
+      setConnectingFirebase(false);
+    }
+  };
+
+  const sectionLabels: Record<AdminSection, string> = {
+    dashboard: t('admin.secDashboard'),
+    orders: t('admin.secOrders'),
+    products: t('admin.secProducts'),
+    categories: t('admin.secCategories'),
+    customers: t('admin.secCustomers'),
+    articles: t('admin.secArticlesBreadcrumb'),
+    videos: t('admin.secVideosBreadcrumb'),
+    testimonials: t('admin.secTestimonials'),
+    media: t('admin.secMediaBreadcrumb'),
+    'site-content': t('admin.secSiteContent'),
+    messages: t('admin.secMessagesBreadcrumb'),
+    settings: t('admin.secSettings'),
+  };
 
   const navGroups: Array<{
     title: string;
     items: Array<{ id: AdminSection; label: string; icon: typeof LayoutDashboard; badge?: number }>;
   }> = [
     {
-      title: 'Pilotage',
+      title: t('admin.groupPilotage'),
       items: [
-        { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-        { id: 'orders', label: 'Commandes', icon: ShoppingBag, badge: newOrdersCount },
-        { id: 'customers', label: 'Clients', icon: Users },
+        { id: 'dashboard', label: t('admin.secDashboard'), icon: LayoutDashboard },
+        { id: 'orders', label: t('admin.secOrders'), icon: ShoppingBag, badge: newOrdersCount },
+        { id: 'customers', label: t('admin.secCustomers'), icon: Users },
       ],
     },
     {
-      title: 'Catalogue',
+      title: t('admin.groupCatalogue'),
       items: [
-        { id: 'products', label: 'Produits', icon: Package },
-        { id: 'categories', label: 'Catégories', icon: FolderTree },
+        { id: 'products', label: t('admin.secProducts'), icon: Package },
+        { id: 'categories', label: t('admin.secCategories'), icon: FolderTree },
       ],
     },
     {
-      title: 'Communauté & CMS',
+      title: t('admin.groupCms'),
       items: [
-        { id: 'articles', label: 'Articles', icon: FileText },
-        { id: 'videos', label: 'Vidéos', icon: Video },
-        { id: 'testimonials', label: 'Témoignages', icon: MessageSquareQuote },
-        { id: 'media', label: 'Médias', icon: Image },
-        { id: 'site-content', label: 'Contenu du site', icon: LayoutTemplate },
+        { id: 'articles', label: t('admin.secArticles'), icon: FileText },
+        { id: 'videos', label: t('admin.secVideos'), icon: Video },
+        { id: 'testimonials', label: t('admin.secTestimonials'), icon: MessageSquareQuote },
+        { id: 'media', label: t('admin.secMedia'), icon: Image },
+        { id: 'site-content', label: t('admin.secSiteContent'), icon: LayoutTemplate },
       ],
     },
     {
-      title: 'Relation & Configuration',
+      title: t('admin.groupConfig'),
       items: [
-        { id: 'messages', label: 'Messages', icon: Mail, badge: unreadMessagesCount },
-        { id: 'settings', label: 'Paramètres', icon: Settings },
+        { id: 'messages', label: t('admin.secMessages'), icon: Mail, badge: unreadMessagesCount },
+        { id: 'settings', label: t('admin.secSettings'), icon: Settings },
       ],
     },
   ];
@@ -121,19 +148,19 @@ export function AdminLayout({
       <div className="h-16 px-5 border-b border-white/10 flex items-center justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white truncate">{siteName}</p>
-          <p className="text-[11px] text-stone-400 truncate">Back-Office Administrateur</p>
+          <p className="text-[11px] text-stone-400 truncate">{t('admin.backOfficeSubtitle')}</p>
         </div>
         <button
           type="button"
           onClick={() => setSidebarOpen(false)}
-          aria-label="Fermer le menu"
+          aria-label={t('admin.closeMenu')}
           className="lg:hidden text-stone-400 hover:text-white"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6" aria-label="Menu administration">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6" aria-label={t('admin.navAria')}>
         {navGroups.map((group) => (
           <div key={group.title}>
             <p className="px-3 mb-1.5 text-[11px] font-medium text-stone-400">{group.title}</p>
@@ -170,13 +197,17 @@ export function AdminLayout({
       </nav>
 
       <div className="p-3 border-t border-white/10 space-y-1.5">
+        <div className="px-3 py-1.5 flex items-center justify-between">
+          <span className="text-[11px] text-stone-400">{t('nav.languageLabel')}</span>
+          <LanguageSwitcher variant="dark" />
+        </div>
         <button
           type="button"
           onClick={onViewPublicSite}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-stone-300 hover:bg-white/8 hover:text-white transition-colors"
         >
           <ExternalLink className="w-4 h-4 shrink-0" />
-          <span>Voir le site public</span>
+          <span>{t('admin.viewPublicSite')}</span>
         </button>
         <button
           type="button"
@@ -184,7 +215,7 @@ export function AdminLayout({
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-stone-400 hover:bg-red-950/50 hover:text-red-200 transition-colors"
         >
           <LogOut className="w-4 h-4 shrink-0" />
-          <span>Déconnexion</span>
+          <span>{t('admin.logout')}</span>
         </button>
       </div>
     </div>
@@ -212,28 +243,29 @@ export function AdminLayout({
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              aria-label="Ouvrir le menu administration"
+              aria-label={t('admin.openMenu')}
               className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-[#3F3E3A] hover:bg-[#F6F6F7]"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0">
-              <span className="text-[#6B6860] hidden sm:inline">Administration</span>
+              <span className="text-[#6B6860] hidden sm:inline">{t('admin.breadcrumb')}</span>
               <span className="text-[#B8B4AC] hidden sm:inline">/</span>
               <h1 className="font-semibold text-[#141413] truncate">
-                {SECTION_LABELS[activeSection]}
+                {sectionLabels[activeSection]}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            <LanguageSwitcher variant="compact" />
             <button
               type="button"
               onClick={onViewPublicSite}
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#3F3E3A] bg-[#F6F6F7] border border-[#E3E3E6] rounded-lg hover:bg-[#EFECE6]"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>Site public</span>
+              <span>{t('admin.publicSiteShort')}</span>
             </button>
             <div className="text-right hidden sm:block">
               <p className="text-xs font-semibold text-[#141413]">{adminUser.name}</p>
@@ -242,7 +274,39 @@ export function AdminLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-8 max-w-[1400px] w-full mx-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-8 max-w-[1400px] w-full mx-auto">
+          {authReady && !isFirebaseAdmin && (
+            <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <CloudOff className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-950 space-y-0.5">
+                  <p className="font-semibold">
+                    Synchronisation Firebase (site-divinhorus) en attente
+                  </p>
+                  <p className="text-amber-800">
+                    Connectez votre compte Google administrateur (bisnessweb24@gmail.com) pour
+                    enregistrer durablement toutes vos fiches et images dans Firebase Firestore.
+                  </p>
+                  {firebaseBannerError && (
+                    <p className="text-red-700 font-medium pt-1">{firebaseBannerError}</p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleConnectFirebase}
+                disabled={connectingFirebase}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold shrink-0 transition-colors"
+              >
+                <Cloud className="w-4 h-4" />
+                <span>
+                  {connectingFirebase ? 'Connexion...' : 'Connecter Firebase (Google)'}
+                </span>
+              </button>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

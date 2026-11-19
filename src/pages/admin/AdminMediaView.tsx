@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { SafeImage } from '../../components/SafeImage';
 import { adminApi } from '../../lib/api';
+import { prepareImageDataUrl } from '../../lib/imageUpload';
 import type { MediaFolder, MediaItem } from '../../types/cms';
 
 interface AdminMediaViewProps {
@@ -32,12 +33,7 @@ export function AdminMediaView({
     if (!file) return;
     setUploading(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('Lecture impossible'));
-        reader.readAsDataURL(file);
-      });
+      const dataUrl = await prepareImageDataUrl(file);
       const res = await adminApi.uploadMedia({
         name: file.name.replace(/\.[^.]+$/, ''),
         folder: uploadFolder,

@@ -1,6 +1,7 @@
 import { Check, Upload, X } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 import { adminApi } from '../../lib/api';
+import { prepareImageDataUrl } from '../../lib/imageUpload';
 import type { MediaFolder, MediaItem } from '../../types/cms';
 import { SafeImage } from '../SafeImage';
 
@@ -36,12 +37,7 @@ export function MediaPickerModal({
     setError('');
     setUploading(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('Lecture impossible'));
-        reader.readAsDataURL(file);
-      });
+      const dataUrl = await prepareImageDataUrl(file);
       const res = await adminApi.uploadMedia({
         name: file.name.replace(/\.[^.]+$/, ''),
         folder: defaultFolder,

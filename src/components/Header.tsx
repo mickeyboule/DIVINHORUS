@@ -1,6 +1,8 @@
 import { Menu, ShoppingBag, User, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { SiteSettings, VisitorMemberPublic } from '../types/cms';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export type PublicRoute =
   | '/'
@@ -21,14 +23,6 @@ interface HeaderProps {
   visitorUser: VisitorMemberPublic | null;
 }
 
-const NAV_ITEMS = [
-  { label: 'Accueil', path: '/' },
-  { label: 'Boutique', path: '/boutique' },
-  { label: 'Communauté', path: '/communaute' },
-  { label: 'À propos', path: '/a-propos' },
-  { label: 'Contact', path: '/contact' },
-];
-
 export function Header({
   currentPath,
   onNavigate,
@@ -38,6 +32,20 @@ export function Header({
   visitorUser,
 }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [settings.general.logoUrl]);
+
+  const navItems = [
+    { label: t('nav.home'), path: '/' },
+    { label: t('nav.shop'), path: '/boutique' },
+    { label: t('nav.community'), path: '/communaute' },
+    { label: t('nav.about'), path: '/a-propos' },
+    { label: t('nav.contact'), path: '/contact' },
+  ];
 
   const isActive = (path: string) => {
     if (path === '/') return currentPath === '/';
@@ -49,21 +57,27 @@ export function Header({
     onNavigate(path);
   };
 
+  const basketAriaLabel =
+    basketCount > 1
+      ? t('header.openBasketAriaPlural', { count: basketCount })
+      : t('header.openBasketAriaSingle', { count: basketCount });
+
   return (
     <header className="sticky top-0 z-40 bg-[#FAF9F6]/95 backdrop-blur-sm border-b border-[#E6E4DF]">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-8">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-6">
         {/* Zone 1: Single-line Brand Title */}
         <button
           type="button"
           onClick={() => handleNav('/')}
           className="flex items-center gap-2.5 text-left whitespace-nowrap shrink-0 focus-visible:rounded"
         >
-          {settings.general.logoUrl ? (
+          {settings.general.logoUrl && !logoFailed ? (
             <img
               src={settings.general.logoUrl}
               alt={settings.general.siteName}
-              className="h-7 w-auto object-contain"
+              className="h-8 sm:h-9 w-auto max-w-[140px] object-contain"
               referrerPolicy="no-referrer"
+              onError={() => setLogoFailed(true)}
             />
           ) : null}
           <span className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-[#141413]">
@@ -72,8 +86,8 @@ export function Header({
         </button>
 
         {/* Zone 2: 5 concise single-line text links */}
-        <nav className="hidden md:flex items-center gap-7" aria-label="Navigation principale">
-          {NAV_ITEMS.map((item) => {
+        <nav className="hidden md:flex items-center gap-7" aria-label={t('nav.mainNav')}>
+          {navItems.map((item) => {
             const active = isActive(item.path);
             return (
               <button
@@ -96,8 +110,8 @@ export function Header({
           })}
         </nav>
 
-        {/* Zone 3: Visitor Account, Basket Icon & Primary Action */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Visitor Account, Basket Icon & Language Switcher */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => handleNav('/mon-compte')}
@@ -108,13 +122,13 @@ export function Header({
             }`}
           >
             <User className="w-3.5 h-3.5" strokeWidth={1.75} />
-            <span>{visitorUser ? visitorUser.firstName : 'Connexion'}</span>
+            <span>{visitorUser ? visitorUser.firstName : t('nav.login')}</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenOrderDrawer}
-            aria-label={`Ouvrir ma demande de commande (${basketCount} article${basketCount > 1 ? 's' : ''})`}
+            aria-label={basketAriaLabel}
             className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg text-[#141413] hover:bg-[#EFECE6] transition-colors"
           >
             <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -125,18 +139,12 @@ export function Header({
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleNav('/boutique')}
-            className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold tracking-wide text-white bg-[#2A4036] rounded-lg hover:bg-[#20322A] transition-colors whitespace-nowrap shrink-0"
-          >
-            Commander
-          </button>
+          <LanguageSwitcher variant="compact" />
 
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={mobileOpen}
             className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-[#141413] hover:bg-[#EFECE6] transition-colors"
           >
@@ -148,8 +156,8 @@ export function Header({
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="md:hidden border-t border-[#E6E4DF] bg-[#FAF9F6] px-4 py-4">
-          <nav className="flex flex-col gap-1" aria-label="Navigation mobile">
-            {NAV_ITEMS.map((item) => {
+          <nav className="flex flex-col gap-1" aria-label={t('nav.mobileNav')}>
+            {navItems.map((item) => {
               const active = isActive(item.path);
               return (
                 <button
@@ -173,7 +181,7 @@ export function Header({
                   : 'text-[#5C5A55] hover:bg-[#F2F0EC]'
               }`}
             >
-              Suivre ma commande
+              {t('nav.trackOrder')}
             </button>
             <button
               type="button"
@@ -184,8 +192,14 @@ export function Header({
                   : 'text-[#5C5A55] hover:bg-[#F2F0EC]'
               }`}
             >
-              {visitorUser ? `Mon compte (${visitorUser.firstName})` : 'Connexion / Mon compte'}
+              {visitorUser
+                ? t('nav.myAccountNamed', { name: visitorUser.firstName })
+                : t('nav.loginOrAccount')}
             </button>
+            <div className="pt-2 mt-1 border-t border-[#E6E4DF] flex items-center justify-between px-3 py-1.5">
+              <span className="text-xs font-medium text-[#5C5A55]">{t('nav.languageLabel')}</span>
+              <LanguageSwitcher variant="full" />
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -194,7 +208,7 @@ export function Header({
               }}
               className="mt-2 w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#2A4036] rounded-lg hover:bg-[#20322A] transition-colors"
             >
-              Ma demande de commande ({basketCount})
+              {t('header.mobileOrderCta', { count: basketCount })}
             </button>
           </nav>
         </div>

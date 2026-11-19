@@ -1,4 +1,10 @@
-export type OrderStatus = 'Nouvelle' | 'En cours' | 'Confirmée' | 'Terminée' | 'Annulée';
+export type OrderStatus =
+  | 'Nouvelle'
+  | 'En cours'
+  | 'Confirmée'
+  | 'En expédition'
+  | 'Terminée'
+  | 'Annulée';
 
 export type AvailabilityStatus = 'En stock' | 'Sur commande' | 'Édition limitée' | 'Rupture';
 
@@ -54,6 +60,52 @@ export interface OrderHistoryEntry {
   actor: string;
 }
 
+export type InvoiceSignatureType = 'none' | 'image' | 'drawn' | 'text';
+
+export interface InvoiceSignature {
+  type: InvoiceSignatureType;
+  imageUrl?: string;
+  signerName: string;
+  signerRole: string;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  description: string;
+  reference?: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type InvoicePaymentStatus = 'En attente de paiement' | 'Payée' | 'Partiellement payée';
+
+export interface OrderInvoice {
+  invoiceNumber: string;
+  status: 'Brouillon' | 'Envoyée';
+  paymentStatus: InvoicePaymentStatus;
+  issuedAt: string;
+  dueDate: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerCountry?: string;
+  currencyCode: string;
+  currencySymbol: string;
+  items: InvoiceLineItem[];
+  shippingFee: number;
+  discount: number;
+  subtotal: number;
+  total: number;
+  paymentMethod: string;
+  paymentDetails: string;
+  notes: string;
+  signature: InvoiceSignature;
+  sentAt: string | null;
+  sentBy?: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -61,6 +113,7 @@ export interface Order {
   updatedAt: string;
   status: OrderStatus;
   customerId: string;
+  visitorId?: string;
   customerFirstName: string;
   customerLastName: string;
   customerPhone: string;
@@ -68,8 +121,26 @@ export interface Order {
   deliveryAddress: string;
   message: string;
   items: OrderItem[];
+  subtotal?: number;
+  shippingFee?: number;
   indicativeTotal: number;
+  customerCountry?: string;
+  displayCurrencyCode?: string;
+  displayCurrencySymbol?: string;
+  displayTotal?: number;
   adminNotes: string;
+  history: OrderHistoryEntry[];
+  invoice?: OrderInvoice;
+}
+
+export interface PublicOrderTrackingInfo {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  status: OrderStatus;
+  customerFirstName: string;
+  customerLastName: string;
   history: OrderHistoryEntry[];
 }
 
@@ -79,6 +150,7 @@ export interface Customer {
   lastName: string;
   phone: string;
   email: string;
+  country?: string;
   address: string;
   notes: string;
   createdAt: string;
@@ -130,6 +202,7 @@ export interface VisitorMemberPublic {
   email: string;
   phone: string;
   address: string;
+  country?: string;
   createdAt: string;
 }
 
@@ -198,6 +271,16 @@ export interface AboutCommitment {
   description: string;
 }
 
+export type FaqCategory = 'Enseignements' | 'Boutique' | 'Général';
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  visible: boolean;
+}
+
 export interface AboutPageContent {
   heroTitle: string;
   heroSubtitle: string;
@@ -207,6 +290,9 @@ export interface AboutPageContent {
   lineageBody: string;
   image: string;
   commitments: AboutCommitment[];
+  faqTitle?: string;
+  faqSubtitle?: string;
+  faqs?: FaqItem[];
 }
 
 export interface ContactPageContent {
@@ -216,12 +302,32 @@ export interface ContactPageContent {
   consultationNote: string;
 }
 
+export type WelcomeAnnouncementType = 'welcome' | 'info' | 'important';
+
+export interface WelcomeAnnouncement {
+  enabled: boolean;
+  type: WelcomeAnnouncementType;
+  kicker?: string;
+  kickerEn?: string;
+  title: string;
+  titleEn?: string;
+  message: string;
+  messageEn?: string;
+  buttonLabel?: string;
+  buttonLabelEn?: string;
+  buttonTarget?: string;
+  image?: string;
+  displayFrequency: 'every_visit' | 'once_per_update';
+  version: string;
+}
+
 export interface SiteContent {
   hero: HeroContent;
   master: MasterSectionContent;
   homeSections: HomeSectionsConfig;
   aboutPage: AboutPageContent;
   contactPage: ContactPageContent;
+  welcomeAnnouncement?: WelcomeAnnouncement;
 }
 
 export interface SiteSettings {
@@ -230,7 +336,9 @@ export interface SiteSettings {
     tagline: string;
     logoUrl: string;
     faviconUrl: string;
+    currencyCode?: string;
     currencySymbol: string;
+    autoCurrencyByCountry?: boolean;
     orderNotificationEmail: string;
   };
   contact: {
@@ -242,16 +350,35 @@ export interface SiteSettings {
   };
   socials: {
     youtube: string;
-    instagram: string;
+    tiktok: string;
     facebook: string;
     telegram: string;
+  };
+  youtubeSync?: {
+    channelUrl: string;
+    channelId: string;
+    autoSync: boolean;
+    lastSyncAt: string | null;
   };
   orderSettings: {
     confirmationMessage: string;
     deliveryZones: string;
     requireEmail: boolean;
     allowMultiProductCart: boolean;
+    defaultShippingFee?: number;
+    shippingRatesByCountry?: ShippingRateRule[];
+    defaultPaymentMethod?: string;
+    defaultPaymentDetails?: string;
+    defaultInvoiceNotes?: string;
+    defaultInvoiceSignature?: InvoiceSignature;
+    teamWhatsappPhone?: string;
   };
+}
+
+export interface ShippingRateRule {
+  countryCode: string;
+  countryName: string;
+  fee: number;
 }
 
 export interface AdminUserPublic {
@@ -283,6 +410,12 @@ export interface ContactMessage {
   createdAt: string;
 }
 
+export interface GeoCurrencyInfo {
+  countryCode: string;
+  source: 'header' | 'ip' | 'accept-language' | 'default';
+  rates: Record<string, number>;
+}
+
 export interface PublicBootstrapData {
   categories: Category[];
   products: Product[];
@@ -292,6 +425,7 @@ export interface PublicBootstrapData {
   testimonials: Testimonial[];
   siteContent: SiteContent;
   settings: SiteSettings;
+  geo?: GeoCurrencyInfo;
 }
 
 export interface AdminBootstrapData {

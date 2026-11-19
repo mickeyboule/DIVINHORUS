@@ -1,0 +1,581 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------- GLOBAL HELPERS ----------------
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrapAdmin() {
+      return isVerified() && (
+        request.auth.token.email == 'bisnessweb24@gmail.com' ||
+        request.auth.token.email == 'coeurdouce2401@gmail.com'
+      );
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        isVerified() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOwner(uid) {
+      return isVerified() && request.auth.uid == uid;
+    }
+
+    // ---------------- VALIDATION BLUEPRINTS ----------------
+    function isValidCategory(data, catId) {
+      return data.keys().hasAll(['id', 'name', 'slug', 'description', 'image', 'order', 'visible', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'slug', 'description', 'image', 'order', 'visible', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == catId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 140
+        && data.description is string && data.description.size() <= 1000
+        && data.image is string && data.image.size() <= 350000
+        && data.order is number && data.order >= 0 && data.order <= 10000
+        && data.visible is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data, prodId) {
+      return data.keys().hasAll(['id', 'reference', 'name', 'slug', 'price', 'categoryId', 'description', 'additionalInfo', 'images', 'availability', 'stockCount', 'featured', 'active', 'orderCount', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'reference', 'name', 'slug', 'price', 'categoryId', 'description', 'additionalInfo', 'images', 'availability', 'stockCount', 'featured', 'active', 'orderCount', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == prodId && isValidId(data.id)
+        && data.reference is string && data.reference.size() >= 1 && data.reference.size() <= 80
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 180
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 200
+        && data.price is number && data.price >= 0 && data.price <= 10000000
+        && data.categoryId is string && isValidId(data.categoryId)
+        && data.description is string && data.description.size() <= 8000
+        && data.additionalInfo is string && data.additionalInfo.size() <= 4000
+        && data.images is list && data.images.size() <= 8
+        && (data.images.size() == 0 || (data.images[0] is string && data.images[0].size() <= 350000))
+        && data.availability in ['En stock', 'Sur commande', 'Édition limitée', 'Rupture']
+        && data.stockCount is number && data.stockCount >= 0 && data.stockCount <= 1000000
+        && data.featured is bool
+        && data.active is bool
+        && data.orderCount is number && data.orderCount >= 0 && data.orderCount <= 10000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidArticleCategory(data, catId) {
+      return data.keys().hasAll(['id', 'name', 'slug', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'slug', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == catId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 140
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidArticle(data, artId) {
+      return data.keys().hasAll(['id', 'title', 'slug', 'excerpt', 'content', 'image', 'author', 'categoryId', 'status', 'featured', 'likesCount', 'likedByKeys', 'publishedAt', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'title', 'slug', 'excerpt', 'content', 'image', 'author', 'categoryId', 'status', 'featured', 'likesCount', 'likedByKeys', 'publishedAt', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == artId && isValidId(data.id)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 220
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 240
+        && data.excerpt is string && data.excerpt.size() <= 1200
+        && data.content is string && data.content.size() <= 50000
+        && data.image is string && data.image.size() <= 350000
+        && data.author is string && data.author.size() <= 140
+        && data.categoryId is string && isValidId(data.categoryId)
+        && data.status in ['Publié', 'Brouillon']
+        && data.featured is bool
+        && data.likesCount is number && data.likesCount >= 0 && data.likesCount <= 10000000
+        && data.likedByKeys is list && data.likedByKeys.size() <= 500
+        && (data.likedByKeys.size() == 0 || (data.likedByKeys[0] is string && data.likedByKeys[0].size() <= 128))
+        && data.publishedAt is string && data.publishedAt.size() <= 64
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidVideo(data, vidId) {
+      return data.keys().hasAll(['id', 'title', 'youtubeUrl', 'youtubeId', 'thumbnail', 'description', 'duration', 'visible', 'featured', 'sortOrder', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'title', 'youtubeUrl', 'youtubeId', 'thumbnail', 'description', 'duration', 'visible', 'featured', 'sortOrder', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == vidId && isValidId(data.id)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 220
+        && data.youtubeUrl is string && data.youtubeUrl.size() >= 1 && data.youtubeUrl.size() <= 500
+        && data.youtubeId is string && data.youtubeId.size() >= 1 && data.youtubeId.size() <= 64
+        && data.thumbnail is string && data.thumbnail.size() <= 350000
+        && data.description is string && data.description.size() <= 4000
+        && data.duration is string && data.duration.size() <= 32
+        && data.visible is bool
+        && data.featured is bool
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTestimonial(data, testId) {
+      return data.keys().hasAll(['id', 'authorName', 'authorLocation', 'rating', 'content', 'status', 'featured', 'visitorId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'authorName', 'authorLocation', 'rating', 'content', 'status', 'featured', 'visitorId', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == testId && isValidId(data.id)
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 120
+        && data.authorLocation is string && data.authorLocation.size() <= 120
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.content is string && data.content.size() >= 1 && data.content.size() <= 3000
+        && data.status in ['Publié', 'En attente', 'Masqué']
+        && data.featured is bool
+        && data.visitorId is string && data.visitorId.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMedia(data, mediaId) {
+      return data.keys().hasAll(['id', 'name', 'url', 'folder', 'sizeLabel', 'uploadedByUid', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'url', 'folder', 'sizeLabel', 'uploadedByUid', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == mediaId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 200
+        && data.url is string && data.url.size() >= 1 && data.url.size() <= 750000
+        && data.folder in ['produits', 'articles', 'categories', 'site']
+        && data.sizeLabel is string && data.sizeLabel.size() <= 64
+        && data.uploadedByUid is string && data.uploadedByUid.size() >= 1 && data.uploadedByUid.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCustomer(data, custId) {
+      return data.keys().hasAll(['id', 'firstName', 'lastName', 'phone', 'email', 'country', 'address', 'notes', 'lastOrderAt', 'orderCount', 'totalIndicative', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'firstName', 'lastName', 'phone', 'email', 'country', 'address', 'notes', 'lastOrderAt', 'orderCount', 'totalIndicative', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == custId && isValidId(data.id)
+        && data.firstName is string && data.firstName.size() >= 1 && data.firstName.size() <= 100
+        && data.lastName is string && data.lastName.size() >= 1 && data.lastName.size() <= 100
+        && data.phone is string && data.phone.size() <= 60
+        && data.email is string && data.email.size() <= 160
+        && data.country is string && data.country.size() <= 80
+        && data.address is string && data.address.size() <= 400
+        && data.notes is string && data.notes.size() <= 4000
+        && data.lastOrderAt is string && data.lastOrderAt.size() <= 64
+        && data.orderCount is number && data.orderCount >= 0 && data.orderCount <= 1000000
+        && data.totalIndicative is number && data.totalIndicative >= 0 && data.totalIndicative <= 100000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data, ordId) {
+      return data.keys().hasAll(['id', 'orderNumber', 'status', 'customerId', 'visitorId', 'customerFirstName', 'customerLastName', 'customerPhone', 'customerEmail', 'customerCountry', 'deliveryAddress', 'message', 'items', 'subtotal', 'shippingFee', 'indicativeTotal', 'displayCurrencyCode', 'displayCurrencySymbol', 'displayTotal', 'adminNotes', 'history', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'orderNumber', 'status', 'customerId', 'visitorId', 'customerFirstName', 'customerLastName', 'customerPhone', 'customerEmail', 'customerCountry', 'deliveryAddress', 'message', 'items', 'subtotal', 'shippingFee', 'indicativeTotal', 'displayCurrencyCode', 'displayCurrencySymbol', 'displayTotal', 'adminNotes', 'history', 'invoice', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == ordId && isValidId(data.id)
+        && data.orderNumber is string && data.orderNumber.size() >= 1 && data.orderNumber.size() <= 40
+        && data.status in ['Nouvelle', 'En cours', 'Confirmée', 'En expédition', 'Terminée', 'Annulée']
+        && data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128
+        && data.visitorId is string && data.visitorId.size() >= 1 && data.visitorId.size() <= 128
+        && data.customerFirstName is string && data.customerFirstName.size() >= 1 && data.customerFirstName.size() <= 100
+        && data.customerLastName is string && data.customerLastName.size() >= 1 && data.customerLastName.size() <= 100
+        && data.customerPhone is string && data.customerPhone.size() >= 1 && data.customerPhone.size() <= 60
+        && data.customerEmail is string && data.customerEmail.size() <= 160
+        && data.customerCountry is string && data.customerCountry.size() <= 80
+        && data.deliveryAddress is string && data.deliveryAddress.size() <= 500
+        && data.message is string && data.message.size() <= 2000
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 50
+        && data.items[0] is map
+        && data.subtotal is number && data.subtotal >= 0 && data.subtotal <= 100000000
+        && data.shippingFee is number && data.shippingFee >= 0 && data.shippingFee <= 1000000
+        && data.indicativeTotal is number && data.indicativeTotal >= 0 && data.indicativeTotal <= 100000000
+        && data.displayCurrencyCode is string && data.displayCurrencyCode.size() <= 16
+        && data.displayCurrencySymbol is string && data.displayCurrencySymbol.size() <= 16
+        && data.displayTotal is number && data.displayTotal >= 0 && data.displayTotal <= 10000000000
+        && data.adminNotes is string && data.adminNotes.size() <= 4000
+        && data.history is list && data.history.size() >= 1 && data.history.size() <= 40
+        && data.history[0] is map
+        && (!('invoice' in data) || data.invoice is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrderTracking(data, orderNum) {
+      return data.keys().hasAll(['orderNumber', 'status', 'customerFirstName', 'customerLastName', 'contactHash', 'history', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['orderNumber', 'status', 'customerFirstName', 'customerLastName', 'contactHash', 'history', 'createdAt', 'updatedAt'])
+        && data.orderNumber is string && data.orderNumber == orderNum && data.orderNumber.size() >= 1 && data.orderNumber.size() <= 40
+        && data.status in ['Nouvelle', 'En cours', 'Confirmée', 'En expédition', 'Terminée', 'Annulée']
+        && data.customerFirstName is string && data.customerFirstName.size() <= 100
+        && data.customerLastName is string && data.customerLastName.size() <= 100
+        && data.contactHash is string && data.contactHash.size() <= 128
+        && data.history is list && data.history.size() >= 1 && data.history.size() <= 40
+        && data.history[0] is map
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidVisitor(data, uid) {
+      return data.keys().hasAll(['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'country', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'country', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == uid && isValidId(data.id)
+        && data.firstName is string && data.firstName.size() >= 1 && data.firstName.size() <= 100
+        && data.lastName is string && data.lastName.size() >= 1 && data.lastName.size() <= 100
+        && data.email is string && data.email.size() >= 1 && data.email.size() <= 160
+        && data.phone is string && data.phone.size() <= 60
+        && data.address is string && data.address.size() <= 400
+        && data.country is string && data.country.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSiteContent(data) {
+      return data.keys().hasAll(['hero', 'master', 'homeSections', 'aboutPage', 'contactPage', 'welcomeAnnouncement', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['hero', 'master', 'homeSections', 'aboutPage', 'contactPage', 'welcomeAnnouncement', 'createdAt', 'updatedAt'])
+        && data.hero is map
+        && data.master is map
+        && data.homeSections is map
+        && data.aboutPage is map
+        && data.contactPage is map
+        && data.welcomeAnnouncement is map
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll(['general', 'contact', 'socials', 'youtubeSync', 'orderSettings', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['general', 'contact', 'socials', 'youtubeSync', 'orderSettings', 'createdAt', 'updatedAt'])
+        && data.general is map
+        && data.contact is map
+        && data.socials is map
+        && data.youtubeSync is map
+        && data.orderSettings is map
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidContactMessage(data, msgId) {
+      return data.keys().hasAll(['id', 'senderUid', 'name', 'email', 'phone', 'subject', 'message', 'read', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'senderUid', 'name', 'email', 'phone', 'subject', 'message', 'read', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == msgId && isValidId(data.id)
+        && data.senderUid is string && data.senderUid.size() >= 1 && data.senderUid.size() <= 128
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 140
+        && data.email is string && data.email.size() >= 1 && data.email.size() <= 160
+        && data.phone is string && data.phone.size() <= 60
+        && data.subject is string && data.subject.size() <= 200
+        && data.message is string && data.message.size() >= 1 && data.message.size() <= 5000
+        && data.read is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminMember(data, admId) {
+      return data.keys().hasAll(['id', 'name', 'email', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'email', 'role', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == admId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.email is string && data.email.size() >= 1 && data.email.size() <= 160
+        && data.role in ['Super Administrateur', 'Éditeur']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidActivity(data, actId) {
+      return data.keys().hasAll(['id', 'actorName', 'action', 'target', 'category', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'actorName', 'action', 'target', 'category', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == actId && isValidId(data.id)
+        && data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 120
+        && data.action is string && data.action.size() >= 1 && data.action.size() <= 200
+        && data.target is string && data.target.size() <= 300
+        && data.category in ['commande', 'produit', 'contenu', 'parametre', 'securite']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // ---------------- CONNECTION PING ----------------
+    match /test/connection {
+      allow get: if true;
+      allow list, create, update, delete: if false;
+    }
+
+    // ---------------- CATALOG ----------------
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId) && (existing().visible == true || isAdmin());
+      allow list: if existing().visible == true || isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(categoryId)
+        && isValidCategory(incoming(), categoryId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(categoryId)
+        && isValidCategory(incoming(), categoryId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'slug', 'description', 'image', 'order', 'visible', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId) && (existing().active == true || isAdmin());
+      allow list: if existing().active == true || isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['reference', 'name', 'slug', 'price', 'categoryId', 'description', 'additionalInfo', 'images', 'availability', 'stockCount', 'featured', 'active', 'orderCount', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(productId);
+    }
+
+    // ---------------- COMMUNITY ----------------
+    match /article_categories/{categoryId} {
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidId(categoryId)
+        && isValidArticleCategory(incoming(), categoryId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(categoryId)
+        && isValidArticleCategory(incoming(), categoryId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'slug', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    match /articles/{articleId} {
+      allow get: if isValidId(articleId) && (existing().status == 'Publié' || isAdmin());
+      allow list: if existing().status == 'Publié' || isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(articleId)
+        && isValidArticle(incoming(), articleId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(articleId)
+        && isValidArticle(incoming(), articleId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'slug', 'excerpt', 'content', 'image', 'author', 'categoryId', 'status', 'featured', 'likesCount', 'likedByKeys', 'publishedAt', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(articleId);
+    }
+
+    match /videos/{videoId} {
+      allow get: if isValidId(videoId) && (existing().visible == true || isAdmin());
+      allow list: if existing().visible == true || isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(videoId)
+        && isValidVideo(incoming(), videoId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(videoId)
+        && isValidVideo(incoming(), videoId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'youtubeUrl', 'youtubeId', 'thumbnail', 'description', 'duration', 'visible', 'featured', 'sortOrder', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(videoId);
+    }
+
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && (
+        existing().status == 'Publié' || isOwner(existing().visitorId) || isAdmin()
+      );
+      allow list: if existing().status == 'Publié'
+        || (isVerified() && existing().visitorId == request.auth.uid)
+        || isBootstrapAdmin();
+      allow create: if isVerified() && isValidId(testimonialId)
+        && isValidTestimonial(incoming(), testimonialId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            incoming().visitorId == request.auth.uid
+            && incoming().status == 'En attente'
+            && incoming().featured == false
+          )
+        );
+      allow update: if isAdmin() && isValidId(testimonialId)
+        && isValidTestimonial(incoming(), testimonialId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['authorName', 'authorLocation', 'rating', 'content', 'status', 'featured', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(testimonialId);
+    }
+
+    // ---------------- MEDIA (IMAGES STORED IN FIREBASE) ----------------
+    match /media/{mediaId} {
+      allow get: if isValidId(mediaId);
+      allow list: if isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(mediaId)
+        && isValidMedia(incoming(), mediaId)
+        && incoming().uploadedByUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(mediaId)
+        && isValidMedia(incoming(), mediaId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'url', 'folder', 'sizeLabel', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(mediaId);
+    }
+
+    // ---------------- CRM CUSTOMERS (PII ISOLATED) ----------------
+    match /customers/{customerId} {
+      allow get: if isValidId(customerId) && isAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(customerId)
+        && isValidCustomer(incoming(), customerId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(customerId)
+        && isValidCustomer(incoming(), customerId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['firstName', 'lastName', 'phone', 'email', 'country', 'address', 'notes', 'lastOrderAt', 'orderCount', 'totalIndicative', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(customerId);
+    }
+
+    // ---------------- ORDERS & PUBLIC TRACKING ----------------
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && (isOwner(existing().visitorId) || isAdmin());
+      allow list: if (isVerified() && existing().visitorId == request.auth.uid) || isBootstrapAdmin();
+      allow create: if isVerified() && isValidId(orderId)
+        && isValidOrder(incoming(), orderId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            incoming().visitorId == request.auth.uid
+            && incoming().status == 'Nouvelle'
+            && incoming().adminNotes == ''
+            && !('invoice' in incoming())
+            && existsAfter(/databases/$(database)/documents/order_tracking/$(incoming().orderNumber))
+          )
+        );
+      allow update: if isAdmin() && isValidId(orderId)
+        && isValidOrder(incoming(), orderId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminNotes', 'history', 'invoice', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(orderId);
+    }
+
+    match /order_tracking/{orderNumber} {
+      allow get: if isValidId(orderNumber);
+      allow list: if false;
+      allow create: if isVerified() && isValidId(orderNumber)
+        && isValidOrderTracking(incoming(), orderNumber)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (isAdmin() || incoming().status == 'Nouvelle');
+      allow update: if isAdmin() && isValidId(orderNumber)
+        && isValidOrderTracking(incoming(), orderNumber)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'history', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(orderNumber);
+    }
+
+    // ---------------- VISITORS (PII ISOLATED) ----------------
+    match /visitors/{visitorId} {
+      allow get: if isValidId(visitorId) && (isOwner(visitorId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create: if isVerified() && isValidId(visitorId)
+        && (isOwner(visitorId) || isAdmin())
+        && isValidVisitor(incoming(), visitorId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerified() && isValidId(visitorId)
+        && isValidVisitor(incoming(), visitorId)
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (isOwner(visitorId) && incoming().diff(existing()).affectedKeys().hasOnly(['firstName', 'lastName', 'phone', 'address', 'country', 'updatedAt']))
+          || (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['firstName', 'lastName', 'email', 'phone', 'address', 'country', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidId(visitorId);
+    }
+
+    // ---------------- SITE CONTENT & SETTINGS ----------------
+    match /site_content/{docId} {
+      allow get: if docId == 'main';
+      allow list: if false;
+      allow create: if isAdmin() && docId == 'main'
+        && isValidSiteContent(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && docId == 'main'
+        && isValidSiteContent(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['hero', 'master', 'homeSections', 'aboutPage', 'contactPage', 'welcomeAnnouncement', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    match /site_settings/{docId} {
+      allow get: if docId == 'public';
+      allow list: if false;
+      allow create: if isAdmin() && docId == 'public'
+        && isValidSiteSettings(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && docId == 'public'
+        && isValidSiteSettings(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['general', 'contact', 'socials', 'youtubeSync', 'orderSettings', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // ---------------- CONTACT MESSAGES (PII ISOLATED) ----------------
+    match /contact_messages/{messageId} {
+      allow get: if isValidId(messageId) && isAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isVerified() && isValidId(messageId)
+        && isValidContactMessage(incoming(), messageId)
+        && incoming().senderUid == request.auth.uid
+        && incoming().read == false
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(messageId)
+        && isValidContactMessage(incoming(), messageId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['read', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(messageId);
+    }
+
+    // ---------------- ADMINS & ACTIVITIES ----------------
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create: if isBootstrapAdmin() && isValidId(adminId)
+        && isValidAdminMember(incoming(), adminId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isBootstrapAdmin() && isValidId(adminId)
+        && isValidAdminMember(incoming(), adminId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'role', 'updatedAt']);
+      allow delete: if isBootstrapAdmin() && isValidId(adminId);
+    }
+
+    match /activities/{activityId} {
+      allow get: if isValidId(activityId) && isAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isAdmin() && isValidId(activityId)
+        && isValidActivity(incoming(), activityId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(activityId);
+    }
+  }
+}

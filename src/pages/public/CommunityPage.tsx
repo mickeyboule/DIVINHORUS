@@ -1,6 +1,7 @@
 import { ArrowRight, Heart, MessageSquarePlus, Play, Search, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { SafeImage } from '../../components/SafeImage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { formatDateFr } from '../../lib/format';
 import type { PublicBootstrapData, VideoItem } from '../../types/cms';
 
@@ -23,6 +24,7 @@ export function CommunityPage({
   onToggleArticleLike,
   onOpenTestimonialModal,
 }: CommunityPageProps) {
+  const { lang, t } = useLanguage();
   const { articles, articleCategories, videos, testimonials } = data;
   const [activeTab, setActiveTab] = useState<'all' | 'articles' | 'videos' | 'testimonials'>(
     initialTab,
@@ -55,13 +57,13 @@ export function CommunityPage({
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-medium text-[#2A4036] tracking-wide">
-            Communauté &amp; Transmission
+            {t('community.kicker')}
           </p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
-            Enseignements, écrits &amp; vidéos
+            {t('community.title')}
           </h1>
           <p className="mt-3 text-base text-[#5C5A55] leading-relaxed">
-            Retrouvez l’ensemble des réflexions publiées par le Maître ainsi que les séances et entretiens filmés.
+            {t('community.subtitle')}
           </p>
         </div>
 
@@ -75,7 +77,7 @@ export function CommunityPage({
                 activeTab === 'all' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
-              Tout voir
+              {t('community.tabAll')}
             </button>
             <button
               type="button"
@@ -84,7 +86,7 @@ export function CommunityPage({
                 activeTab === 'articles' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
-              Articles ({articles.length})
+              {t('community.tabArticles', { count: articles.length })}
             </button>
             <button
               type="button"
@@ -93,7 +95,7 @@ export function CommunityPage({
                 activeTab === 'videos' ? 'bg-white text-[#141413] shadow-xs' : 'text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
-              Vidéos YouTube ({videos.length})
+              {t('community.tabVideos', { count: videos.length })}
             </button>
             <button
               type="button"
@@ -104,7 +106,7 @@ export function CommunityPage({
                   : 'text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
-              Témoignages ({testimonials.length})
+              {t('community.tabTestimonials', { count: testimonials.length })}
             </button>
           </div>
 
@@ -114,7 +116,7 @@ export function CommunityPage({
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un enseignement ou une vidéo..."
+              placeholder={t('community.searchPlaceholder')}
               className="w-full md:w-72 pl-9 pr-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg focus:border-[#2A4036] focus:outline-none"
             />
           </div>
@@ -125,7 +127,7 @@ export function CommunityPage({
           <section className="mt-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h2 className="font-display text-3xl font-semibold text-[#141413]">
-                Articles &amp; réflexions
+                {t('community.articlesHeading')}
               </h2>
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
@@ -137,7 +139,7 @@ export function CommunityPage({
                       : 'bg-white border border-[#E6E4DF] text-[#5C5A55] hover:text-[#141413]'
                   }`}
                 >
-                  Toutes les rubriques
+                  {t('community.allTopics')}
                 </button>
                 {articleCategories.map((cat) => (
                   <button
@@ -158,9 +160,7 @@ export function CommunityPage({
 
             {filteredArticles.length === 0 ? (
               <div className="bg-white border border-[#E6E4DF] rounded-xl p-10 text-center">
-                <p className="text-sm text-[#5C5A55]">
-                  Aucun article publié ne correspond à vos critères.
-                </p>
+                <p className="text-sm text-[#5C5A55]">{t('community.noArticles')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
@@ -186,9 +186,9 @@ export function CommunityPage({
                       </button>
                       <div className="p-5 flex-1 flex flex-col">
                         <div className="flex items-center gap-2 text-xs text-[#6B6860]">
-                          <span>{cat?.name || 'Enseignement'}</span>
+                          <span>{cat?.name || t('community.teachingFallback')}</span>
                           <span aria-hidden="true">·</span>
-                          <span>{formatDateFr(article.publishedAt)}</span>
+                          <span>{formatDateFr(article.publishedAt, lang)}</span>
                         </div>
                         <button
                           type="button"
@@ -208,13 +208,13 @@ export function CommunityPage({
                             onClick={() => onNavigate(`/communaute/${article.slug}`)}
                             className="inline-flex items-center gap-1 text-xs font-semibold text-[#2A4036] hover:underline shrink-0"
                           >
-                            <span>Lire</span>
+                            <span>{t('community.read')}</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => onToggleArticleLike(article.id)}
-                            aria-label={`Aimer ${article.title}`}
+                            aria-label={t('home.likeArticleAria', { title: article.title })}
                             className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
                               isLiked
                                 ? 'text-[#8A2E2E] bg-red-50'
@@ -239,16 +239,14 @@ export function CommunityPage({
           <section className={activeTab === 'all' ? 'mt-16 pt-12 border-t border-[#E6E4DF]' : 'mt-10'}>
             <div className="mb-6">
               <h2 className="font-display text-3xl font-semibold text-[#141413]">
-                Vidéos &amp; méditations YouTube
+                {t('community.videosHeading')}
               </h2>
-              <p className="mt-1.5 text-sm text-[#5C5A55]">
-                Séances guidées et causeries spirituelles visionnables directement ici.
-              </p>
+              <p className="mt-1.5 text-sm text-[#5C5A55]">{t('community.videosSubtitle')}</p>
             </div>
 
             {filteredVideos.length === 0 ? (
               <div className="bg-white border border-[#E6E4DF] rounded-xl p-10 text-center">
-                <p className="text-sm text-[#5C5A55]">Aucune vidéo disponible pour le moment.</p>
+                <p className="text-sm text-[#5C5A55]">{t('community.noVideos')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
@@ -295,7 +293,7 @@ export function CommunityPage({
                           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
                         >
                           <Play className="w-3.5 h-3.5" />
-                          <span>Lire la vidéo</span>
+                          <span>{t('community.playVideo')}</span>
                         </button>
                       </div>
                     </div>
@@ -314,10 +312,10 @@ export function CommunityPage({
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
               <div>
                 <h2 className="font-display text-3xl font-semibold text-[#141413]">
-                  Témoignages de la communauté
+                  {t('community.testimonialsHeading')}
                 </h2>
                 <p className="mt-1.5 text-sm text-[#5C5A55]">
-                  Partagez votre expérience des lectures, méditations ou objets du Sanctuaire.
+                  {t('community.testimonialsSubtitle')}
                 </p>
               </div>
               <button
@@ -326,15 +324,13 @@ export function CommunityPage({
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg self-start sm:self-auto transition-colors whitespace-nowrap"
               >
                 <MessageSquarePlus className="w-4 h-4" />
-                <span>Laisser un témoignage</span>
+                <span>{t('community.leaveTestimonial')}</span>
               </button>
             </div>
 
             {testimonials.length === 0 ? (
               <div className="bg-white border border-[#E6E4DF] rounded-xl p-10 text-center">
-                <p className="text-sm text-[#5C5A55]">
-                  Aucun témoignage publié pour le moment. Soyez le premier à partager votre ressenti.
-                </p>
+                <p className="text-sm text-[#5C5A55]">{t('community.noTestimonials')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -355,15 +351,15 @@ export function CommunityPage({
                         ))}
                       </div>
                       <p className="text-sm text-[#2B2A27] leading-relaxed">
-                        « {item.content} »
+                        {lang === 'en' ? `"${item.content}"` : `« ${item.content} »`}
                       </p>
                     </div>
                     <div className="mt-5 pt-4 border-t border-[#F0EFEA]">
                       <p className="text-sm font-semibold text-[#141413]">{item.authorName}</p>
                       <p className="text-xs text-[#6B6860] mt-0.5">
-                        {item.authorLocation || 'Visiteur'}
+                        {item.authorLocation || t('community.visitorFallback')}
                         <span aria-hidden="true"> · </span>
-                        {formatDateFr(item.createdAt)}
+                        {formatDateFr(item.createdAt, lang)}
                       </p>
                     </div>
                   </article>

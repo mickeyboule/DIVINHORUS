@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { VideoItem } from '../types/cms';
 
 interface VideoPlayerModalProps {
@@ -7,6 +8,7 @@ interface VideoPlayerModalProps {
 }
 
 export function VideoPlayerModal({ video, onClose }: VideoPlayerModalProps) {
+  const { t } = useLanguage();
   if (!video) return null;
 
   return (
@@ -27,7 +29,7 @@ export function VideoPlayerModal({ video, onClose }: VideoPlayerModalProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer la vidéo"
+            aria-label={t('videoModal.closeAria')}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 shrink-0"
           >
             <X className="w-5 h-5" />

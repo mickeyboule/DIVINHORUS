@@ -1,11 +1,13 @@
-import { formatPrice, getAvailabilityLabel } from '../lib/format';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { getAvailabilityLabel } from '../lib/format';
 import type { Category, Product } from '../types/cms';
 import { SafeImage } from './SafeImage';
 
 interface ProductCardProps {
   product: Product;
   category?: Category;
-  currencySymbol: string;
+  currencySymbol?: string;
   onOpenProduct: (slug: string) => void;
   onOrderProduct: (product: Product) => void;
 }
@@ -13,11 +15,12 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   category,
-  currencySymbol,
   onOpenProduct,
   onOrderProduct,
 }: ProductCardProps) {
-  const avail = getAvailabilityLabel(product.availability);
+  const { formatClientPrice } = useCurrency();
+  const { lang, t } = useLanguage();
+  const avail = getAvailabilityLabel(product.availability, lang);
   const unavailable = product.availability === 'Rupture';
 
   return (
@@ -37,7 +40,7 @@ export function ProductCard({
 
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex items-center justify-between gap-2 text-xs text-[#6B6860]">
-          <span className="truncate">{category?.name || 'Création'}</span>
+          <span className="truncate">{category?.name || t('product.creationFallback')}</span>
           <span className={`shrink-0 font-medium ${avail.textClass}`}>{avail.label}</span>
         </div>
 
@@ -57,7 +60,7 @@ export function ProductCard({
 
         <div className="mt-5 pt-4 border-t border-[#F0EFEA] flex items-center justify-between gap-3">
           <span className="text-[15px] font-mono font-medium tabular-nums text-[#141413]">
-            {formatPrice(product.price, currencySymbol)}
+            {formatClientPrice(product.price)}
           </span>
           <button
             type="button"
@@ -65,7 +68,7 @@ export function ProductCard({
             onClick={() => onOrderProduct(product)}
             className="px-4 py-2 text-xs font-semibold text-white bg-[#2A4036] rounded-lg hover:bg-[#20322A] disabled:bg-stone-300 disabled:text-stone-600 disabled:cursor-not-allowed transition-colors whitespace-nowrap shrink-0"
           >
-            {unavailable ? 'Indisponible' : 'Commander'}
+            {unavailable ? t('product.unavailable') : t('product.order')}
           </button>
         </div>
       </div>

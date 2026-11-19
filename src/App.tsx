@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { OrderDrawer, type BasketItem } from './components/OrderDrawer';
 import { TestimonialModal } from './components/TestimonialModal';
 import { ToastStack, type ToastItem } from './components/Toast';
 import { VideoPlayerModal } from './components/VideoPlayerModal';
+import { WelcomeAnnouncementModal } from './components/WelcomeAnnouncementModal';
+import { CurrencyProvider } from './contexts/CurrencyContext';
+import { useLanguage } from './contexts/LanguageContext';
 import { adminApi, authApi, getOrCreateClientKey, publicApi, visitorApi } from './lib/api';
+import { auth } from './lib/firebase';
+import { localizeProduct, localizePublicBootstrapData } from './lib/i18n';
 import { AdminArticlesView } from './pages/admin/AdminArticlesView';
 import { AdminCategoriesView } from './pages/admin/AdminCategoriesView';
 import { AdminCustomersView } from './pages/admin/AdminCustomersView';
@@ -41,15 +46,36 @@ import type {
 } from './types/cms';
 
 export default function App() {
+  const { lang, t } = useLanguage();
   const [route, setRoute] = useState<string>(() => window.location.pathname + window.location.search);
 
   const [publicData, setPublicData] = useState<PublicBootstrapData | null>(null);
   const [publicLoading, setPublicLoading] = useState(true);
   const [publicError, setPublicError] = useState('');
 
-  const [basket, setBasket] = useState<BasketItem[]>([]);
+  const [basket, setBasket] = useState<BasketItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('dh_basket_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dh_basket_v1', JSON.stringify(basket));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [basket]);
   const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
 
   const [visitorUser, setVisitorUser] = useState<VisitorMemberPublic | null>(null);
@@ -71,14 +97,35 @@ export default function App() {
     }, 4000);
   }, []);
 
+  const localizedPublicData = useMemo(
+    () => (publicData ? localizePublicBootstrapData(publicData, lang) : null),
+    [publicData, lang],
+  );
+
+  const localizedBasket = useMemo(
+    () =>
+      basket.map((item) => ({
+        ...item,
+        product:
+          localizedPublicData?.products.find((p) => p.id === item.product.id) ??
+          localizeProduct(item.product, lang),
+      })),
+    [basket, localizedPublicData?.products, lang],
+  );
+
+  useEffect(() => {
+    const siteName = localizedPublicData?.settings.general.siteName;
+    const tagline = localizedPublicData?.settings.general.tagline;
+    if (siteName) {
+      document.title = tagline ? `${siteName} — ${tagline}` : siteName;
+    }
+  }, [localizedPublicData?.settings.general.siteName, localizedPublicData?.settings.general.tagline]);
+
   const fetchPublic = useCallback(async () => {
     try {
       const data = await publicApi.getBootstrap();
       setPublicData(data);
       setPublicError('');
-      if (data.settings.general.siteName) {
-        document.title = `${data.settings.general.siteName} — ${data.settings.general.tagline}`;
-      }
       if (data.settings.general.faviconUrl) {
         let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
         if (!link) {
@@ -89,16 +136,38 @@ export default function App() {
         link.href = data.settings.general.faviconUrl;
       }
     } catch (err) {
-      setPublicError(err instanceof Error ? err.message : 'Impossible de charger le site.');
+      setPublicError(err instanceof Error ? err.message : t('app.loadError'));
     } finally {
       setPublicLoading(false);
     }
-  }, []);
+  }, [t]);
 
-  const fetchAdmin = useCallback(async () => {
-    const data = await adminApi.getBootstrap();
-    setAdminData(data);
-  }, []);
+  const knownOrderIdsRef = useRef<Set<string> | null>(null);
+  const adminDataLoadedRef = useRef(false);
+
+  const fetchAdmin = useCallback(
+    async (notifyNewOrders = false) => {
+      try {
+        await auth.authStateReady();
+        const data = await adminApi.getBootstrap();
+        if (notifyNewOrders && knownOrderIdsRef.current) {
+          const added = data.orders.filter((o) => !knownOrderIdsRef.current!.has(o.id));
+          if (added.length === 1) {
+            notify('success', t('app.newOrderReceived', { orderNumber: added[0].orderNumber }));
+          } else if (added.length > 1) {
+            notify('success', t('app.newOrdersReceived', { count: added.length }));
+          }
+        }
+        knownOrderIdsRef.current = new Set(data.orders.map((o) => o.id));
+        adminDataLoadedRef.current = true;
+        setAdminData(data);
+        return data;
+      } catch {
+        return null;
+      }
+    },
+    [notify, t],
+  );
 
   useEffect(() => {
     void fetchPublic();
@@ -108,8 +177,19 @@ export default function App() {
         setVisitorUser(res.visitor);
         setVisitorOrders(res.orders);
       })
-      .catch(() => {
-        // Visitor not logged in
+      .catch(async () => {
+        try {
+          await auth.authStateReady();
+          if (auth.currentUser) {
+            const synced = await authApi.syncFromFirebaseUser('visitor');
+            if (synced && synced.role === 'visitor') {
+              setVisitorUser(synced.visitor);
+              setVisitorOrders(synced.orders);
+            }
+          }
+        } catch {
+          // Visitor not logged in
+        }
       });
   }, [fetchPublic]);
 
@@ -139,22 +219,95 @@ export default function App() {
   const isAdminRoute =
     route.split('?')[0].startsWith('/admin') || window.location.hash.startsWith('#/admin');
 
+  const welcomeAnnouncement = localizedPublicData?.siteContent?.welcomeAnnouncement;
+
+  useEffect(() => {
+    if (isAdminRoute || publicLoading || !publicData) return;
+    if (
+      !welcomeAnnouncement ||
+      !welcomeAnnouncement.enabled ||
+      (!welcomeAnnouncement.title.trim() && !welcomeAnnouncement.message.trim())
+    ) {
+      setAnnouncementOpen(false);
+      return;
+    }
+    const key = `dh_announcement_seen_${welcomeAnnouncement.version || 'v1'}`;
+    try {
+      const storage =
+        welcomeAnnouncement.displayFrequency === 'once_per_update'
+          ? localStorage
+          : sessionStorage;
+      if (storage.getItem(key) === '1') return;
+    } catch {
+      // Ignore storage errors
+    }
+    setAnnouncementOpen(true);
+  }, [
+    isAdminRoute,
+    publicLoading,
+    publicData,
+    welcomeAnnouncement?.enabled,
+    welcomeAnnouncement?.version,
+    welcomeAnnouncement?.displayFrequency,
+    welcomeAnnouncement?.title,
+    welcomeAnnouncement?.message,
+  ]);
+
+  const handleDismissAnnouncement = useCallback(() => {
+    setAnnouncementOpen(false);
+    if (!welcomeAnnouncement) return;
+    const key = `dh_announcement_seen_${welcomeAnnouncement.version || 'v1'}`;
+    try {
+      const storage =
+        welcomeAnnouncement.displayFrequency === 'once_per_update'
+          ? localStorage
+          : sessionStorage;
+      storage.setItem(key, '1');
+    } catch {
+      // Ignore storage errors
+    }
+  }, [welcomeAnnouncement]);
+
   useEffect(() => {
     if (!isAdminRoute) return;
-    if (adminUser && adminData) return;
+    if (adminUser && adminDataLoadedRef.current) {
+      void fetchAdmin(true);
+      return;
+    }
     let active = true;
     setAdminChecking(true);
-    authApi
-      .me()
+    auth
+      .authStateReady()
+      .then(() => authApi.me())
       .then(async (res) => {
         if (!active) return;
         const data = await adminApi.getBootstrap();
         if (!active) return;
+        knownOrderIdsRef.current = new Set(data.orders.map((o) => o.id));
+        adminDataLoadedRef.current = true;
         setAdminData(data);
         setAdminUser(res.admin);
       })
-      .catch(() => {
+      .catch(async () => {
+        try {
+          await auth.authStateReady();
+          if (auth.currentUser && active) {
+            const synced = await authApi.syncFromFirebaseUser('admin');
+            if (synced && synced.role === 'admin' && active) {
+              const data = await adminApi.getBootstrap();
+              if (!active) return;
+              knownOrderIdsRef.current = new Set(data.orders.map((o) => o.id));
+              adminDataLoadedRef.current = true;
+              setAdminData(data);
+              setAdminUser(synced.admin);
+              return;
+            }
+          }
+        } catch {
+          // Ignore and show admin login page
+        }
         if (!active) return;
+        adminDataLoadedRef.current = false;
         setAdminUser(null);
         setAdminData(null);
       })
@@ -164,7 +317,83 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [isAdminRoute, adminUser, adminData]);
+  }, [isAdminRoute, adminUser?.id, fetchAdmin]);
+
+  // Keep admin dashboard, orders, and registered user data synchronized in real time
+  useEffect(() => {
+    if (!isAdminRoute || !adminUser) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void fetchAdmin(true);
+      }
+    }, 8000);
+    const onFocusOrVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchAdmin(true);
+      }
+    };
+    window.addEventListener('focus', onFocusOrVisible);
+    document.addEventListener('visibilitychange', onFocusOrVisible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', onFocusOrVisible);
+      document.removeEventListener('visibilitychange', onFocusOrVisible);
+    };
+  }, [isAdminRoute, adminUser, fetchAdmin]);
+
+  // Refresh visitor account data when visiting /mon-compte
+  useEffect(() => {
+    const cleanPath = route.split('?')[0];
+    if (cleanPath !== '/mon-compte' || !visitorUser) return;
+    visitorApi
+      .me()
+      .then((res) => {
+        setVisitorUser(res.visitor);
+        setVisitorOrders(res.orders);
+      })
+      .catch(() => {});
+  }, [route, visitorUser?.id]);
+
+  // Deep-link /admin?order=CMD-XXXX straight to that order's details once admin is logged in
+  useEffect(() => {
+    if (!isAdminRoute || !adminUser || !adminData) return;
+    const [, query = ''] = route.split('?');
+    const params = new URLSearchParams(query);
+    const orderParam = (params.get('order') || params.get('orderId') || '').trim();
+    if (!orderParam) return;
+
+    let cancelled = false;
+    const resolveOrderLink = async () => {
+      const normalized = orderParam.toUpperCase();
+      let ordersToSearch = adminData.orders;
+      let match = ordersToSearch.find(
+        (o) => o.id === orderParam || o.orderNumber.toUpperCase() === normalized,
+      );
+      if (!match) {
+        const fresh = await fetchAdmin(false);
+        if (cancelled) return;
+        if (fresh) {
+          ordersToSearch = fresh.orders;
+          match = ordersToSearch.find(
+            (o) => o.id === orderParam || o.orderNumber.toUpperCase() === normalized,
+          );
+        }
+      }
+      if (cancelled) return;
+      if (match) {
+        setAdminSection('orders');
+        setSelectedOrderId(match.id);
+      } else {
+        notify('error', t('app.orderNotFound', { orderParam }));
+      }
+      window.history.replaceState({}, '', '/admin');
+      setRoute('/admin');
+    };
+    void resolveOrderLink();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdminRoute, adminUser, adminData, route, notify, fetchAdmin, t]);
 
   // Basket handlers
   const handleAddToBasket = (product: Product, qty = 1, openDrawer = false) => {
@@ -180,7 +409,7 @@ export default function App() {
     if (openDrawer) {
       setOrderDrawerOpen(true);
     } else {
-      notify('success', `« ${product.name} » ajouté à votre sélection.`);
+      notify('success', t('app.addedToSelection', { name: product.name }));
     }
   };
 
@@ -204,17 +433,21 @@ export default function App() {
 
   const handleAdminLoginSuccess = async (admin: AdminUserPublic) => {
     const data = await adminApi.getBootstrap();
+    knownOrderIdsRef.current = new Set(data.orders.map((o) => o.id));
+    adminDataLoadedRef.current = true;
     setAdminData(data);
     setAdminUser(admin);
-    notify('success', `Bienvenue, ${admin.name}.`);
+    notify('success', t('app.adminWelcome', { name: admin.name }));
   };
 
   const handleAdminLogout = async () => {
     await authApi.logout();
+    adminDataLoadedRef.current = false;
+    knownOrderIdsRef.current = null;
     setAdminUser(null);
     setAdminData(null);
     navigate('/');
-    notify('success', 'Session administrateur fermée.');
+    notify('success', t('app.adminLogout'));
   };
 
   const handleMediaAdded = (item: MediaItem) => {
@@ -234,9 +467,9 @@ export default function App() {
             }
           : prev,
       );
-      notify('success', res.liked ? 'Article ajouté à vos favoris.' : 'Mention « J’aime » retirée.');
+      notify('success', res.liked ? t('app.articleLiked') : t('app.articleUnliked'));
     } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Action impossible.');
+      notify('error', err instanceof Error ? err.message : t('app.actionImpossible'));
     }
   };
 
@@ -244,17 +477,17 @@ export default function App() {
     await visitorApi.logout();
     setVisitorUser(null);
     setVisitorOrders([]);
-    notify('success', 'Vous êtes déconnecté de votre espace visiteur.');
+    notify('success', t('app.visitorLogout'));
   };
 
   // ---------------- ADMIN PORTAL RENDER ----------------
   if (isAdminRoute) {
-    const siteName = adminData?.settings.general.siteName || publicData?.settings.general.siteName || 'Élias Varenne';
+    const siteName = adminData?.settings.general.siteName || publicData?.settings.general.siteName || 'DIVIN HORUS';
 
     if (adminChecking) {
       return (
         <div className="min-h-screen bg-[#F6F6F7] flex items-center justify-center text-sm text-[#5C5A55]">
-          Vérification de la session...
+          {t('app.verifyingSession')}
         </div>
       );
     }
@@ -275,7 +508,7 @@ export default function App() {
     if (!adminData) {
       return (
         <div className="min-h-screen bg-[#F6F6F7] flex items-center justify-center text-sm text-[#5C5A55]">
-          Chargement de l’espace administrateur...
+          {t('app.loadingAdmin')}
         </div>
       );
     }
@@ -290,6 +523,9 @@ export default function App() {
           onSelectSection={(sec) => {
             setAdminSection(sec);
             if (sec !== 'orders') setSelectedOrderId(null);
+            if (sec === 'dashboard' || sec === 'orders' || sec === 'customers' || sec === 'messages') {
+              void fetchAdmin(true);
+            }
           }}
           adminUser={adminUser}
           siteName={adminData.settings.general.siteName}
@@ -297,6 +533,11 @@ export default function App() {
           unreadMessagesCount={unreadMessagesCount}
           onLogout={handleAdminLogout}
           onViewPublicSite={() => navigate('/')}
+          onFirebaseConnected={() => {
+            void fetchAdmin(false);
+            void fetchPublic();
+            notify('success', 'Synchronisation Firebase activée sur site-divinhorus.');
+          }}
         >
           {adminSection === 'dashboard' && (
             <AdminDashboardView
@@ -314,6 +555,8 @@ export default function App() {
             <AdminOrdersView
               orders={adminData.orders}
               currencySymbol={adminData.settings.general.currencySymbol}
+              settings={adminData.settings}
+              media={adminData.media}
               selectedOrderId={selectedOrderId}
               onSelectOrder={setSelectedOrderId}
               onOrderUpdated={(updated) => {
@@ -322,6 +565,11 @@ export default function App() {
                     ? { ...prev, orders: prev.orders.map((o) => (o.id === updated.id ? updated : o)) }
                     : prev,
                 );
+              }}
+              onMediaAdded={handleMediaAdded}
+              onSettingsChanged={(settings) => {
+                setAdminData((prev) => (prev ? { ...prev, settings } : prev));
+                setPublicData((prev) => (prev ? { ...prev, settings } : prev));
               }}
               onNotify={notify}
             />
@@ -333,9 +581,10 @@ export default function App() {
               categories={adminData.categories}
               media={adminData.media}
               currencySymbol={adminData.settings.general.currencySymbol}
-              onProductsChanged={(products) =>
-                setAdminData((prev) => (prev ? { ...prev, products } : prev))
-              }
+              onProductsChanged={(products) => {
+                setAdminData((prev) => (prev ? { ...prev, products } : prev));
+                void fetchPublic();
+              }}
               onMediaAdded={handleMediaAdded}
               onNotify={notify}
             />
@@ -346,9 +595,10 @@ export default function App() {
               categories={adminData.categories}
               products={adminData.products}
               media={adminData.media}
-              onCategoriesChanged={(categories) =>
-                setAdminData((prev) => (prev ? { ...prev, categories } : prev))
-              }
+              onCategoriesChanged={(categories) => {
+                setAdminData((prev) => (prev ? { ...prev, categories } : prev));
+                void fetchPublic();
+              }}
               onMediaAdded={handleMediaAdded}
               onNotify={notify}
             />
@@ -357,12 +607,25 @@ export default function App() {
           {adminSection === 'customers' && (
             <AdminCustomersView
               customers={adminData.customers}
+              visitors={adminData.visitors}
               orders={adminData.orders}
               currencySymbol={adminData.settings.general.currencySymbol}
+              onCustomerCreated={(cust) =>
+                setAdminData((prev) =>
+                  prev ? { ...prev, customers: [cust, ...prev.customers] } : prev,
+                )
+              }
               onCustomerUpdated={(cust) =>
                 setAdminData((prev) =>
                   prev
                     ? { ...prev, customers: prev.customers.map((c) => (c.id === cust.id ? cust : c)) }
+                    : prev,
+                )
+              }
+              onCustomerDeleted={(customerId) =>
+                setAdminData((prev) =>
+                  prev
+                    ? { ...prev, customers: prev.customers.filter((c) => c.id !== customerId) }
                     : prev,
                 )
               }
@@ -380,12 +643,14 @@ export default function App() {
               articleCategories={adminData.articleCategories}
               media={adminData.media}
               defaultAuthor={adminData.siteContent.master.name}
-              onArticlesChanged={(articles) =>
-                setAdminData((prev) => (prev ? { ...prev, articles } : prev))
-              }
-              onArticleCategoriesChanged={(articleCategories) =>
-                setAdminData((prev) => (prev ? { ...prev, articleCategories } : prev))
-              }
+              onArticlesChanged={(articles) => {
+                setAdminData((prev) => (prev ? { ...prev, articles } : prev));
+                void fetchPublic();
+              }}
+              onArticleCategoriesChanged={(articleCategories) => {
+                setAdminData((prev) => (prev ? { ...prev, articleCategories } : prev));
+                void fetchPublic();
+              }}
               onMediaAdded={handleMediaAdded}
               onNotify={notify}
             />
@@ -394,8 +659,15 @@ export default function App() {
           {adminSection === 'videos' && (
             <AdminVideosView
               videos={adminData.videos}
-              onVideosChanged={(videos) =>
-                setAdminData((prev) => (prev ? { ...prev, videos } : prev))
+              youtubeSync={adminData.settings.youtubeSync}
+              onVideosChanged={(videos) => {
+                setAdminData((prev) => (prev ? { ...prev, videos } : prev));
+                void fetchPublic();
+              }}
+              onYoutubeSyncChanged={(youtubeSync) =>
+                setAdminData((prev) =>
+                  prev ? { ...prev, settings: { ...prev.settings, youtubeSync } } : prev,
+                )
               }
               onNotify={notify}
             />
@@ -431,6 +703,7 @@ export default function App() {
               media={adminData.media}
               onSiteContentChanged={(siteContent) => {
                 setAdminData((prev) => (prev ? { ...prev, siteContent } : prev));
+                setPublicData((prev) => (prev ? { ...prev, siteContent } : prev));
                 void fetchPublic();
               }}
               onMediaAdded={handleMediaAdded}
@@ -454,13 +727,40 @@ export default function App() {
               admins={adminData.admins}
               currentAdmin={adminUser}
               media={adminData.media}
-              onSettingsChanged={(settings) => {
-                setAdminData((prev) => (prev ? { ...prev, settings } : prev));
+              onSettingsChanged={(settings, updatedProducts) => {
+                setAdminData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        settings,
+                        ...(updatedProducts ? { products: updatedProducts } : {}),
+                      }
+                    : prev,
+                );
+                setPublicData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        settings,
+                        ...(updatedProducts ? { products: updatedProducts } : {}),
+                      }
+                    : prev,
+                );
+                if (settings.general.faviconUrl) {
+                  let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+                  if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                  }
+                  link.href = settings.general.faviconUrl;
+                }
                 void fetchPublic();
               }}
               onAdminsChanged={(admins) =>
                 setAdminData((prev) => (prev ? { ...prev, admins } : prev))
               }
+              onCurrentAdminUpdated={(updated) => setAdminUser(updated)}
               onMediaAdded={handleMediaAdded}
               onNotify={notify}
             />
@@ -476,16 +776,16 @@ export default function App() {
   if (publicLoading) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center text-sm text-[#5C5A55]">
-        Chargement de l’espace...
+        {t('app.loadingSite')}
       </div>
     );
   }
 
-  if (publicError || !publicData) {
+  if (publicError || !localizedPublicData) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center p-6 text-center">
         <p className="font-display text-2xl font-semibold text-[#141413]">
-          Connexion temporairement indisponible
+          {t('app.connUnavailable')}
         </p>
         <p className="mt-2 text-sm text-[#5C5A55]">{publicError}</p>
         <button
@@ -493,7 +793,7 @@ export default function App() {
           onClick={() => void fetchPublic()}
           className="mt-5 px-5 py-2.5 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
         >
-          Réessayer
+          {t('app.retry')}
         </button>
       </div>
     );
@@ -505,7 +805,7 @@ export default function App() {
 
   let pageView = (
     <HomePage
-      data={publicData}
+      data={localizedPublicData}
       actorKey={actorKey}
       onNavigate={navigate}
       onOrderProduct={(p) => handleOrderProduct(p, 1)}
@@ -518,7 +818,7 @@ export default function App() {
   if (pathname === '/boutique') {
     pageView = (
       <ShopPage
-        data={publicData}
+        data={localizedPublicData}
         initialCategorySlug={searchParams.get('categorie') || undefined}
         onNavigate={navigate}
         onOrderProduct={(p) => handleOrderProduct(p, 1)}
@@ -529,7 +829,7 @@ export default function App() {
     pageView = (
       <ProductDetailPage
         slug={slug}
-        data={publicData}
+        data={localizedPublicData}
         onNavigate={navigate}
         onOrderProduct={handleOrderProduct}
         onAddToBasket={(p, q) => handleAddToBasket(p, q, false)}
@@ -543,7 +843,7 @@ export default function App() {
         : 'all';
     pageView = (
       <CommunityPage
-        data={publicData}
+        data={localizedPublicData}
         actorKey={actorKey}
         initialTab={initialTab}
         onNavigate={navigate}
@@ -557,26 +857,31 @@ export default function App() {
     pageView = (
       <ArticleDetailPage
         slug={slug}
-        data={publicData}
+        data={localizedPublicData}
         actorKey={actorKey}
         onNavigate={navigate}
         onToggleArticleLike={(id) => void handleToggleArticleLike(id)}
       />
     );
   } else if (pathname === '/a-propos') {
-    pageView = <AboutPage data={publicData} onNavigate={navigate} />;
+    pageView = <AboutPage data={localizedPublicData} onNavigate={navigate} />;
   } else if (pathname === '/contact') {
-    pageView = <ContactPage data={publicData} />;
+    pageView = <ContactPage data={localizedPublicData} />;
   } else if (pathname === '/mon-compte') {
     pageView = (
       <VisitorAccountPage
         visitorUser={visitorUser}
         visitorOrders={visitorOrders}
-        articles={publicData.articles}
-        settings={publicData.settings}
+        articles={localizedPublicData.articles}
+        settings={localizedPublicData.settings}
         onAuthSuccess={(visitor, orders) => {
           setVisitorUser(visitor);
           setVisitorOrders(orders);
+        }}
+        onAdminAuthSuccess={async (admin) => {
+          await handleAdminLoginSuccess(admin);
+          window.history.pushState({}, '', '/admin');
+          setRoute('/admin');
         }}
         onProfileUpdated={(visitor, orders) => {
           setVisitorUser(visitor);
@@ -590,7 +895,7 @@ export default function App() {
   } else if (pathname === '/suivi-commande') {
     pageView = (
       <OrderTrackingPage
-        settings={publicData.settings}
+        settings={localizedPublicData.settings}
         visitorUser={visitorUser}
         initialOrderNumber={searchParams.get('num') || ''}
         initialContact={searchParams.get('contact') || ''}
@@ -600,56 +905,76 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-[#141413]">
-      <Header
-        currentPath={pathname}
-        onNavigate={navigate}
-        basketCount={basketCount}
-        onOpenOrderDrawer={() => setOrderDrawerOpen(true)}
-        settings={publicData.settings}
-        visitorUser={visitorUser}
-      />
+    <CurrencyProvider settings={localizedPublicData.settings} geo={localizedPublicData.geo}>
+      <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-[#141413]">
+        <Header
+          currentPath={pathname}
+          onNavigate={navigate}
+          basketCount={basketCount}
+          onOpenOrderDrawer={() => setOrderDrawerOpen(true)}
+          settings={localizedPublicData.settings}
+          visitorUser={visitorUser}
+        />
 
-      <main className="flex-1">{pageView}</main>
+        <main className="flex-1">{pageView}</main>
 
-      <Footer onNavigate={navigate} settings={publicData.settings} />
+        <Footer onNavigate={navigate} settings={localizedPublicData.settings} />
 
-      <OrderDrawer
-        open={orderDrawerOpen}
-        onClose={() => setOrderDrawerOpen(false)}
-        items={basket}
-        onUpdateQty={handleUpdateQty}
-        onRemoveItem={handleRemoveItem}
-        onClearBasket={() => setBasket([])}
-        allProducts={publicData.products}
-        onAddProduct={(p) => handleAddToBasket(p, 1, false)}
-        settings={publicData.settings}
-        visitorUser={visitorUser}
-        onNavigate={navigate}
-        onOrderSuccess={(ord) => {
-          notify('success', `Demande ${ord.orderNumber} enregistrée.`);
-          if (visitorUser) {
-            setVisitorOrders((prev) => [ord, ...prev]);
-          }
-          if (adminUser) void fetchAdmin();
-        }}
-      />
+        <OrderDrawer
+          open={orderDrawerOpen}
+          onClose={() => setOrderDrawerOpen(false)}
+          items={localizedBasket}
+          onUpdateQty={handleUpdateQty}
+          onRemoveItem={handleRemoveItem}
+          onClearBasket={() => setBasket([])}
+          allProducts={localizedPublicData.products}
+          onAddProduct={(p) => handleAddToBasket(p, 1, false)}
+          settings={localizedPublicData.settings}
+          visitorUser={visitorUser}
+          onVisitorAuthenticated={(visitor, orders) => {
+            setVisitorUser(visitor);
+            setVisitorOrders(orders);
+            notify('success', t('account.welcomeBack', { name: visitor.firstName }));
+          }}
+          onNavigate={navigate}
+          onOrderSuccess={(ord, updatedVisitor) => {
+            notify('success', t('app.orderCreated', { orderNumber: ord.orderNumber }));
+            if (updatedVisitor) {
+              setVisitorUser(updatedVisitor);
+            }
+            if (visitorUser || updatedVisitor) {
+              setVisitorOrders((prev) =>
+                prev.some((o) => o.id === ord.id) ? prev : [ord, ...prev],
+              );
+            }
+            if (adminUser) void fetchAdmin(false);
+          }}
+        />
 
-      <TestimonialModal
-        open={testimonialModalOpen}
-        onClose={() => setTestimonialModalOpen(false)}
-        visitorUser={visitorUser}
-        onCreated={(testimonial) => {
-          setPublicData((prev) =>
-            prev ? { ...prev, testimonials: [testimonial, ...prev.testimonials] } : prev,
-          );
-          notify('success', 'Merci ! Votre témoignage a bien été publié.');
-        }}
-      />
+        <TestimonialModal
+          open={testimonialModalOpen}
+          onClose={() => setTestimonialModalOpen(false)}
+          visitorUser={visitorUser}
+          onCreated={(testimonial) => {
+            setPublicData((prev) =>
+              prev ? { ...prev, testimonials: [testimonial, ...prev.testimonials] } : prev,
+            );
+            notify('success', t('app.testimonialPublished'));
+          }}
+        />
 
-      <VideoPlayerModal video={activeVideo} onClose={() => setActiveVideo(null)} />
+        <VideoPlayerModal video={activeVideo} onClose={() => setActiveVideo(null)} />
 
-      <ToastStack toasts={toasts} onDismiss={(id) => setToasts((p) => p.filter((t) => t.id !== id))} />
-    </div>
+        <WelcomeAnnouncementModal
+          open={announcementOpen}
+          announcement={welcomeAnnouncement}
+          siteName={localizedPublicData.settings.general.siteName}
+          onClose={handleDismissAnnouncement}
+          onNavigate={navigate}
+        />
+
+        <ToastStack toasts={toasts} onDismiss={(id) => setToasts((p) => p.filter((t) => t.id !== id))} />
+      </div>
+    </CurrencyProvider>
   );
 }

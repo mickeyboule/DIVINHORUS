@@ -1,6 +1,8 @@
-import { Search } from 'lucide-react';
+import { Globe, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ProductCard } from '../../components/ProductCard';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { Product, PublicBootstrapData } from '../../types/cms';
 
 interface ShopPageProps {
@@ -16,7 +18,9 @@ export function ShopPage({
   onNavigate,
   onOrderProduct,
 }: ShopPageProps) {
+  const { t } = useLanguage();
   const { categories, products, settings } = data;
+  const { countryOption, autoEnabled, availableCountries, setCountryOverride } = useCurrency();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(() => {
     if (!initialCategorySlug) return 'all';
     const found = categories.find((c) => c.slug === initialCategorySlug);
@@ -48,22 +52,22 @@ export function ShopPage({
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         {/* Page Header */}
         <div className="max-w-2xl">
-          <p className="text-xs font-medium text-[#2A4036] tracking-wide">
-            Boutique du Sanctuaire
-          </p>
+          <p className="text-xs font-medium text-[#2A4036] tracking-wide">{t('shop.kicker')}</p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
-            {activeCategory ? activeCategory.name : 'Objets de pratique & créations'}
+            {activeCategory ? activeCategory.name : t('shop.allProductsTitle')}
           </h1>
           <p className="mt-3 text-base text-[#5C5A55] leading-relaxed">
-            {activeCategory
-              ? activeCategory.description
-              : 'Sélectionnez les créations souhaitées et transmettez directement votre demande de commande sans paiement en ligne.'}
+            {activeCategory ? activeCategory.description : t('shop.allProductsSubtitle')}
           </p>
         </div>
 
         {/* Dynamic Category Filters + Search + Sort */}
         <div className="mt-10 pb-6 border-b border-[#E6E4DF] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Catégories de produits">
+          <div
+            className="flex flex-wrap items-center gap-1.5"
+            role="tablist"
+            aria-label={t('shop.categoriesAria')}
+          >
             <button
               type="button"
               onClick={() => setSelectedCategoryId('all')}
@@ -73,7 +77,7 @@ export function ShopPage({
                   : 'bg-white border border-[#E6E4DF] text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
-              Tous les produits ({products.length})
+              {t('shop.allProductsTab', { count: products.length })}
             </button>
             {categories.map((cat) => {
               const count = products.filter((p) => p.categoryId === cat.id).length;
@@ -101,7 +105,7 @@ export function ShopPage({
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un produit..."
+                placeholder={t('shop.searchPlaceholder')}
                 className="w-full sm:w-60 pl-9 pr-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg focus:border-[#2A4036] focus:outline-none"
               />
             </div>
@@ -109,13 +113,34 @@ export function ShopPage({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'featured' | 'price-asc' | 'price-desc')}
-              aria-label="Trier les produits"
+              aria-label={t('shop.sortAria')}
               className="px-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg text-[#141413] focus:border-[#2A4036] focus:outline-none"
             >
-              <option value="featured">Sélection mise en avant</option>
-              <option value="price-asc">Prix croissant</option>
-              <option value="price-desc">Prix décroissant</option>
+              <option value="featured">{t('shop.sortFeatured')}</option>
+              <option value="price-asc">{t('shop.sortPriceAsc')}</option>
+              <option value="price-desc">{t('shop.sortPriceDesc')}</option>
             </select>
+
+            {autoEnabled && (
+              <div className="relative flex items-center bg-white border border-[#E6E4DF] rounded-lg px-2.5 py-2 focus-within:border-[#2A4036]">
+                <Globe className="w-4 h-4 text-[#2A4036] shrink-0 mr-2" />
+                <label htmlFor="shop-country-currency" className="sr-only">
+                  {t('shop.countryCurrencyAria')}
+                </label>
+                <select
+                  id="shop-country-currency"
+                  value={countryOption.countryCode}
+                  onChange={(e) => setCountryOverride(e.target.value)}
+                  className="text-sm bg-transparent text-[#141413] focus:outline-none pr-1"
+                >
+                  {availableCountries.map((opt) => (
+                    <option key={opt.countryCode} value={opt.countryCode}>
+                      {opt.countryName} ({opt.currencySymbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -123,11 +148,9 @@ export function ShopPage({
         {filteredProducts.length === 0 ? (
           <div className="py-20 text-center bg-white border border-[#E6E4DF] rounded-xl mt-8 px-6">
             <p className="font-display text-2xl font-semibold text-[#141413]">
-              Aucun produit trouvé
+              {t('shop.emptyTitle')}
             </p>
-            <p className="mt-2 text-sm text-[#5C5A55]">
-              Essayez de modifier votre recherche ou de consulter une autre catégorie.
-            </p>
+            <p className="mt-2 text-sm text-[#5C5A55]">{t('shop.emptyDesc')}</p>
             <button
               type="button"
               onClick={() => {
@@ -136,7 +159,7 @@ export function ShopPage({
               }}
               className="mt-5 px-4 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg hover:bg-[#20322A]"
             >
-              Réinitialiser les filtres
+              {t('shop.resetFilters')}
             </button>
           </div>
         ) : (

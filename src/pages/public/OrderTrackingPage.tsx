@@ -1,9 +1,21 @@
-import { ArrowRight, CheckCircle2, Clock, PackageCheck, Search, UserCheck, XCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Search,
+  UserCheck,
+  XCircle,
+} from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import { SafeImage } from '../../components/SafeImage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { publicApi } from '../../lib/api';
-import { formatDateTimeFr, formatPrice } from '../../lib/format';
-import type { Order, OrderStatus, SiteSettings, VisitorMemberPublic } from '../../types/cms';
+import { formatDateTimeFr, getOrderStatusStyle } from '../../lib/format';
+import type {
+  OrderStatus,
+  PublicOrderTrackingInfo,
+  SiteSettings,
+  VisitorMemberPublic,
+} from '../../types/cms';
 
 interface OrderTrackingPageProps {
   settings: SiteSettings;
@@ -13,41 +25,46 @@ interface OrderTrackingPageProps {
   onNavigate: (path: string) => void;
 }
 
-const PROGRESS_STEPS: Array<{ status: OrderStatus; label: string; description: string }> = [
-  {
-    status: 'Nouvelle',
-    label: 'Demande reçue',
-    description: 'Votre sélection a été transmise au Sanctuaire.',
-  },
-  {
-    status: 'En cours',
-    label: 'Vérification & échange',
-    description: 'Notre équipe prépare votre demande et vérifie la disponibilité.',
-  },
-  {
-    status: 'Confirmée',
-    label: 'Confirmée',
-    description: 'La préparation et les modalités de remise sont validées.',
-  },
-  {
-    status: 'Terminée',
-    label: 'Remise effectuée',
-    description: 'Votre commande a été remise ou livrée.',
-  },
-];
-
 export function OrderTrackingPage({
-  settings,
   visitorUser,
   initialOrderNumber = '',
   initialContact = '',
   onNavigate,
 }: OrderTrackingPageProps) {
+  const { lang, t } = useLanguage();
   const [orderNumber, setOrderNumber] = useState(initialOrderNumber);
   const [contact, setContact] = useState(initialContact || visitorUser?.email || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<PublicOrderTrackingInfo | null>(null);
+
+  const progressSteps: Array<{ status: OrderStatus; label: string; description: string }> = [
+    {
+      status: 'Nouvelle',
+      label: t('tracking.stepNewLabel'),
+      description: t('tracking.stepNewDesc'),
+    },
+    {
+      status: 'En cours',
+      label: t('tracking.stepInProgressLabel'),
+      description: t('tracking.stepInProgressDesc'),
+    },
+    {
+      status: 'Confirmée',
+      label: t('tracking.stepConfirmedLabel'),
+      description: t('tracking.stepConfirmedDesc'),
+    },
+    {
+      status: 'En expédition',
+      label: t('tracking.stepShippingLabel'),
+      description: t('tracking.stepShippingDesc'),
+    },
+    {
+      status: 'Terminée',
+      label: t('tracking.stepCompletedLabel'),
+      description: t('tracking.stepCompletedDesc'),
+    },
+  ];
 
   useEffect(() => {
     if (initialOrderNumber && initialContact) {
@@ -59,18 +76,18 @@ export function OrderTrackingPage({
           setError('');
         })
         .catch((err) => {
-          setError(err instanceof Error ? err.message : 'Commande introuvable.');
+          setError(err instanceof Error ? err.message : t('tracking.notFound'));
         })
         .finally(() => setLoading(false));
     }
-  }, [initialOrderNumber, initialContact]);
+  }, [initialOrderNumber, initialContact, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setOrder(null);
     if (!orderNumber.trim() || !contact.trim()) {
-      setError('Veuillez saisir votre numéro de commande et votre email ou téléphone.');
+      setError(t('tracking.missingFields'));
       return;
     }
     setLoading(true);
@@ -78,28 +95,29 @@ export function OrderTrackingPage({
       const res = await publicApi.trackOrder(orderNumber.trim(), contact.trim());
       setOrder(res.order);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Aucune commande trouvée.');
+      setError(err instanceof Error ? err.message : t('tracking.notFound'));
     } finally {
       setLoading(false);
     }
   };
 
   const currentStepIdx = order
-    ? PROGRESS_STEPS.findIndex((s) => s.status === order.status)
+    ? progressSteps.findIndex((s) => s.status === order.status)
     : -1;
+  const statusStyle = order ? getOrderStatusStyle(order.status, lang) : null;
 
   return (
     <div className="bg-[#FAF9F6] min-h-[75vh] py-12 sm:py-16">
       <div className="max-w-[960px] mx-auto px-4 sm:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-medium text-[#2A4036] tracking-wide">
-            Suivi de commande
+            {t('tracking.kicker')}
           </p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
-            Où en est votre demande ?
+            {t('tracking.title')}
           </h1>
           <p className="mt-3 text-base text-[#5C5A55] leading-relaxed">
-            Consultez à tout moment l’avancement de votre commande grâce à votre référence (ex : CMD-1045) et à votre email ou numéro de téléphone.
+            {t('tracking.subtitle')}
           </p>
         </div>
 
@@ -111,27 +129,27 @@ export function OrderTrackingPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-[#3F3E3A] mb-1.5">
-                Numéro de commande
+                {t('tracking.orderNumberLabel')}
               </label>
               <input
                 type="text"
                 required
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="Ex : CMD-1045"
+                placeholder={t('tracking.orderNumberPlaceholder')}
                 className="w-full px-3.5 py-2.5 text-sm font-mono bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#2A4036] focus:outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-[#3F3E3A] mb-1.5">
-                Email ou numéro de téléphone
+                {t('tracking.contactLabel')}
               </label>
               <input
                 type="text"
                 required
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="Ex : claire.morel@exemple.fr ou +33 6..."
+                placeholder={t('tracking.contactPlaceholder')}
                 className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#2A4036] focus:outline-none"
               />
             </div>
@@ -150,7 +168,7 @@ export function OrderTrackingPage({
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
             >
               <Search className="w-4 h-4" />
-              <span>{loading ? 'Recherche...' : 'Consulter ma commande'}</span>
+              <span>{loading ? t('tracking.searching') : t('tracking.submit')}</span>
             </button>
 
             <button
@@ -160,34 +178,43 @@ export function OrderTrackingPage({
             >
               <UserCheck className="w-3.5 h-3.5" />
               <span>
-                {visitorUser
-                  ? 'Voir toutes mes commandes dans Mon compte'
-                  : 'Vous avez un compte ? Voir toutes vos commandes'}
+                {visitorUser ? t('tracking.viewAccountOrders') : t('tracking.haveAccount')}
               </span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>
 
-        {/* Order Result */}
+        {/* Order Status Result (Status & Progress Only) */}
         {order && (
           <div className="mt-8 space-y-6">
-            {/* Summary & Status */}
             <div className="bg-white border border-[#E6E4DF] rounded-xl p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFECE6]">
                 <div>
                   <p className="text-xs font-mono tabular-nums text-[#5C5A55]">
-                    Référence #{order.orderNumber} · Enregistrée le {formatDateTimeFr(order.createdAt)}
+                    {t('tracking.registeredAt', {
+                      orderNumber: order.orderNumber,
+                      date: formatDateTimeFr(order.createdAt, lang),
+                    })}
                   </p>
                   <h2 className="mt-1 font-display text-2xl font-semibold text-[#141413]">
                     {order.customerFirstName} {order.customerLastName}
                   </h2>
+                  <p className="mt-1 text-[11px] font-mono tabular-nums text-[#6B6860]">
+                    {t('tracking.lastUpdate', {
+                      date: formatDateTimeFr(order.updatedAt, lang),
+                    })}
+                  </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <p className="text-[11px] text-[#6B6860]">Statut actuel</p>
-                  <p className="mt-0.5 text-sm font-semibold text-[#2A4036]">
-                    {order.status}
-                  </p>
+                  <p className="text-[11px] text-[#6B6860] mb-1">{t('tracking.currentStatus')}</p>
+                  {statusStyle && (
+                    <span
+                      className={`inline-block px-3 py-1 rounded-md border text-xs font-semibold ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                    >
+                      {statusStyle.label}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -196,15 +223,15 @@ export function OrderTrackingPage({
                 <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
                   <XCircle className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-red-900">Demande annulée</p>
-                    <p className="text-xs text-red-800 mt-0.5">
-                      Cette demande de commande a été annulée. Contactez le Sanctuaire pour toute précision.
+                    <p className="text-sm font-semibold text-red-900">
+                      {t('tracking.cancelledTitle')}
                     </p>
+                    <p className="text-xs text-red-800 mt-0.5">{t('tracking.cancelledDesc')}</p>
                   </div>
                 </div>
               ) : (
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
-                  {PROGRESS_STEPS.map((step, idx) => {
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {progressSteps.map((step, idx) => {
                     const reached = idx <= currentStepIdx;
                     const isCurrent = idx === currentStepIdx;
                     return (
@@ -238,85 +265,28 @@ export function OrderTrackingPage({
               )}
             </div>
 
-            {/* Items & Delivery */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              <div className="md:col-span-7 bg-white border border-[#E6E4DF] rounded-xl p-6">
-                <h3 className="text-sm font-semibold text-[#141413] flex items-center gap-2 mb-4">
-                  <PackageCheck className="w-4 h-4 text-[#2A4036]" />
-                  <span>Objets demandés</span>
-                </h3>
-                <div className="divide-y divide-[#F0EFEA]">
-                  {order.items.map((item) => (
-                    <div key={item.productId} className="py-3 flex items-center gap-3.5">
-                      <SafeImage
-                        src={item.image}
-                        alt={item.productName}
-                        className="w-14 h-14 rounded-lg object-cover bg-[#F3F2EE] shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#141413] truncate">
-                          {item.productName}
-                        </p>
-                        <p className="text-xs text-[#6B6860] font-mono tabular-nums mt-0.5">
-                          Quantité : {item.quantity} × {formatPrice(item.unitPrice, settings.general.currencySymbol)}
-                        </p>
-                      </div>
-                      <span className="text-sm font-mono tabular-nums font-semibold text-[#141413]">
-                        {formatPrice(item.unitPrice * item.quantity, settings.general.currencySymbol)}
+            {/* Chronological Status History Only */}
+            <div className="bg-white border border-[#E6E4DF] rounded-xl p-6">
+              <h3 className="text-sm font-semibold text-[#141413] mb-3">
+                {t('tracking.historyTitle')}
+              </h3>
+              <div className="space-y-3">
+                {order.history.map((entry, i) => (
+                  <div
+                    key={i}
+                    className="text-xs border-b border-[#F0EFEA] last:border-0 pb-2.5 last:pb-0"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-[#141413]">
+                        {getOrderStatusStyle(entry.status, lang).label}
+                      </span>
+                      <span className="font-mono tabular-nums text-[11px] text-[#6B6860]">
+                        {formatDateTimeFr(entry.date, lang)}
                       </span>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t border-[#E6E4DF] flex items-center justify-between text-sm font-semibold">
-                  <span>Total indicatif</span>
-                  <span className="font-mono tabular-nums">
-                    {formatPrice(order.indicativeTotal, settings.general.currencySymbol)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="md:col-span-5 space-y-6">
-                <div className="bg-white border border-[#E6E4DF] rounded-xl p-6 text-xs space-y-2">
-                  <h3 className="text-sm font-semibold text-[#141413] mb-2">
-                    Modalités enregistrées
-                  </h3>
-                  <p className="text-[#5C5A55]">
-                    <strong className="text-[#141413]">Téléphone :</strong> {order.customerPhone}
-                  </p>
-                  {order.customerEmail && (
-                    <p className="text-[#5C5A55]">
-                      <strong className="text-[#141413]">Email :</strong> {order.customerEmail}
-                    </p>
-                  )}
-                  <p className="text-[#5C5A55]">
-                    <strong className="text-[#141413]">Livraison / Retrait :</strong>{' '}
-                    {order.deliveryAddress}
-                  </p>
-                  {order.message && (
-                    <p className="text-[#5C5A55] pt-2 border-t border-[#F0EFEA]">
-                      <strong className="text-[#141413]">Votre message :</strong> {order.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-white border border-[#E6E4DF] rounded-xl p-6">
-                  <h3 className="text-sm font-semibold text-[#141413] mb-3">
-                    Historique chronologique
-                  </h3>
-                  <div className="space-y-3">
-                    {order.history.map((entry, i) => (
-                      <div key={i} className="text-xs border-b border-[#F0EFEA] last:border-0 pb-2.5 last:pb-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-[#141413]">{entry.status}</span>
-                          <span className="font-mono tabular-nums text-[11px] text-[#6B6860]">
-                            {formatDateTimeFr(entry.date)}
-                          </span>
-                        </div>
-                        <p className="text-[#5C5A55] mt-0.5">{entry.note}</p>
-                      </div>
-                    ))}
+                    <p className="text-[#5C5A55] mt-0.5">{entry.note}</p>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>

@@ -375,7 +375,7 @@ export function AdminProductsView({
                   <input
                     type="number"
                     min="0"
-                    step="0.5"
+                    step="any"
                     required
                     value={editing.price ?? 0}
                     onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}

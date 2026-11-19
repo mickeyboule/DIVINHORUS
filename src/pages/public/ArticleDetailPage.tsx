@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
 import { SafeImage } from '../../components/SafeImage';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { formatDateFr } from '../../lib/format';
 import type { PublicBootstrapData } from '../../types/cms';
 
@@ -18,6 +19,7 @@ export function ArticleDetailPage({
   onNavigate,
   onToggleArticleLike,
 }: ArticleDetailPageProps) {
+  const { lang, t } = useLanguage();
   const { articles, articleCategories } = data;
   const article = articles.find((a) => a.slug === slug);
 
@@ -25,17 +27,15 @@ export function ArticleDetailPage({
     return (
       <div className="max-w-[900px] mx-auto px-4 sm:px-8 py-24 text-center">
         <h1 className="font-display text-3xl font-semibold text-[#141413]">
-          Article introuvable
+          {t('articleDetail.notFoundTitle')}
         </h1>
-        <p className="mt-2 text-sm text-[#5C5A55]">
-          Cet article n’est pas disponible ou a été dépublié.
-        </p>
+        <p className="mt-2 text-sm text-[#5C5A55]">{t('articleDetail.notFoundDesc')}</p>
         <button
           type="button"
           onClick={() => onNavigate('/communaute')}
           className="mt-6 px-5 py-2.5 bg-[#2A4036] text-white text-sm font-semibold rounded-lg"
         >
-          Retour à la communauté
+          {t('articleDetail.backToCommunity')}
         </button>
       </div>
     );
@@ -57,16 +57,18 @@ export function ArticleDetailPage({
           className="inline-flex items-center gap-2 text-xs font-medium text-[#5C5A55] hover:text-[#141413] mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour à la communauté</span>
+          <span>{t('articleDetail.backToCommunity')}</span>
         </button>
 
         <header>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#6B6860]">
-            <span className="font-medium text-[#2A4036]">{category?.name || 'Enseignement'}</span>
+            <span className="font-medium text-[#2A4036]">
+              {category?.name || t('articleDetail.teachingFallback')}
+            </span>
             <span aria-hidden="true">·</span>
-            <span>{formatDateFr(article.publishedAt)}</span>
+            <span>{formatDateFr(article.publishedAt, lang)}</span>
             <span aria-hidden="true">·</span>
-            <span>Par {article.author}</span>
+            <span>{t('articleDetail.byAuthor', { author: article.author })}</span>
           </div>
 
           <h1 className="mt-3 font-display text-3xl sm:text-5xl font-semibold text-[#141413] leading-[1.12] tracking-tight">
@@ -74,9 +76,7 @@ export function ArticleDetailPage({
           </h1>
 
           {article.excerpt && (
-            <p className="mt-5 text-lg text-[#5C5A55] leading-relaxed">
-              {article.excerpt}
-            </p>
+            <p className="mt-5 text-lg text-[#5C5A55] leading-relaxed">{article.excerpt}</p>
           )}
 
           <div className="mt-5 flex items-center gap-3">
@@ -94,8 +94,8 @@ export function ArticleDetailPage({
               />
               <span>
                 {article.likedByKeys?.includes(actorKey)
-                  ? 'Vous aimez cet enseignement'
-                  : 'J’aime cet enseignement'}
+                  ? t('articleDetail.likedTeaching')
+                  : t('articleDetail.likeTeaching')}
               </span>
               <span className="font-mono tabular-nums pl-1 border-l border-current/20">
                 {article.likesCount || 0}
@@ -137,8 +137,10 @@ export function ArticleDetailPage({
               className={`w-4 h-4 ${article.likedByKeys?.includes(actorKey) ? 'fill-current' : ''}`}
             />
             <span>
-              {article.likedByKeys?.includes(actorKey) ? 'Aimé' : 'Aimer cet article'} (
-              <span className="font-mono tabular-nums">{article.likesCount || 0}</span>)
+              {article.likedByKeys?.includes(actorKey)
+                ? t('articleDetail.likedShort')
+                : t('articleDetail.likeArticle')}{' '}
+              (<span className="font-mono tabular-nums">{article.likesCount || 0}</span>)
             </span>
           </button>
 
@@ -147,7 +149,7 @@ export function ArticleDetailPage({
             onClick={() => onNavigate('/communaute')}
             className="text-xs font-semibold text-[#2A4036] hover:underline"
           >
-            Retour aux enseignements
+            {t('articleDetail.backToTeachings')}
           </button>
         </div>
       </div>
@@ -156,7 +158,7 @@ export function ArticleDetailPage({
       {similarArticles.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-4 sm:px-8 mt-20 pt-12 border-t border-[#E6E4DF]">
           <h2 className="font-display text-3xl font-semibold text-[#141413] mb-8">
-            Articles similaires
+            {t('articleDetail.similarArticles')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
             {similarArticles.map((item) => {
@@ -179,9 +181,9 @@ export function ArticleDetailPage({
                   </button>
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 text-xs text-[#6B6860]">
-                      <span>{cat?.name || 'Enseignement'}</span>
+                      <span>{cat?.name || t('articleDetail.teachingFallback')}</span>
                       <span aria-hidden="true">·</span>
-                      <span>{formatDateFr(item.publishedAt)}</span>
+                      <span>{formatDateFr(item.publishedAt, lang)}</span>
                     </div>
                     <button
                       type="button"
@@ -198,7 +200,7 @@ export function ArticleDetailPage({
                         onClick={() => onNavigate(`/communaute/${item.slug}`)}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-[#2A4036] hover:underline"
                       >
-                        <span>Lire l’article</span>
+                        <span>{t('articleDetail.readArticle')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

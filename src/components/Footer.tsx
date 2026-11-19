@@ -1,5 +1,9 @@
-import { Lock } from 'lucide-react';
+import { Globe } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { SiteSettings } from '../types/cms';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -7,9 +11,17 @@ interface FooterProps {
 }
 
 export function Footer({ onNavigate, settings }: FooterProps) {
+  const { countryOption, autoEnabled, availableCountries, setCountryOverride } = useCurrency();
+  const { t } = useLanguage();
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [settings.general.logoUrl]);
+
   const socials = [
     { label: 'YouTube', url: settings.socials.youtube },
-    { label: 'Instagram', url: settings.socials.instagram },
+    { label: 'TikTok', url: settings.socials.tiktok },
     { label: 'Facebook', url: settings.socials.facebook },
     { label: 'Telegram', url: settings.socials.telegram },
   ].filter((s) => s.url && s.url.trim().length > 0);
@@ -19,17 +31,28 @@ export function Footer({ onNavigate, settings }: FooterProps) {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-14 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           <div className="md:col-span-5">
-            <p className="font-display text-2xl font-semibold tracking-tight">
-              {settings.general.siteName}
-            </p>
+            <div className="flex items-center gap-3">
+              {settings.general.logoUrl && !logoFailed ? (
+                <img
+                  src={settings.general.logoUrl}
+                  alt={settings.general.siteName}
+                  className="h-9 w-auto max-w-[150px] object-contain"
+                  referrerPolicy="no-referrer"
+                  onError={() => setLogoFailed(true)}
+                />
+              ) : null}
+              <p className="font-display text-2xl font-semibold tracking-tight">
+                {settings.general.siteName}
+              </p>
+            </div>
             <p className="mt-3 text-sm text-[#5C5A55] leading-relaxed max-w-md">
-              {settings.general.tagline}. Un espace dédié à la transmission contemplative, au partage communautaire et à la préparation attentive d’objets rituels.
+              {t('footer.taglineDescription', { tagline: settings.general.tagline })}
             </p>
           </div>
 
           <div className="md:col-span-3">
             <h3 className="text-xs font-semibold tracking-wide text-[#5C5A55] mb-3">
-              Navigation
+              {t('nav.navigation')}
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
@@ -38,7 +61,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Accueil
+                  {t('nav.home')}
                 </button>
               </li>
               <li>
@@ -47,7 +70,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/boutique')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Boutique
+                  {t('nav.shop')}
                 </button>
               </li>
               <li>
@@ -56,7 +79,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/communaute')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Communauté
+                  {t('nav.community')}
                 </button>
               </li>
               <li>
@@ -65,7 +88,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/a-propos')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  À propos
+                  {t('nav.about')}
                 </button>
               </li>
               <li>
@@ -74,7 +97,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/contact')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Contact
+                  {t('nav.contact')}
                 </button>
               </li>
               <li>
@@ -83,7 +106,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/suivi-commande')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Suivre ma commande
+                  {t('nav.trackOrder')}
                 </button>
               </li>
               <li>
@@ -92,7 +115,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   onClick={() => onNavigate('/mon-compte')}
                   className="text-[#141413] hover:text-[#2A4036] transition-colors"
                 >
-                  Mon compte visiteur
+                  {t('nav.myAccountFull')}
                 </button>
               </li>
             </ul>
@@ -100,7 +123,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
 
           <div className="md:col-span-4">
             <h3 className="text-xs font-semibold tracking-wide text-[#5C5A55] mb-3">
-              Sanctuaire &amp; Coordonnées
+              {t('footer.sanctuaryHeading')}
             </h3>
             <div className="space-y-1.5 text-sm text-[#5C5A55]">
               <p className="text-[#141413] font-medium">{settings.contact.address}</p>
@@ -130,16 +153,35 @@ export function Footer({ onNavigate, settings }: FooterProps) {
 
         <div className="mt-12 pt-6 border-t border-[#E2DFD9] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#6B6860]">
           <p>
-            © {new Date().getFullYear()} {settings.general.siteName}. Tous droits réservés.
+            {t('footer.rightsReserved', {
+              year: new Date().getFullYear(),
+              siteName: settings.general.siteName,
+            })}
           </p>
-          <button
-            type="button"
-            onClick={() => onNavigate('/admin')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D9D6CF] text-[#141413] font-medium hover:border-[#2A4036] hover:text-[#2A4036] transition-colors"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Espace Administrateur</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <LanguageSwitcher variant="compact" />
+            {autoEnabled && (
+              <div className="inline-flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#2A4036]" />
+                <label htmlFor="footer-country-currency" className="sr-only">
+                  {t('footer.countryCurrencyLabel')}
+                </label>
+                <select
+                  id="footer-country-currency"
+                  value={countryOption.countryCode}
+                  onChange={(e) => setCountryOverride(e.target.value)}
+                  className="bg-white border border-[#D9D6CF] rounded-md px-2 py-1 text-xs text-[#141413] focus:border-[#2A4036] focus:outline-none"
+                >
+                  {availableCountries.map((opt) => (
+                    <option key={opt.countryCode} value={opt.countryCode}>
+                      {opt.countryName} · {opt.currencyCode} ({opt.currencySymbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <p className="text-[11px] text-[#8A877E]">{settings.general.tagline}</p>
+          </div>
         </div>
       </div>
     </footer>

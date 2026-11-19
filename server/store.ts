@@ -12,9 +12,12 @@ import type {
   Customer,
   MediaItem,
   Order,
+  OrderInvoice,
   OrderStatus,
   Product,
   PublicBootstrapData,
+  PublicOrderTrackingInfo,
+  ShippingRateRule,
   SiteContent,
   SiteSettings,
   Testimonial,
@@ -26,11 +29,13 @@ import type {
 export interface AdminUserRecord extends AdminUserPublic {
   passwordHash: string;
   salt: string;
+  firebaseUid?: string;
 }
 
 export interface VisitorMemberRecord extends VisitorMemberPublic {
   passwordHash: string;
   salt: string;
+  firebaseUid?: string;
 }
 
 export interface DatabaseSchema {
@@ -89,438 +94,10 @@ function isoDaysAgo(days: number, hour = 10): string {
 }
 
 function createInitialSeed(): DatabaseSchema {
-  const adminCreds = hashPassword('Sanctuaire2026');
-
-  const categories: Category[] = [
-    {
-      id: 'cat_encens',
-      name: 'Encens & Résines',
-      slug: 'encens-resines',
-      description: 'Bâtons roulés à la main, bois de cèdre sacré et résines pures de purification.',
-      image: '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-      order: 1,
-      visible: true,
-      createdAt: isoDaysAgo(40),
-    },
-    {
-      id: 'cat_huiles',
-      name: 'Huiles & Élixirs',
-      slug: 'huiles-elixirs',
-      description: 'Extraits botaniques pressés à froid et huiles d’onction préparées en petites séries.',
-      image: '/src/assets/images/product_elixir_oil_1794851466718.jpg',
-      order: 2,
-      visible: true,
-      createdAt: isoDaysAgo(38),
-    },
-    {
-      id: 'cat_bougies',
-      name: 'Bougies Rituelles',
-      slug: 'bougies-rituelles',
-      description: 'Cire d’abeille sauvage coulée en céramique artisanale pour la veille contemplative.',
-      image: '/src/assets/images/product_candle_beeswax_1794851466573.jpg',
-      order: 3,
-      visible: true,
-      createdAt: isoDaysAgo(35),
-    },
-    {
-      id: 'cat_pierres',
-      name: 'Pierres & Méditation',
-      slug: 'pierres-meditation',
-      description: 'Minéraux polis sélectionnés pour l’ancrage, la clarté mentale et la pratique silencieuse.',
-      image: '/src/assets/images/product_stone_labradorite_1794851467208.jpg',
-      order: 4,
-      visible: true,
-      createdAt: isoDaysAgo(32),
-    },
-  ];
-
-  const products: Product[] = [
-    {
-      id: 'prod_encens_cedre',
-      reference: 'EV-ENC-001',
-      name: 'Encens Cèdre de l’Atlas & Oliban',
-      slug: 'encens-cedre-atlas-oliban',
-      price: 34,
-      categoryId: 'cat_encens',
-      description:
-        'Roulés selon une méthode traditionnelle sans liant synthétique, ces bâtons marient le cœur de cèdre de l’Atlas aux larmes d’oliban pur. Leur combustion lente installe un climat de recueillement profond.',
-      additionalInfo: 'Boîte de 24 bâtons · Combustion environ 45 minutes par bâton · Origine : Atlas & Oman · Support en basalte vendu séparément.',
-      images: ['/src/assets/images/product_incense_cedar_1794851466386.jpg'],
-      availability: 'En stock',
-      stockCount: 28,
-      featured: true,
-      active: true,
-      orderCount: 19,
-      createdAt: isoDaysAgo(30),
-      updatedAt: isoDaysAgo(2),
-    },
-    {
-      id: 'prod_huile_sauge',
-      reference: 'EV-HUI-004',
-      name: 'Élixir Botanique de Sauge Blanche',
-      slug: 'elixir-botanique-sauge-blanche',
-      price: 58,
-      categoryId: 'cat_huiles',
-      description:
-        'Macération lente de sauge blanche et de néroli dans une huile de jojoba vierge. Quelques gouttes sur les poignets ou sur pierre poreuse accompagnent l’ouverture de la pratique matinale.',
-      additionalInfo: 'Flacon en verre ambré 30 ml · Compte-gouttes en laiton brossé · Sans conservateur ni parfum de synthèse.',
-      images: ['/src/assets/images/product_elixir_oil_1794851466718.jpg'],
-      availability: 'En stock',
-      stockCount: 16,
-      featured: true,
-      active: true,
-      orderCount: 14,
-      createdAt: isoDaysAgo(28),
-      updatedAt: isoDaysAgo(3),
-    },
-    {
-      id: 'prod_bougie_cire',
-      reference: 'EV-BOU-002',
-      name: 'Bougie de Veille Cire d’Abeille & Grès',
-      slug: 'bougie-veille-cire-abeille-gres',
-      price: 46,
-      categoryId: 'cat_bougies',
-      description:
-        'Coulée à la main dans un calice de grès tourné en atelier, cette bougie de cire d’abeille brute diffuse une lueur chaude et une note subtile de miel sauvage, propice au silence du soir.',
-      additionalInfo: 'Cire d’abeille 100 % pure · Mèche en coton non blanchi · 55 heures de combustion · Contenant réutilisable.',
-      images: ['/src/assets/images/product_candle_beeswax_1794851466573.jpg'],
-      availability: 'En stock',
-      stockCount: 22,
-      featured: true,
-      active: true,
-      orderCount: 16,
-      createdAt: isoDaysAgo(25),
-      updatedAt: isoDaysAgo(1),
-    },
-    {
-      id: 'prod_pierres_ancrage',
-      reference: 'EV-PIE-007',
-      name: 'Duo d’Ancrage Labradorite & Quartz Fumé',
-      slug: 'duo-ancrage-labradorite-quartz-fume',
-      price: 65,
-      categoryId: 'cat_pierres',
-      description:
-        'Deux galets de paume polis à la main, choisis par le Maître pour leur densité et leur toucher apaisant. Livrés dans leur pochette de lin brut pour accompagner l’assise quotidienne.',
-      additionalInfo: 'Labradorite de Madagascar & Quartz Fumé alpin · Poids moyen du duo : 260 g · Pièces naturelles uniques.',
-      images: ['/src/assets/images/product_stone_labradorite_1794851467208.jpg'],
-      availability: 'Édition limitée',
-      stockCount: 7,
-      featured: true,
-      active: true,
-      orderCount: 11,
-      createdAt: isoDaysAgo(20),
-      updatedAt: isoDaysAgo(4),
-    },
-    {
-      id: 'prod_encens_sanctuaire',
-      reference: 'EV-ENC-009',
-      name: 'Coffret Rituel du Sanctuaire',
-      slug: 'coffret-rituel-du-sanctuaire',
-      price: 112,
-      categoryId: 'cat_encens',
-      description:
-        'Réunit notre brûleur sculpté en basalte et travertin, une réserve de bâtons au cèdre et le carnet de pratique quotidienne en papier coton.',
-      additionalInfo: 'Composition complète : Porte-encens bi-matière, 24 bâtons de cèdre, carnet cousu main · Préparation sous 48h.',
-      images: [
-        '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-        '/src/assets/images/article_sacred_ritual_1794851468079.jpg',
-      ],
-      availability: 'Sur commande',
-      stockCount: 5,
-      featured: false,
-      active: true,
-      orderCount: 8,
-      createdAt: isoDaysAgo(15),
-      updatedAt: isoDaysAgo(2),
-    },
-    {
-      id: 'prod_bol_contemplation',
-      reference: 'EV-MED-012',
-      name: 'Carnet de Silence & Bol d’Ouverture',
-      slug: 'carnet-silence-bol-ouverture',
-      price: 89,
-      categoryId: 'cat_pierres',
-      description:
-        'Ensemble dédié à l’écriture méditative du matin : un carnet artisanal à tranche brute accompagné d’un petit bol chantant en laiton martelé à la tonalité claire et durable.',
-      additionalInfo: 'Bol diamètre 10 cm avec mailloche en bois de noyer · Carnet 120 pages papier coton 180 g/m².',
-      images: ['/src/assets/images/article_sacred_ritual_1794851468079.jpg'],
-      availability: 'En stock',
-      stockCount: 12,
-      featured: false,
-      active: true,
-      orderCount: 6,
-      createdAt: isoDaysAgo(12),
-      updatedAt: isoDaysAgo(1),
-    },
-  ];
-
-  const customers: Customer[] = [
-    {
-      id: 'cust_1',
-      firstName: 'Claire',
-      lastName: 'Morel',
-      phone: '+33 6 14 28 73 90',
-      email: 'claire.morel@exemple.fr',
-      address: '14 Rue des Archives, 75004 Paris',
-      notes: 'Apprécie les livraisons en fin d’après-midi.',
-      createdAt: isoDaysAgo(14),
-      lastOrderAt: isoDaysAgo(0, 9),
-      orderCount: 2,
-      totalIndicative: 146,
-    },
-    {
-      id: 'cust_2',
-      firstName: 'Marc',
-      lastName: 'Lefèvre',
-      phone: '+33 6 72 41 19 04',
-      email: 'marc.lefevre@exemple.fr',
-      address: '8 Place Bellecour, 69002 Lyon',
-      notes: '',
-      createdAt: isoDaysAgo(9),
-      lastOrderAt: isoDaysAgo(1, 15),
-      orderCount: 1,
-      totalIndicative: 65,
-    },
-    {
-      id: 'cust_3',
-      firstName: 'Nadia',
-      lastName: 'Benali',
-      phone: '+33 6 55 83 12 47',
-      email: 'nadia.benali@exemple.fr',
-      address: '27 Avenue Jean Médecin, 06000 Nice',
-      notes: 'Demande régulière de coffrets pour retraite.',
-      createdAt: isoDaysAgo(5),
-      lastOrderAt: isoDaysAgo(3, 11),
-      orderCount: 1,
-      totalIndicative: 112,
-    },
-    {
-      id: 'cust_4',
-      firstName: 'Antoine',
-      lastName: 'Rousseau',
-      phone: '+33 7 81 04 66 21',
-      email: '',
-      address: '3 Rue Sainte-Catherine, 33000 Bordeaux',
-      notes: '',
-      createdAt: isoDaysAgo(3),
-      lastOrderAt: isoDaysAgo(2, 16),
-      orderCount: 1,
-      totalIndicative: 80,
-    },
-  ];
-
-  const orders: Order[] = [
-    {
-      id: 'ord_1045',
-      orderNumber: 'CMD-1045',
-      createdAt: isoDaysAgo(0, 9),
-      updatedAt: isoDaysAgo(0, 9),
-      status: 'Nouvelle',
-      customerId: 'cust_1',
-      customerFirstName: 'Claire',
-      customerLastName: 'Morel',
-      customerPhone: '+33 6 14 28 73 90',
-      customerEmail: 'claire.morel@exemple.fr',
-      deliveryAddress: '14 Rue des Archives, 75004 Paris',
-      message: 'Merci de joindre un mot de guidance pour offrir.',
-      items: [
-        {
-          productId: 'prod_huile_sauge',
-          productName: 'Élixir Botanique de Sauge Blanche',
-          productRef: 'EV-HUI-004',
-          unitPrice: 58,
-          quantity: 1,
-          image: '/src/assets/images/product_elixir_oil_1794851466718.jpg',
-        },
-        {
-          productId: 'prod_encens_cedre',
-          productName: 'Encens Cèdre de l’Atlas & Oliban',
-          productRef: 'EV-ENC-001',
-          unitPrice: 34,
-          quantity: 1,
-          image: '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-        },
-      ],
-      indicativeTotal: 92,
-      adminNotes: '',
-      history: [
-        {
-          status: 'Nouvelle',
-          date: isoDaysAgo(0, 9),
-          note: 'Demande de commande reçue depuis la boutique.',
-          actor: 'Visiteur',
-        },
-      ],
-    },
-    {
-      id: 'ord_1044',
-      orderNumber: 'CMD-1044',
-      createdAt: isoDaysAgo(1, 15),
-      updatedAt: isoDaysAgo(1, 17),
-      status: 'En cours',
-      customerId: 'cust_2',
-      customerFirstName: 'Marc',
-      customerLastName: 'Lefèvre',
-      customerPhone: '+33 6 72 41 19 04',
-      customerEmail: 'marc.lefevre@exemple.fr',
-      deliveryAddress: '8 Place Bellecour, 69002 Lyon',
-      message: 'Disponible par téléphone après 18h pour confirmer la livraison.',
-      items: [
-        {
-          productId: 'prod_pierres_ancrage',
-          productName: 'Duo d’Ancrage Labradorite & Quartz Fumé',
-          productRef: 'EV-PIE-007',
-          unitPrice: 65,
-          quantity: 1,
-          image: '/src/assets/images/product_stone_labradorite_1794851467208.jpg',
-        },
-      ],
-      indicativeTotal: 65,
-      adminNotes: 'Appel prévu ce soir à 18h30.',
-      history: [
-        {
-          status: 'Nouvelle',
-          date: isoDaysAgo(1, 15),
-          note: 'Demande de commande enregistrée.',
-          actor: 'Visiteur',
-        },
-        {
-          status: 'En cours',
-          date: isoDaysAgo(1, 17),
-          note: 'Sélection des deux pierres en cours à l’atelier.',
-          actor: 'Maître Élias Varenne',
-        },
-      ],
-    },
-    {
-      id: 'ord_1043',
-      orderNumber: 'CMD-1043',
-      createdAt: isoDaysAgo(2, 16),
-      updatedAt: isoDaysAgo(2, 18),
-      status: 'Confirmée',
-      customerId: 'cust_4',
-      customerFirstName: 'Antoine',
-      customerLastName: 'Rousseau',
-      customerPhone: '+33 7 81 04 66 21',
-      customerEmail: '',
-      deliveryAddress: '3 Rue Sainte-Catherine, 33000 Bordeaux',
-      message: '',
-      items: [
-        {
-          productId: 'prod_bougie_cire',
-          productName: 'Bougie de Veille Cire d’Abeille & Grès',
-          productRef: 'EV-BOU-002',
-          unitPrice: 46,
-          quantity: 1,
-          image: '/src/assets/images/product_candle_beeswax_1794851466573.jpg',
-        },
-        {
-          productId: 'prod_encens_cedre',
-          productName: 'Encens Cèdre de l’Atlas & Oliban',
-          productRef: 'EV-ENC-001',
-          unitPrice: 34,
-          quantity: 1,
-          image: '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-        },
-      ],
-      indicativeTotal: 80,
-      adminNotes: 'Confirmé par téléphone, expédition demain.',
-      history: [
-        {
-          status: 'Nouvelle',
-          date: isoDaysAgo(2, 16),
-          note: 'Demande de commande enregistrée.',
-          actor: 'Visiteur',
-        },
-        {
-          status: 'Confirmée',
-          date: isoDaysAgo(2, 18),
-          note: 'Adresse et créneau validés avec le client.',
-          actor: 'Maître Élias Varenne',
-        },
-      ],
-    },
-    {
-      id: 'ord_1042',
-      orderNumber: 'CMD-1042',
-      createdAt: isoDaysAgo(3, 11),
-      updatedAt: isoDaysAgo(2, 10),
-      status: 'Terminée',
-      customerId: 'cust_3',
-      customerFirstName: 'Nadia',
-      customerLastName: 'Benali',
-      customerPhone: '+33 6 55 83 12 47',
-      customerEmail: 'nadia.benali@exemple.fr',
-      deliveryAddress: '27 Avenue Jean Médecin, 06000 Nice',
-      message: 'Pour notre cercle de méditation mensuel.',
-      items: [
-        {
-          productId: 'prod_encens_sanctuaire',
-          productName: 'Coffret Rituel du Sanctuaire',
-          productRef: 'EV-ENC-009',
-          unitPrice: 112,
-          quantity: 1,
-          image: '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-        },
-      ],
-      indicativeTotal: 112,
-      adminNotes: 'Colis remis en main propre.',
-      history: [
-        {
-          status: 'Nouvelle',
-          date: isoDaysAgo(3, 11),
-          note: 'Demande reçue.',
-          actor: 'Visiteur',
-        },
-        {
-          status: 'Terminée',
-          date: isoDaysAgo(2, 10),
-          note: 'Commande livrée et clôturée.',
-          actor: 'Maître Élias Varenne',
-        },
-      ],
-    },
-    {
-      id: 'ord_1041',
-      orderNumber: 'CMD-1041',
-      createdAt: isoDaysAgo(6, 14),
-      updatedAt: isoDaysAgo(4, 12),
-      status: 'Terminée',
-      customerId: 'cust_1',
-      customerFirstName: 'Claire',
-      customerLastName: 'Morel',
-      customerPhone: '+33 6 14 28 73 90',
-      customerEmail: 'claire.morel@exemple.fr',
-      deliveryAddress: '14 Rue des Archives, 75004 Paris',
-      message: '',
-      items: [
-        {
-          productId: 'prod_bougie_cire',
-          productName: 'Bougie de Veille Cire d’Abeille & Grès',
-          productRef: 'EV-BOU-002',
-          unitPrice: 46,
-          quantity: 1,
-          image: '/src/assets/images/product_candle_beeswax_1794851466573.jpg',
-        },
-      ],
-      indicativeTotal: 54,
-      adminNotes: '',
-      history: [
-        {
-          status: 'Nouvelle',
-          date: isoDaysAgo(6, 14),
-          note: 'Demande reçue.',
-          actor: 'Visiteur',
-        },
-        {
-          status: 'Terminée',
-          date: isoDaysAgo(4, 12),
-          note: 'Livrée.',
-          actor: 'Maître Élias Varenne',
-        },
-      ],
-    },
-  ];
+  const categories: Category[] = [];
+  const products: Product[] = [];
+  const customers: Customer[] = [];
+  const orders: Order[] = [];
 
   const articleCategories: ArticleCategory[] = [
     { id: 'ac_enseignements', name: 'Enseignements', slug: 'enseignements' },
@@ -529,193 +106,9 @@ function createInitialSeed(): DatabaseSchema {
     { id: 'ac_actualites', name: 'Actualités du Sanctuaire', slug: 'actualites' },
   ];
 
-  const articles: Article[] = [
-    {
-      id: 'art_silence_interieur',
-      title: 'Habiter le silence avant que le monde ne s’éveille',
-      slug: 'habiter-le-silence-avant-le-monde',
-      excerpt:
-        'Pourquoi les vingt premières minutes du matin déterminent la qualité de notre attention, et comment aménager un espace de clarté sans rupture avec la vie moderne.',
-      content:
-        'Le silence n’est pas l’absence de bruit ; il est la présence d’une écoute sans précipitation. Lorsque nous ouvrons les yeux le matin, notre esprit cherche aussitôt un appui extérieur : une tâche, un message, une inquiétude héritée de la veille.\n\nAménager un seuil entre le sommeil et l’action transforme radicalement notre rapport au temps. Il ne s’agit pas de fuir nos responsabilités, mais d’entrer dans la journée depuis un centre stable. Asseyez-vous face à une lumière sobre, respirez trois fois profondément sans chercher à corriger le souffle, puis observez simplement ce qui demande à être apaisé.\n\nUn objet familier — une tasse de thé tiède, une flamme de cire pure, une pierre fraîche dans la paume — agit alors comme un repère sensoriel. Il rappelle au corps que rien n’exige votre dispersion immédiate.',
-      image: '/src/assets/images/article_inner_silence_1794851467763.jpg',
-      author: 'Maître Élias Varenne',
-      categoryId: 'ac_enseignements',
-      status: 'Publié',
-      featured: true,
-      likesCount: 18,
-      likedByKeys: [],
-      publishedAt: isoDaysAgo(4),
-      createdAt: isoDaysAgo(5),
-      updatedAt: isoDaysAgo(4),
-    },
-    {
-      id: 'art_rituel_ecriture',
-      title: 'L’écriture contemplative comme miroir de discernement',
-      slug: 'ecriture-contemplative-miroir-discernement',
-      excerpt:
-        'Poser ses pensées sur papier coton libère la mémoire vive et révèle les intentions véritables derrière nos hésitations quotidiennes.',
-      content:
-        'Écrire à la main ralentit le débit de la pensée jusqu’à la vitesse de la respiration. Dans ce ralentissement apparaît une honnêteté que le tumulte intérieur dissimulait.\n\nChaque soir, consacrez dix minutes à noter trois observations sans jugement : ce qui vous a donné de l’élan, ce qui a troublé votre paix, et ce que vous choisissez de déposer avant le sommeil. Nul besoin de style littéraire ; la simplicité du trait suffit.\n\nAvec les semaines, ces feuillets deviennent une cartographie fidèle de votre évolution intérieure. Vous cessez de répéter les mêmes impasses parce que vous apprenez à en reconnaître les premiers signes.',
-      image: '/src/assets/images/article_sacred_ritual_1794851468079.jpg',
-      author: 'Maître Élias Varenne',
-      categoryId: 'ac_pratique',
-      status: 'Publié',
-      featured: true,
-      likesCount: 14,
-      likedByKeys: [],
-      publishedAt: isoDaysAgo(10),
-      createdAt: isoDaysAgo(11),
-      updatedAt: isoDaysAgo(10),
-    },
-    {
-      id: 'art_matiere_sacree',
-      title: 'La sobriété des objets qui nous entourent',
-      slug: 'sobriete-des-objets-qui-nous-entourent',
-      excerpt:
-        'Ce que nous touchons façonne notre état d’esprit. Réflexion sur les matières nobles — bois, pierre, argile — et leur rôle dans l’équilibre du foyer.',
-      content:
-        'Nous vivons entourés d’objets anonymes, légers et jetables qui n’appellent aucun soin. Pourtant, l’être humain entretient un dialogue silencieux avec la matière qui l’environne.\n\nChoisir un brûleur en pierre brute ou une bougie façonnée par une main patiente n’est pas un luxe décoratif : c’est une manière d’honorer le geste. Chaque fois que vous allumez un encens véritable, vous signifiez à votre espace qu’un temps différent commence.\n\nEntourez-vous de peu d’objets, mais veillez à ce que chacun porte une intention claire, une origine lisible et une durée qui dépasse l’instant.',
-      image: '/src/assets/images/hero_sanctuary_1794851465479.jpg',
-      author: 'Maître Élias Varenne',
-      categoryId: 'ac_reflexions',
-      status: 'Publié',
-      featured: true,
-      likesCount: 9,
-      likedByKeys: [],
-      publishedAt: isoDaysAgo(17),
-      createdAt: isoDaysAgo(18),
-      updatedAt: isoDaysAgo(17),
-    },
-    {
-      id: 'art_retraite_hiver',
-      title: 'Notes préparatoires pour la veille du solstice d’hiver',
-      slug: 'notes-preparatoires-solstice-hiver',
-      excerpt:
-        'Brouillon de travail consacré aux lectures et temps de silence qui rythmeront la rencontre de décembre au Sanctuaire.',
-      content:
-        'Document de préparation interne pour les participants de la retraite d’hiver. Horaires envisagés : ouverture à 7h30, marche silencieuse à 11h00, entretien collectif à 17h00.',
-      image: '/src/assets/images/product_candle_beeswax_1794851466573.jpg',
-      author: 'Maître Élias Varenne',
-      categoryId: 'ac_actualites',
-      status: 'Brouillon',
-      featured: false,
-      likesCount: 0,
-      likedByKeys: [],
-      publishedAt: isoDaysAgo(1),
-      createdAt: isoDaysAgo(1),
-      updatedAt: isoDaysAgo(1),
-    },
-  ];
-
-  const videos: VideoItem[] = [
-    {
-      id: 'vid_1',
-      title: 'Entretien sur la paix intérieure et l’art de la présence',
-      youtubeUrl: 'https://www.youtube.com/watch?v=inpok4MKVLM',
-      youtubeId: 'inpok4MKVLM',
-      thumbnail: 'https://img.youtube.com/vi/inpok4MKVLM/hqdefault.jpg',
-      description: 'Une méditation guidée de cinq minutes pour retrouver votre ancrage au cœur de la journée.',
-      duration: '05:12',
-      visible: true,
-      featured: true,
-      sortOrder: 1,
-      createdAt: isoDaysAgo(12),
-    },
-    {
-      id: 'vid_2',
-      title: 'Respiration consciente et apaisement du système nerveux',
-      youtubeUrl: 'https://www.youtube.com/watch?v=ZToicYcHIOU',
-      youtubeId: 'ZToicYcHIOU',
-      thumbnail: 'https://img.youtube.com/vi/ZToicYcHIOU/hqdefault.jpg',
-      description: 'Pratique vocale et silencieuse pour relâcher les tensions accumulées avant le repos nocturne.',
-      duration: '10:05',
-      visible: true,
-      featured: true,
-      sortOrder: 2,
-      createdAt: isoDaysAgo(21),
-    },
-    {
-      id: 'vid_3',
-      title: 'Le discernement face aux cycles de changement',
-      youtubeUrl: 'https://www.youtube.com/watch?v=O-6f5wQXSu8',
-      youtubeId: 'O-6f5wQXSu8',
-      thumbnail: 'https://img.youtube.com/vi/O-6f5wQXSu8/hqdefault.jpg',
-      description: 'Enseignement d’ouverture sur l’accueil des transitions personnelles avec lucidité et douceur.',
-      duration: '10:18',
-      visible: true,
-      featured: false,
-      sortOrder: 3,
-      createdAt: isoDaysAgo(30),
-    },
-  ];
-
-  const media: MediaItem[] = [
-    {
-      id: 'med_hero',
-      name: 'Sanctuaire Matin Lumière',
-      url: '/src/assets/images/hero_sanctuary_1794851465479.jpg',
-      folder: 'site',
-      sizeLabel: '16:9 · Éditorial',
-      createdAt: isoDaysAgo(40),
-    },
-    {
-      id: 'med_master',
-      name: 'Portrait Maître Élias Varenne',
-      url: '/src/assets/images/master_portrait_1794851465814.jpg',
-      folder: 'site',
-      sizeLabel: '3:4 · Portrait',
-      createdAt: isoDaysAgo(40),
-    },
-    {
-      id: 'med_incense',
-      name: 'Encens Cèdre & Basalte',
-      url: '/src/assets/images/product_incense_cedar_1794851466386.jpg',
-      folder: 'produits',
-      sizeLabel: '4:3 · Produit',
-      createdAt: isoDaysAgo(35),
-    },
-    {
-      id: 'med_oil',
-      name: 'Élixir Sauge Blanche',
-      url: '/src/assets/images/product_elixir_oil_1794851466718.jpg',
-      folder: 'produits',
-      sizeLabel: '4:3 · Produit',
-      createdAt: isoDaysAgo(35),
-    },
-    {
-      id: 'med_candle',
-      name: 'Bougie Cire & Grès',
-      url: '/src/assets/images/product_candle_beeswax_1794851466573.jpg',
-      folder: 'produits',
-      sizeLabel: '4:3 · Produit',
-      createdAt: isoDaysAgo(35),
-    },
-    {
-      id: 'med_stones',
-      name: 'Pierres Labradorite & Quartz',
-      url: '/src/assets/images/product_stone_labradorite_1794851467208.jpg',
-      folder: 'produits',
-      sizeLabel: '4:3 · Produit',
-      createdAt: isoDaysAgo(35),
-    },
-    {
-      id: 'med_art1',
-      name: 'Cérémonie du Thé & Silence',
-      url: '/src/assets/images/article_inner_silence_1794851467763.jpg',
-      folder: 'articles',
-      sizeLabel: '4:3 · Article',
-      createdAt: isoDaysAgo(20),
-    },
-    {
-      id: 'med_art2',
-      name: 'Carnet Coton & Bol Laiton',
-      url: '/src/assets/images/article_sacred_ritual_1794851468079.jpg',
-      folder: 'articles',
-      sizeLabel: '4:3 · Article',
-      createdAt: isoDaysAgo(20),
-    },
-  ];
+  const articles: Article[] = [];
+  const videos: VideoItem[] = [];
+  const media: MediaItem[] = [];
 
   const siteContent: SiteContent = {
     hero: {
@@ -723,7 +116,7 @@ function createInitialSeed(): DatabaseSchema {
       title: 'Bienvenue dans votre espace de clarté et de présence',
       subtitle:
         'Découvrez les enseignements contemporains de Maître Élias Varenne, rejoignez les échanges de la communauté et commandez des objets rituels façonnés avec sobriété.',
-      image: '/src/assets/images/hero_sanctuary_1794851465479.jpg',
+      image: '',
       primaryButtonLabel: 'Découvrir la boutique',
       primaryButtonTarget: '/boutique',
       secondaryButtonLabel: 'Rejoindre la communauté',
@@ -731,7 +124,7 @@ function createInitialSeed(): DatabaseSchema {
     },
     master: {
       visible: true,
-      photo: '/src/assets/images/master_portrait_1794851465814.jpg',
+      photo: '',
       name: 'Maître Élias Varenne',
       title: 'Fondateur du Sanctuaire & Guide contemplatif',
       shortBio:
@@ -745,18 +138,13 @@ function createInitialSeed(): DatabaseSchema {
       featuredProductsTitle: 'Découvrez notre sélection',
       featuredProductsSubtitle:
         'Objets de pratique et créations naturelles préparés en séries limitées, disponibles uniquement sur demande directe.',
-      featuredProductIds: [
-        'prod_encens_cedre',
-        'prod_huile_sauge',
-        'prod_bougie_cire',
-        'prod_pierres_ancrage',
-      ],
+      featuredProductIds: [],
       showCommunityArticles: true,
       featuredArticlesTitle: 'Derniers enseignements & écrits',
-      featuredArticleIds: ['art_silence_interieur', 'art_rituel_ecriture', 'art_matiere_sacree'],
+      featuredArticleIds: [],
       showCommunityVideos: true,
       featuredVideosTitle: 'Vidéos & méditations guidées',
-      featuredVideoIds: ['vid_1', 'vid_2'],
+      featuredVideoIds: [],
       showTestimonials: true,
       featuredTestimonialsTitle: 'Paroles & Témoignages',
       sectionOrder: ['master', 'products', 'articles', 'videos', 'testimonials'],
@@ -764,14 +152,14 @@ function createInitialSeed(): DatabaseSchema {
     aboutPage: {
       heroTitle: 'Une voie contemplative ancrée dans le réel',
       heroSubtitle:
-        'Le Sanctuaire Élias Varenne réunit transmission écrite, pratique audio-visuelle et artisanat sacré au service de l’équilibre intérieur.',
+        'DIVIN HORUS réunit transmission écrite, pratique audio-visuelle et artisanat sacré au service de l’équilibre intérieur.',
       philosophyTitle: 'Notre philosophie de transmission',
       philosophyBody:
         'Nous croyons qu’une démarche spirituelle authentique se mesure à la paix qu’elle apporte dans les gestes ordinaires : la parole juste, l’attention portée aux autres, et la sobriété de nos habitudes.\n\nRefusant tout folklore ostentatoire, notre espace privilégie la clarté, l’étude patiente et l’accompagnement humain direct. C’est également la raison pour laquelle chaque commande fait l’objet d’un échange personnel avant préparation.',
       lineageTitle: 'L’atelier des matières nobles',
       lineageBody:
         'Tous les encens, huiles botaniques, bougies en cire d’abeille et minéraux sont sélectionnés ou formulés auprès d’artisans indépendants respectueux des cycles naturels. Aucun paiement automatisé n’est requis en ligne : votre demande est reçue, vérifiée et confirmée personnellement par notre équipe.',
-      image: '/src/assets/images/master_portrait_1794851465814.jpg',
+      image: '',
       commitments: [
         {
           title: 'Sérénité & Transparence',
@@ -786,23 +174,107 @@ function createInitialSeed(): DatabaseSchema {
           description: 'Articles, enseignements et vidéos restent librement accessibles afin de nourrir votre pratique.',
         },
       ],
+      faqTitle: 'Questions fréquentes',
+      faqSubtitle:
+        'Retrouvez les réponses essentielles concernant nos enseignements, l’accès à la communauté et le fonctionnement de la boutique sur commande.',
+      faqs: [
+        {
+          id: 'faq_1',
+          category: 'Enseignements',
+          visible: true,
+          question: 'Comment accéder aux enseignements, articles et vidéos de DIVIN HORUS ?',
+          answer:
+            'Tous les écrits, réflexions et méditations vidéo publiés dans l’espace Communauté sont en accès libre et gratuit. Vous pouvez également créer un compte visiteur depuis la rubrique « Connexion » afin d’enregistrer vos articles préférés et publier votre témoignage.',
+        },
+        {
+          id: 'faq_2',
+          category: 'Enseignements',
+          visible: true,
+          question: 'Faut-il déjà pratiquer la méditation pour suivre les enseignements ?',
+          answer:
+            'Aucune expérience préalable n’est requise. Les enseignements transmis privilégient des repères clairs, la présence au quotidien et des exercices progressifs accessibles à chacun.',
+        },
+        {
+          id: 'faq_3',
+          category: 'Enseignements',
+          visible: true,
+          question: 'À quelle fréquence de nouvelles vidéos et réflexions sont-elles publiées ?',
+          answer:
+            'De nouveaux articles sont publiés régulièrement dans la Communauté, et chaque vidéo mise en ligne sur notre chaîne YouTube officielle est synchronisée automatiquement sur le site.',
+        },
+        {
+          id: 'faq_4',
+          category: 'Boutique',
+          visible: true,
+          question: 'Pourquoi n’y a-t-il pas de paiement en ligne sur la boutique ?',
+          answer:
+            'Par souci d’authenticité et d’accompagnement humain, aucune carte bancaire n’est demandée en ligne. Vous validez simplement votre demande de commande : notre équipe vérifie la disponibilité artisanale et vous contacte personnellement pour confirmer les détails et le règlement.',
+        },
+        {
+          id: 'faq_5',
+          category: 'Boutique',
+          visible: true,
+          question: 'Comment suivre l’évolution de ma demande de commande ?',
+          answer:
+            'Chaque demande génère un numéro unique (par exemple CMD-1001). Vous pouvez suivre son statut à tout moment depuis la page « Suivre ma commande » ou directement dans votre espace « Mon compte ».',
+        },
+        {
+          id: 'faq_6',
+          category: 'Boutique',
+          visible: true,
+          question: 'Quels sont les délais de préparation et les zones d’expédition ?',
+          answer:
+            'Les créations en stock sont préparées sous 2 à 3 jours ouvrés ; les pièces réalisées sur commande demandent 5 à 10 jours. Nous expédions en France métropolitaine, Belgique, Suisse, Luxembourg et proposons le retrait sur rendez-vous.',
+        },
+        {
+          id: 'faq_7',
+          category: 'Boutique',
+          visible: true,
+          question: 'D’où proviennent les matières utilisées pour les objets rituels ?',
+          answer:
+            'Les résines naturelles, cires d’abeille pures, huiles botaniques et minéraux bruts sont sourcés auprès d’artisans indépendants, sans parfums de synthèse ni additifs chimiques.',
+        },
+        {
+          id: 'faq_8',
+          category: 'Général',
+          visible: true,
+          question: 'Comment demander un renseignement ou un accompagnement individuel ?',
+          answer:
+            'Rendez-vous sur la page Contact pour nous écrire directement. Notre équipe vous répond avec attention du lundi au vendredi sous 24 à 48 heures ouvrées.',
+        },
+      ],
     },
     contactPage: {
-      title: 'Entrer en relation avec le Sanctuaire',
+      title: 'Entrer en relation avec DIVIN HORUS',
       subtitle:
         'Pour toute question concernant un enseignement, une demande de commande personnalisée ou une orientation, notre équipe vous répond avec attention.',
       sanctuaryHours: 'Accueil & réponses du lundi au vendredi, de 9h30 à 18h30',
       consultationNote: 'Les demandes de commande passées en boutique sont confirmées par téléphone ou courriel sous 24 heures ouvrées.',
     },
+    welcomeAnnouncement: {
+      enabled: true,
+      type: 'welcome',
+      kicker: 'Mot d’accueil',
+      title: 'Bienvenue dans l’espace DIVIN HORUS',
+      message:
+        'Nous sommes heureux de vous accueillir. Découvrez nos enseignements, méditations guidées et objets rituels façonnés avec sobriété.\n\nChaque commande passée sur la boutique fait l’objet d’une confirmation personnalisée par notre équipe.',
+      buttonLabel: 'Découvrir la boutique',
+      buttonTarget: '/boutique',
+      image: '',
+      displayFrequency: 'every_visit',
+      version: 'v1',
+    },
   };
 
   const settings: SiteSettings = {
     general: {
-      siteName: 'Élias Varenne',
+      siteName: 'DIVIN HORUS',
       tagline: 'Spiritualité, Enseignements & Objets Sacrés',
       logoUrl: '',
       faviconUrl: '',
+      currencyCode: 'EUR',
       currencySymbol: '€',
+      autoCurrencyByCountry: true,
       orderNotificationEmail: 'commandes@eliasvarenne.fr',
     },
     contact: {
@@ -814,9 +286,15 @@ function createInitialSeed(): DatabaseSchema {
     },
     socials: {
       youtube: 'https://www.youtube.com',
-      instagram: 'https://www.instagram.com',
+      tiktok: 'https://www.tiktok.com',
       facebook: '',
       telegram: '',
+    },
+    youtubeSync: {
+      channelUrl: '',
+      channelId: '',
+      autoSync: true,
+      lastSyncAt: null,
     },
     orderSettings: {
       confirmationMessage:
@@ -824,6 +302,30 @@ function createInitialSeed(): DatabaseSchema {
       deliveryZones: 'France métropolitaine, Belgique, Suisse, Luxembourg et retrait au Sanctuaire (Paris)',
       requireEmail: false,
       allowMultiProductCart: true,
+      defaultShippingFee: 15,
+      shippingRatesByCountry: [
+        { countryCode: 'FR', countryName: 'France', fee: 5 },
+        { countryCode: 'BE', countryName: 'Belgique', fee: 8 },
+        { countryCode: 'LU', countryName: 'Luxembourg', fee: 8 },
+        { countryCode: 'CH', countryName: 'Suisse', fee: 12 },
+        { countryCode: 'CI', countryName: 'Côte d’Ivoire', fee: 15 },
+        { countryCode: 'SN', countryName: 'Sénégal', fee: 15 },
+        { countryCode: 'CM', countryName: 'Cameroun', fee: 15 },
+        { countryCode: 'MA', countryName: 'Maroc', fee: 12 },
+        { countryCode: 'CA', countryName: 'Canada', fee: 18 },
+        { countryCode: 'US', countryName: 'États-Unis', fee: 18 },
+      ],
+      defaultPaymentMethod: 'Mobile Money / Virement bancaire',
+      defaultPaymentDetails:
+        'Merci de régler le montant total par Mobile Money ou Virement bancaire en indiquant votre numéro de commande en référence.',
+      defaultInvoiceNotes: 'DIVIN HORUS · Facture à régler dès réception pour finaliser l’expédition.',
+      defaultInvoiceSignature: {
+        type: 'text',
+        imageUrl: '',
+        signerName: 'Direction DIVIN HORUS',
+        signerRole: 'Service Commandes & Facturation',
+      },
+      teamWhatsappPhone: '',
     },
   };
 
@@ -831,118 +333,23 @@ function createInitialSeed(): DatabaseSchema {
     {
       id: 'adm_1',
       name: 'Maître Élias Varenne',
-      email: 'admin@eliasvarenne.fr',
+      email: 'bisnessweb24@gmail.com',
       role: 'Super Administrateur',
-      passwordHash: adminCreds.hash,
-      salt: adminCreds.salt,
+      passwordHash:
+        '687790f1b68f3f0aa9278441c0ed4316f95796330b1455d36a2b92b1cd67c2cd590a483daab0f5a3ce0e736d1cf289ee6514d67e3883cb41c9a17138fe77ea94',
+      salt: 'a9fd049dedae68cb1f0f5e5193943124',
       createdAt: isoDaysAgo(60),
       lastLoginAt: isoDaysAgo(0, 8),
     },
   ];
 
-  const activities: ActivityLog[] = [
-    {
-      id: 'act_1',
-      actorName: 'Claire Morel',
-      action: 'Nouvelle demande de commande enregistrée',
-      target: 'CMD-1045 (92 €)',
-      category: 'commande',
-      createdAt: isoDaysAgo(0, 9),
-    },
-    {
-      id: 'act_2',
-      actorName: 'Maître Élias Varenne',
-      action: 'Statut mis à jour vers En cours',
-      target: 'CMD-1044 · Marc Lefèvre',
-      category: 'commande',
-      createdAt: isoDaysAgo(1, 17),
-    },
-    {
-      id: 'act_3',
-      actorName: 'Maître Élias Varenne',
-      action: 'Article publié dans Communauté',
-      target: 'Habiter le silence avant que le monde ne s’éveille',
-      category: 'contenu',
-      createdAt: isoDaysAgo(4, 10),
-    },
-    {
-      id: 'act_4',
-      actorName: 'Maître Élias Varenne',
-      action: 'Produit mis à jour',
-      target: 'Bougie de Veille Cire d’Abeille & Grès',
-      category: 'produit',
-      createdAt: isoDaysAgo(1, 11),
-    },
-  ];
-
-  const contactMessages: ContactMessage[] = [
-    {
-      id: 'msg_1',
-      name: 'Hélène Laurent',
-      email: 'helene.laurent@exemple.fr',
-      phone: '+33 6 42 19 88 10',
-      subject: 'Question sur la prochaine retraite silencieuse',
-      message:
-        'Bonjour, je souhaiterais connaître les dates des prochaines rencontres d’hiver ainsi que la disponibilité du coffret du Sanctuaire.',
-      read: false,
-      createdAt: isoDaysAgo(1, 14),
-    },
-  ];
-
-  const visitorCreds = hashPassword('Visiteur2026');
-  const visitors: VisitorMemberRecord[] = [
-    {
-      id: 'vis_1',
-      firstName: 'Claire',
-      lastName: 'Morel',
-      email: 'claire.morel@exemple.fr',
-      phone: '+33 6 14 28 73 90',
-      address: '14 Rue des Archives, 75004 Paris',
-      passwordHash: visitorCreds.hash,
-      salt: visitorCreds.salt,
-      createdAt: isoDaysAgo(14),
-    },
-  ];
-
-  const testimonials: Testimonial[] = [
-    {
-      id: 'test_1',
-      authorName: 'Claire Morel',
-      authorLocation: 'Paris · Bougie & Élixir',
-      rating: 5,
-      content:
-        'La qualité de l’encens au cèdre et l’attention portée à chaque demande de commande créent une véritable relation de confiance. Le suivi téléphonique avant l’envoi est d’une grande délicatesse.',
-      status: 'Publié',
-      featured: true,
-      visitorId: 'vis_1',
-      createdAt: isoDaysAgo(3),
-    },
-    {
-      id: 'test_2',
-      authorName: 'Marc Lefèvre',
-      authorLocation: 'Lyon · Duo Labradorite',
-      rating: 5,
-      content:
-        'Les textes publiés dans la communauté m’accompagnent chaque matin avant le travail. Sans jamais tomber dans l’excès, les enseignements de Maître Élias apportent une clarté immédiate.',
-      status: 'Publié',
-      featured: true,
-      createdAt: isoDaysAgo(8),
-    },
-    {
-      id: 'test_3',
-      authorName: 'Nadia Benali',
-      authorLocation: 'Nice · Coffret du Sanctuaire',
-      rating: 5,
-      content:
-        'Notre cercle de lecture utilise le carnet de silence et la bougie de cire d’abeille depuis plusieurs mois. Les matières sont sobres, durables et fidèles à l’esprit du Sanctuaire.',
-      status: 'Publié',
-      featured: true,
-      createdAt: isoDaysAgo(15),
-    },
-  ];
+  const activities: ActivityLog[] = [];
+  const contactMessages: ContactMessage[] = [];
+  const visitors: VisitorMemberRecord[] = [];
+  const testimonials: Testimonial[] = [];
 
   return {
-    nextOrderSeq: 1046,
+    nextOrderSeq: 1001,
     categories,
     products,
     orders,
@@ -1003,6 +410,133 @@ class CmsStore {
     ) {
       parsed.siteContent.homeSections.sectionOrder.push('testimonials');
       changed = true;
+    }
+    if (parsed.settings?.socials) {
+      const socialsAny = parsed.settings.socials as Record<string, string | undefined>;
+      if (typeof socialsAny.instagram === 'string') {
+        if (!socialsAny.tiktok) {
+          socialsAny.tiktok = socialsAny.instagram.includes('instagram.com')
+            ? 'https://www.tiktok.com'
+            : socialsAny.instagram;
+        }
+        delete socialsAny.instagram;
+        changed = true;
+      }
+      if (typeof socialsAny.tiktok !== 'string') {
+        socialsAny.tiktok = 'https://www.tiktok.com';
+        changed = true;
+      }
+    }
+    if (!parsed.settings?.youtubeSync) {
+      parsed.settings.youtubeSync = {
+        channelUrl: '',
+        channelId: '',
+        autoSync: true,
+        lastSyncAt: null,
+      };
+      changed = true;
+    }
+    if (parsed.settings?.general?.siteName === 'Élias Varenne') {
+      parsed.settings.general.siteName = 'DIVIN HORUS';
+      changed = true;
+    }
+    if (parsed.siteContent?.aboutPage) {
+      if (
+        typeof parsed.siteContent.aboutPage.heroSubtitle === 'string' &&
+        parsed.siteContent.aboutPage.heroSubtitle.includes('Sanctuaire Élias Varenne')
+      ) {
+        parsed.siteContent.aboutPage.heroSubtitle = parsed.siteContent.aboutPage.heroSubtitle.replace(
+          'Le Sanctuaire Élias Varenne',
+          'DIVIN HORUS',
+        );
+        changed = true;
+      }
+      if (!parsed.siteContent.aboutPage.faqTitle) {
+        parsed.siteContent.aboutPage.faqTitle = seed.siteContent.aboutPage.faqTitle;
+        changed = true;
+      }
+      if (!parsed.siteContent.aboutPage.faqSubtitle) {
+        parsed.siteContent.aboutPage.faqSubtitle = seed.siteContent.aboutPage.faqSubtitle;
+        changed = true;
+      }
+      if (!Array.isArray(parsed.siteContent.aboutPage.faqs)) {
+        parsed.siteContent.aboutPage.faqs = seed.siteContent.aboutPage.faqs;
+        changed = true;
+      }
+    }
+    if (parsed.siteContent && !parsed.siteContent.welcomeAnnouncement) {
+      parsed.siteContent.welcomeAnnouncement = seed.siteContent.welcomeAnnouncement;
+      changed = true;
+    }
+
+    if (parsed.settings?.general && typeof parsed.settings.general.autoCurrencyByCountry !== 'boolean') {
+      parsed.settings.general.autoCurrencyByCountry = true;
+      changed = true;
+    }
+    if (parsed.settings?.general && !parsed.settings.general.currencyCode) {
+      const sym = (parsed.settings.general.currencySymbol || '').trim().toUpperCase();
+      parsed.settings.general.currencyCode = sym === 'FCFA' || sym === 'CFA' ? 'XOF' : sym === '$' ? 'USD' : 'EUR';
+      changed = true;
+    }
+
+    if (parsed.settings?.orderSettings) {
+      const curCode = (parsed.settings.general?.currencyCode || 'EUR').toUpperCase().trim();
+      const eurRates: Record<string, number> = {
+        EUR: 1,
+        XOF: 655.957,
+        XAF: 655.957,
+        USD: 1.08,
+        CAD: 1.5,
+        CHF: 0.94,
+        GBP: 0.84,
+        MAD: 10.85,
+        TND: 3.38,
+        DZD: 145,
+        CDF: 3050,
+        GNF: 9300,
+        MGA: 4950,
+        HTG: 142,
+      };
+      const rate = eurRates[curCode] ?? 1;
+      const zeroDec = new Set(['XOF', 'XAF', 'DZD', 'CDF', 'GNF', 'MGA', 'HTG']);
+      const scaleFromEur = (amt: number) =>
+        zeroDec.has(curCode) ? Math.round(amt * rate) : Math.round(amt * rate * 100) / 100;
+
+      if (typeof parsed.settings.orderSettings.defaultShippingFee !== 'number') {
+        parsed.settings.orderSettings.defaultShippingFee = scaleFromEur(
+          seed.settings.orderSettings.defaultShippingFee ?? 15,
+        );
+        changed = true;
+      }
+      if (!Array.isArray(parsed.settings.orderSettings.shippingRatesByCountry)) {
+        parsed.settings.orderSettings.shippingRatesByCountry = (
+          seed.settings.orderSettings.shippingRatesByCountry || []
+        ).map((r) => ({
+          ...r,
+          fee: scaleFromEur(r.fee),
+        }));
+        changed = true;
+      }
+      if (!parsed.settings.orderSettings.defaultPaymentMethod) {
+        parsed.settings.orderSettings.defaultPaymentMethod = seed.settings.orderSettings.defaultPaymentMethod;
+        changed = true;
+      }
+      if (typeof parsed.settings.orderSettings.defaultPaymentDetails !== 'string') {
+        parsed.settings.orderSettings.defaultPaymentDetails = seed.settings.orderSettings.defaultPaymentDetails;
+        changed = true;
+      }
+      if (typeof parsed.settings.orderSettings.defaultInvoiceNotes !== 'string') {
+        parsed.settings.orderSettings.defaultInvoiceNotes = seed.settings.orderSettings.defaultInvoiceNotes;
+        changed = true;
+      }
+      if (!parsed.settings.orderSettings.defaultInvoiceSignature) {
+        parsed.settings.orderSettings.defaultInvoiceSignature = seed.settings.orderSettings.defaultInvoiceSignature;
+        changed = true;
+      }
+      if (typeof parsed.settings.orderSettings.teamWhatsappPhone !== 'string') {
+        parsed.settings.orderSettings.teamWhatsappPhone = '';
+        changed = true;
+      }
     }
 
     if (changed) {
@@ -1125,6 +659,51 @@ class CmsStore {
     return this.data.admins.find((a) => a.id === id);
   }
 
+  public findAdminByFirebaseUid(firebaseUid: string): AdminUserRecord | undefined {
+    return this.data.admins.find((a) => a.firebaseUid === firebaseUid);
+  }
+
+  public linkAdminFirebaseUid(id: string, firebaseUid: string): void {
+    const adm = this.data.admins.find((a) => a.id === id);
+    if (adm && adm.firebaseUid !== firebaseUid) {
+      adm.firebaseUid = firebaseUid;
+      this.save();
+    }
+  }
+
+  public ensureAdminFromFirebase(input: {
+    uid: string;
+    email: string;
+    name?: string;
+  }): AdminUserRecord {
+    const cleanEmail = input.email.trim().toLowerCase();
+    const existing =
+      this.findAdminByFirebaseUid(input.uid) || this.findAdminByEmail(cleanEmail);
+    if (existing) {
+      if (existing.firebaseUid !== input.uid) {
+        existing.firebaseUid = input.uid;
+        this.save();
+      }
+      return existing;
+    }
+
+    const creds = hashPassword(crypto.randomBytes(24).toString('hex'));
+    const created: AdminUserRecord = {
+      id: makeId('adm'),
+      name: input.name?.trim() || cleanEmail.split('@')[0] || 'Administrateur',
+      email: cleanEmail,
+      role: 'Super Administrateur',
+      passwordHash: creds.hash,
+      salt: creds.salt,
+      firebaseUid: input.uid,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+    };
+    this.data.admins.push(created);
+    this.logActivity(created.name, 'Administrateur reconnu via Firebase Auth', cleanEmail, 'securite');
+    return created;
+  }
+
   public touchAdminLogin(id: string): void {
     const adm = this.data.admins.find((a) => a.id === id);
     if (adm) {
@@ -1141,6 +720,11 @@ class CmsStore {
     deliveryAddress: string;
     message: string;
     items: Array<{ productId: string; quantity: number }>;
+    visitorId?: string;
+    customerCountry?: string;
+    displayCurrencyCode?: string;
+    displayCurrencySymbol?: string;
+    displayTotal?: number;
   }): Order {
     const now = new Date().toISOString();
     const orderItems = input.items.map((reqItem) => {
@@ -1164,7 +748,19 @@ class CmsStore {
       throw new Error('Veuillez sélectionner au moins un produit.');
     }
 
-    const indicativeTotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    const subtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    const resolvedCountry = (input.customerCountry || 'FR').toUpperCase().trim();
+    const matchedShippingRule = (
+      this.data.settings.orderSettings.shippingRatesByCountry || []
+    ).find((r) => r.countryCode.toUpperCase().trim() === resolvedCountry);
+    const rawShippingFee =
+      matchedShippingRule && typeof matchedShippingRule.fee === 'number'
+        ? matchedShippingRule.fee
+        : typeof this.data.settings.orderSettings.defaultShippingFee === 'number'
+          ? this.data.settings.orderSettings.defaultShippingFee
+          : 0;
+    const shippingFee = Math.max(0, Math.round(rawShippingFee * 100) / 100);
+    const indicativeTotal = Math.round((subtotal + shippingFee) * 100) / 100;
 
     const normalizedPhone = input.phone.replace(/\s+/g, '');
     let customer = this.data.customers.find(
@@ -1178,6 +774,7 @@ class CmsStore {
       customer.lastName = input.lastName.trim();
       customer.phone = input.phone.trim();
       if (input.email.trim()) customer.email = input.email.trim();
+      customer.country = resolvedCountry;
       customer.address = input.deliveryAddress.trim();
       customer.lastOrderAt = now;
       customer.orderCount += 1;
@@ -1189,6 +786,7 @@ class CmsStore {
         lastName: input.lastName.trim(),
         phone: input.phone.trim(),
         email: input.email.trim(),
+        country: resolvedCountry,
         address: input.deliveryAddress.trim(),
         notes: '',
         createdAt: now,
@@ -1209,6 +807,7 @@ class CmsStore {
       updatedAt: now,
       status: 'Nouvelle',
       customerId: customer.id,
+      ...(input.visitorId ? { visitorId: input.visitorId } : {}),
       customerFirstName: input.firstName.trim(),
       customerLastName: input.lastName.trim(),
       customerPhone: input.phone.trim(),
@@ -1216,7 +815,15 @@ class CmsStore {
       deliveryAddress: input.deliveryAddress.trim(),
       message: input.message.trim(),
       items: orderItems,
+      subtotal,
+      shippingFee,
       indicativeTotal,
+      customerCountry: resolvedCountry,
+      ...(input.displayCurrencyCode ? { displayCurrencyCode: input.displayCurrencyCode } : {}),
+      ...(input.displayCurrencySymbol ? { displayCurrencySymbol: input.displayCurrencySymbol } : {}),
+      ...(typeof input.displayTotal === 'number' && Number.isFinite(input.displayTotal)
+        ? { displayTotal: input.displayTotal }
+        : {}),
       adminNotes: '',
       history: [
         {
@@ -1227,6 +834,27 @@ class CmsStore {
         },
       ],
     };
+
+    if (input.visitorId) {
+      const linkedVisitor = this.findVisitorById(input.visitorId);
+      if (linkedVisitor) {
+        if ((!linkedVisitor.firstName || linkedVisitor.firstName === 'Membre') && input.firstName.trim()) {
+          linkedVisitor.firstName = input.firstName.trim();
+        }
+        if ((!linkedVisitor.lastName || linkedVisitor.lastName === 'Sanctuaire') && input.lastName.trim()) {
+          linkedVisitor.lastName = input.lastName.trim();
+        }
+        if (!linkedVisitor.phone && input.phone.trim()) {
+          linkedVisitor.phone = input.phone.trim();
+        }
+        if (!linkedVisitor.address && input.deliveryAddress.trim()) {
+          linkedVisitor.address = input.deliveryAddress.trim();
+        }
+        if (!linkedVisitor.country && resolvedCountry) {
+          linkedVisitor.country = resolvedCountry;
+        }
+      }
+    }
 
     this.data.orders.unshift(order);
     this.logActivity(
@@ -1265,12 +893,261 @@ class CmsStore {
     return order;
   }
 
-  public updateCustomerNotes(id: string, notes: string, actorName: string): Customer | null {
+  public saveOrderInvoice(
+    orderId: string,
+    payload: Partial<OrderInvoice> & { sendToClient?: boolean; saveAsDefault?: boolean },
+    actorName: string,
+  ): { order: Order; settings?: SiteSettings } | null {
+    const order = this.data.orders.find((o) => o.id === orderId);
+    if (!order) return null;
+    const now = new Date().toISOString();
+
+    const rawItems = Array.isArray(payload.items) && payload.items.length > 0
+      ? payload.items
+      : order.items.map((i, idx) => ({
+          id: `${i.productId}_${idx}`,
+          description: i.productName,
+          reference: i.productRef,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+        }));
+
+    const items = rawItems.map((line, idx) => ({
+      id: line.id || `line_${idx}_${Date.now()}`,
+      description: String(line.description || 'Article').trim() || 'Article',
+      reference: line.reference ? String(line.reference).trim() : '',
+      quantity: Math.max(1, Math.round(Number(line.quantity) || 1)),
+      unitPrice: Math.max(0, Number(line.unitPrice) || 0),
+    }));
+
+    const shippingFee = Math.max(0, Number(payload.shippingFee ?? order.shippingFee ?? 0) || 0);
+    const discount = Math.max(0, Number(payload.discount ?? 0) || 0);
+    const subtotal = Math.round(items.reduce((s, l) => s + l.quantity * l.unitPrice, 0) * 100) / 100;
+    const total = Math.max(0, Math.round((subtotal + shippingFee - discount) * 100) / 100);
+
+    const isSending = Boolean(payload.sendToClient);
+    const prevInvoice = order.invoice;
+    const nextStatus: 'Brouillon' | 'Envoyée' = isSending
+      ? 'Envoyée'
+      : prevInvoice?.status === 'Envoyée'
+        ? 'Envoyée'
+        : 'Brouillon';
+
+    const defaultSig = this.data.settings.orderSettings.defaultInvoiceSignature || {
+      type: 'text' as const,
+      imageUrl: '',
+      signerName: actorName,
+      signerRole: 'Direction · DIVIN HORUS',
+    };
+
+    const sigInput = payload.signature || prevInvoice?.signature || defaultSig;
+    const signature = {
+      type: sigInput.type || 'none',
+      imageUrl: sigInput.imageUrl ? String(sigInput.imageUrl).trim() : '',
+      signerName: String(sigInput.signerName ?? '').trim(),
+      signerRole: String(sigInput.signerRole ?? '').trim(),
+    };
+
+    const invoice: OrderInvoice = {
+      invoiceNumber:
+        String(payload.invoiceNumber || prevInvoice?.invoiceNumber || order.orderNumber.replace(/^CMD-/, 'FAC-')).trim(),
+      status: nextStatus,
+      paymentStatus: payload.paymentStatus || prevInvoice?.paymentStatus || 'En attente de paiement',
+      issuedAt: payload.issuedAt || prevInvoice?.issuedAt || now.slice(0, 10),
+      dueDate: payload.dueDate || prevInvoice?.dueDate || now.slice(0, 10),
+      customerName:
+        String(
+          payload.customerName ??
+            prevInvoice?.customerName ??
+            `${order.customerFirstName} ${order.customerLastName}`,
+        ).trim(),
+      customerEmail: String(payload.customerEmail ?? prevInvoice?.customerEmail ?? order.customerEmail).trim(),
+      customerPhone: String(payload.customerPhone ?? prevInvoice?.customerPhone ?? order.customerPhone).trim(),
+      customerAddress: String(
+        payload.customerAddress ?? prevInvoice?.customerAddress ?? order.deliveryAddress,
+      ).trim(),
+      customerCountry: payload.customerCountry || prevInvoice?.customerCountry || order.customerCountry,
+      currencyCode:
+        String(payload.currencyCode || prevInvoice?.currencyCode || this.data.settings.general.currencyCode || 'EUR').trim(),
+      currencySymbol:
+        String(payload.currencySymbol || prevInvoice?.currencySymbol || this.data.settings.general.currencySymbol || '€').trim(),
+      items,
+      shippingFee,
+      discount,
+      subtotal,
+      total,
+      paymentMethod: String(
+        payload.paymentMethod ??
+          prevInvoice?.paymentMethod ??
+          this.data.settings.orderSettings.defaultPaymentMethod ??
+          'Virement / Mobile Money',
+      ).trim(),
+      paymentDetails: String(
+        payload.paymentDetails ??
+          prevInvoice?.paymentDetails ??
+          this.data.settings.orderSettings.defaultPaymentDetails ??
+          '',
+      ).trim(),
+      notes: String(
+        payload.notes ??
+          prevInvoice?.notes ??
+          this.data.settings.orderSettings.defaultInvoiceNotes ??
+          '',
+      ).trim(),
+      signature,
+      sentAt: isSending ? now : prevInvoice?.sentAt || null,
+      sentBy: isSending ? actorName : prevInvoice?.sentBy,
+      updatedAt: now,
+    };
+
+    order.invoice = invoice;
+    order.updatedAt = now;
+
+    if (isSending) {
+      order.history.push({
+        status: order.status,
+        date: now,
+        note: `Facture ${invoice.invoiceNumber} et moyen de paiement (${invoice.paymentMethod}) envoyés au client.`,
+        actor: actorName,
+      });
+      this.logActivity(
+        actorName,
+        `Facture ${invoice.invoiceNumber} envoyée au client`,
+        `${order.orderNumber} · ${invoice.total} ${invoice.currencySymbol}`,
+        'commande',
+      );
+    } else {
+      this.logActivity(
+        actorName,
+        `Facture ${invoice.invoiceNumber} enregistrée (${invoice.status})`,
+        `${order.orderNumber} · ${invoice.total} ${invoice.currencySymbol}`,
+        'commande',
+      );
+    }
+
+    let updatedSettings: SiteSettings | undefined;
+    if (payload.saveAsDefault) {
+      this.data.settings.orderSettings.defaultPaymentMethod = invoice.paymentMethod;
+      this.data.settings.orderSettings.defaultPaymentDetails = invoice.paymentDetails;
+      this.data.settings.orderSettings.defaultInvoiceNotes = invoice.notes;
+      this.data.settings.orderSettings.defaultInvoiceSignature = invoice.signature;
+      updatedSettings = this.data.settings;
+    }
+
+    this.save();
+    return { order, ...(updatedSettings ? { settings: updatedSettings } : {}) };
+  }
+
+  public createCustomer(
+    input: {
+      firstName: string;
+      lastName: string;
+      phone?: string;
+      email?: string;
+      country?: string;
+      address?: string;
+      notes?: string;
+    },
+    actorName: string,
+  ): Customer {
+    const firstName = (input.firstName || '').trim();
+    const lastName = (input.lastName || '').trim();
+    const phone = (input.phone || '').trim();
+    const email = (input.email || '').trim();
+    const rawCountry = (input.country || '').trim();
+    const country = rawCountry.length === 2 ? rawCountry.toUpperCase() : rawCountry;
+    const address = (input.address || '').trim();
+    const notes = (input.notes || '').trim();
+
+    if (!firstName || !lastName) {
+      throw new Error('Veuillez renseigner le prénom et le nom du client.');
+    }
+    if (!phone && !email) {
+      throw new Error('Veuillez renseigner au moins un téléphone ou une adresse email.');
+    }
+
+    const normPhone = phone.replace(/\s+/g, '');
+    const normEmail = email.toLowerCase();
+    const duplicate = this.data.customers.find(
+      (c) =>
+        (normPhone && c.phone.replace(/\s+/g, '') === normPhone) ||
+        (normEmail && c.email && c.email.toLowerCase() === normEmail),
+    );
+    if (duplicate) {
+      throw new Error('Un client avec ce numéro de téléphone ou cet email existe déjà.');
+    }
+
+    const now = new Date().toISOString();
+    const created: Customer = {
+      id: makeId('cust'),
+      firstName,
+      lastName,
+      phone,
+      email,
+      ...(country ? { country } : {}),
+      address,
+      notes,
+      createdAt: now,
+      lastOrderAt: '',
+      orderCount: 0,
+      totalIndicative: 0,
+    };
+    this.data.customers.unshift(created);
+    this.logActivity(actorName, 'Client ajouté manuellement', `${created.firstName} ${created.lastName}`, 'commande');
+    return created;
+  }
+
+  public updateCustomer(
+    id: string,
+    patch: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      email?: string;
+      country?: string;
+      address?: string;
+      notes?: string;
+    },
+    actorName: string,
+  ): Customer | null {
     const cust = this.data.customers.find((c) => c.id === id);
     if (!cust) return null;
-    cust.notes = notes;
+    if (typeof patch.firstName === 'string' && patch.firstName.trim()) {
+      cust.firstName = patch.firstName.trim();
+    }
+    if (typeof patch.lastName === 'string' && patch.lastName.trim()) {
+      cust.lastName = patch.lastName.trim();
+    }
+    if (typeof patch.phone === 'string') {
+      cust.phone = patch.phone.trim();
+    }
+    if (typeof patch.email === 'string') {
+      cust.email = patch.email.trim();
+    }
+    if (typeof patch.country === 'string') {
+      const rc = patch.country.trim();
+      cust.country = rc.length === 2 ? rc.toUpperCase() : rc;
+    }
+    if (typeof patch.address === 'string') {
+      cust.address = patch.address.trim();
+    }
+    if (typeof patch.notes === 'string') {
+      cust.notes = patch.notes;
+    }
     this.logActivity(actorName, 'Fiche client mise à jour', `${cust.firstName} ${cust.lastName}`, 'commande');
     return cust;
+  }
+
+  public updateCustomerNotes(id: string, notes: string, actorName: string): Customer | null {
+    return this.updateCustomer(id, { notes }, actorName);
+  }
+
+  public deleteCustomer(id: string, actorName: string): boolean {
+    const idx = this.data.customers.findIndex((c) => c.id === id);
+    if (idx === -1) return false;
+    const [removed] = this.data.customers.splice(idx, 1);
+    this.logActivity(actorName, 'Client supprimé', `${removed.firstName} ${removed.lastName}`, 'commande');
+    return true;
   }
 
   public upsertProduct(input: Partial<Product> & { id?: string }, actorName: string): Product {
@@ -1563,15 +1440,190 @@ class CmsStore {
   }
 
   public updateSiteContent(content: SiteContent, actorName: string): SiteContent {
-    this.data.siteContent = content;
+    const normalizedFaqs = Array.isArray(content.aboutPage?.faqs)
+      ? content.aboutPage.faqs
+          .map((item) => ({
+            id: item.id?.trim() || makeId('faq'),
+            question: (item.question || '').trim(),
+            answer: (item.answer || '').trim(),
+            category:
+              item.category === 'Enseignements' || item.category === 'Boutique' || item.category === 'Général'
+                ? item.category
+                : ('Général' as const),
+            visible: item.visible !== false,
+          }))
+          .filter((item) => item.question.length > 0 && item.answer.length > 0)
+      : this.data.siteContent.aboutPage.faqs || [];
+
+    const prevAnnouncement = this.data.siteContent.welcomeAnnouncement;
+    const rawAnnouncement = content.welcomeAnnouncement;
+    let normalizedAnnouncement = prevAnnouncement;
+    if (rawAnnouncement) {
+      const nextType =
+        rawAnnouncement.type === 'info' || rawAnnouncement.type === 'important'
+          ? rawAnnouncement.type
+          : ('welcome' as const);
+      const nextTitle = (rawAnnouncement.title || '').trim();
+      const nextMessage = (rawAnnouncement.message || '').trim();
+      const nextEnabled = Boolean(rawAnnouncement.enabled);
+      const nextFrequency =
+        rawAnnouncement.displayFrequency === 'once_per_update'
+          ? ('once_per_update' as const)
+          : ('every_visit' as const);
+      const nextKickerEn = (rawAnnouncement.kickerEn || '').trim();
+      const nextTitleEn = (rawAnnouncement.titleEn || '').trim();
+      const nextMessageEn = (rawAnnouncement.messageEn || '').trim();
+      const nextButtonLabelEn = (rawAnnouncement.buttonLabelEn || '').trim();
+      const contentModified =
+        !prevAnnouncement ||
+        prevAnnouncement.title !== nextTitle ||
+        prevAnnouncement.message !== nextMessage ||
+        (prevAnnouncement.titleEn || '') !== nextTitleEn ||
+        (prevAnnouncement.messageEn || '') !== nextMessageEn ||
+        prevAnnouncement.type !== nextType ||
+        (!prevAnnouncement.enabled && nextEnabled);
+      const requestedVersion = (rawAnnouncement.version || '').trim();
+      const nextVersion =
+        requestedVersion && requestedVersion !== prevAnnouncement?.version
+          ? requestedVersion
+          : contentModified
+            ? `v_${Date.now().toString(36)}`
+            : prevAnnouncement?.version || 'v1';
+
+      normalizedAnnouncement = {
+        enabled: nextEnabled,
+        type: nextType,
+        kicker: (rawAnnouncement.kicker || '').trim(),
+        ...(nextKickerEn ? { kickerEn: nextKickerEn } : {}),
+        title: nextTitle,
+        ...(nextTitleEn ? { titleEn: nextTitleEn } : {}),
+        message: nextMessage,
+        ...(nextMessageEn ? { messageEn: nextMessageEn } : {}),
+        buttonLabel: (rawAnnouncement.buttonLabel || '').trim(),
+        ...(nextButtonLabelEn ? { buttonLabelEn: nextButtonLabelEn } : {}),
+        buttonTarget: (rawAnnouncement.buttonTarget || '').trim(),
+        image: (rawAnnouncement.image || '').trim(),
+        displayFrequency: nextFrequency,
+        version: nextVersion,
+      };
+    }
+
+    this.data.siteContent = {
+      ...content,
+      aboutPage: {
+        ...content.aboutPage,
+        faqTitle: content.aboutPage.faqTitle?.trim() || 'Questions fréquentes',
+        faqSubtitle:
+          content.aboutPage.faqSubtitle?.trim() ||
+          'Retrouvez les réponses essentielles concernant nos enseignements et la boutique sur commande.',
+        faqs: normalizedFaqs,
+      },
+      ...(normalizedAnnouncement ? { welcomeAnnouncement: normalizedAnnouncement } : {}),
+    };
     this.logActivity(actorName, 'Contenu du site mis à jour', 'Page d’accueil & éditorial', 'contenu');
     return this.data.siteContent;
   }
 
-  public updateSettings(settings: SiteSettings, actorName: string): SiteSettings {
-    this.data.settings = settings;
-    this.logActivity(actorName, 'Paramètres du site enregistrés', settings.general.siteName, 'parametre');
-    return this.data.settings;
+  public updateSettings(
+    settings: SiteSettings,
+    actorName: string,
+    options?: { convertCatalogPrices?: boolean; rates?: Record<string, number> },
+  ): { settings: SiteSettings; products?: Product[] } {
+    const prevCode = (this.data.settings.general.currencyCode || 'EUR').toUpperCase().trim();
+    const nextCode = (settings.general.currencyCode || 'EUR').toUpperCase().trim();
+    const sanitizedShippingRules: ShippingRateRule[] = Array.isArray(
+      settings.orderSettings?.shippingRatesByCountry,
+    )
+      ? settings.orderSettings.shippingRatesByCountry
+          .filter((r) => r && r.countryCode)
+          .map((r) => ({
+            countryCode: String(r.countryCode).toUpperCase().trim(),
+            countryName: String(r.countryName || r.countryCode).trim(),
+            fee: Math.max(0, Number(r.fee) || 0),
+          }))
+      : [];
+
+    const normalizedSettings: SiteSettings = {
+      ...settings,
+      general: {
+        ...settings.general,
+        currencyCode: nextCode || 'EUR',
+        currencySymbol: settings.general.currencySymbol?.trim() || '€',
+      },
+      orderSettings: {
+        ...settings.orderSettings,
+        defaultShippingFee: Math.max(0, Number(settings.orderSettings?.defaultShippingFee) || 0),
+        shippingRatesByCountry: sanitizedShippingRules,
+      },
+    };
+    this.data.settings = normalizedSettings;
+
+    let convertedProducts: Product[] | undefined;
+    if (
+      options?.convertCatalogPrices &&
+      prevCode !== nextCode &&
+      prevCode !== 'CUSTOM' &&
+      nextCode !== 'CUSTOM'
+    ) {
+      const fallbackRates: Record<string, number> = {
+        EUR: 1,
+        XOF: 655.957,
+        XAF: 655.957,
+        USD: 1.08,
+        CAD: 1.5,
+        CHF: 0.94,
+        GBP: 0.84,
+        MAD: 10.85,
+        TND: 3.38,
+        DZD: 145,
+        CDF: 3050,
+        GNF: 9300,
+        MGA: 4950,
+        HTG: 142,
+      };
+      const rates = { ...fallbackRates, ...(options.rates || {}) };
+      const fromRate = rates[prevCode] ?? 1;
+      const toRate = rates[nextCode] ?? 1;
+      const zeroDec = new Set(['XOF', 'XAF', 'DZD', 'CDF', 'GNF', 'MGA', 'HTG']);
+      const convertVal = (val: number) => {
+        const eur = fromRate > 0 ? val / fromRate : val;
+        const raw = eur * toRate;
+        return zeroDec.has(nextCode) ? Math.round(raw) : Math.round(raw * 100) / 100;
+      };
+      const now = new Date().toISOString();
+
+      this.data.products.forEach((p) => {
+        p.price = convertVal(p.price);
+        p.updatedAt = now;
+      });
+      if (typeof this.data.settings.orderSettings.defaultShippingFee === 'number') {
+        this.data.settings.orderSettings.defaultShippingFee = convertVal(
+          this.data.settings.orderSettings.defaultShippingFee,
+        );
+      }
+      if (Array.isArray(this.data.settings.orderSettings.shippingRatesByCountry)) {
+        this.data.settings.orderSettings.shippingRatesByCountry =
+          this.data.settings.orderSettings.shippingRatesByCountry.map((r) => ({
+            ...r,
+            fee: convertVal(r.fee),
+          }));
+      }
+      convertedProducts = this.data.products;
+      this.logActivity(
+        actorName,
+        `Catalogue converti (${prevCode} → ${nextCode})`,
+        `${this.data.products.length} produits`,
+        'parametre',
+      );
+    }
+
+    this.logActivity(
+      actorName,
+      'Paramètres du site enregistrés',
+      `${normalizedSettings.general.siteName} (${normalizedSettings.general.currencySymbol})`,
+      'parametre',
+    );
+    return { settings: this.data.settings, ...(convertedProducts ? { products: convertedProducts } : {}) };
   }
 
   public createAdmin(
@@ -1619,6 +1671,41 @@ class CmsStore {
     adm.passwordHash = creds.hash;
     adm.salt = creds.salt;
     this.logActivity(actorName, 'Mot de passe modifié', adm.email, 'securite');
+  }
+
+  public updateAdminProfile(
+    id: string,
+    patch: { email?: string; name?: string },
+    actorName: string,
+  ): AdminUserPublic {
+    const adm = this.data.admins.find((a) => a.id === id);
+    if (!adm) throw new Error('Administrateur introuvable.');
+
+    if (typeof patch.email === 'string') {
+      const nextEmail = patch.email.trim().toLowerCase();
+      if (!nextEmail || !/\S+@\S+\.\S+/.test(nextEmail)) {
+        throw new Error('Veuillez saisir une adresse email valide.');
+      }
+      const conflictAdmin = this.data.admins.find(
+        (a) => a.id !== id && a.email.toLowerCase() === nextEmail,
+      );
+      if (conflictAdmin) {
+        throw new Error('Un autre administrateur utilise déjà cette adresse email.');
+      }
+      const conflictVisitor = this.data.visitors.find((v) => v.email.toLowerCase() === nextEmail);
+      if (conflictVisitor) {
+        throw new Error('Un compte visiteur utilise déjà cette adresse email.');
+      }
+      adm.email = nextEmail;
+    }
+
+    if (typeof patch.name === 'string' && patch.name.trim()) {
+      adm.name = patch.name.trim();
+    }
+
+    this.logActivity(actorName, 'Adresse de connexion modifiée', adm.email, 'securite');
+    const { passwordHash: _ph, salt: _s, ...pub } = adm;
+    return pub;
   }
 
   public createContactMessage(input: {
@@ -1669,16 +1756,39 @@ class CmsStore {
     return this.data.visitors.find((v) => v.id === id);
   }
 
+  public findVisitorByFirebaseUid(firebaseUid: string): VisitorMemberRecord | undefined {
+    return this.data.visitors.find((v) => v.firebaseUid === firebaseUid);
+  }
+
+  public linkVisitorFirebaseUid(id: string, firebaseUid: string): void {
+    const vis = this.data.visitors.find((v) => v.id === id);
+    if (vis && vis.firebaseUid !== firebaseUid) {
+      vis.firebaseUid = firebaseUid;
+      this.save();
+    }
+  }
+
   public registerVisitor(input: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     address: string;
+    country?: string;
     password: string;
+    firebaseUid?: string;
   }): VisitorMemberPublic {
     const email = input.email.trim().toLowerCase();
-    if (this.findVisitorByEmail(email)) {
+    const cleanCountry = input.country ? input.country.trim().toUpperCase() : '';
+    const existing = this.findVisitorByEmail(email);
+    if (existing) {
+      if (input.firebaseUid && !existing.firebaseUid) {
+        existing.firebaseUid = input.firebaseUid;
+        if (cleanCountry && !existing.country) existing.country = cleanCountry;
+        this.save();
+        const { passwordHash: _ph, salt: _s, firebaseUid: _fu, ...pubExisting } = existing;
+        return pubExisting;
+      }
       throw new Error('Un compte existe déjà avec cette adresse email.');
     }
     const creds = hashPassword(input.password);
@@ -1689,19 +1799,104 @@ class CmsStore {
       email,
       phone: input.phone.trim(),
       address: input.address.trim(),
+      ...(cleanCountry ? { country: cleanCountry } : {}),
       passwordHash: creds.hash,
       salt: creds.salt,
+      ...(input.firebaseUid ? { firebaseUid: input.firebaseUid } : {}),
       createdAt: new Date().toISOString(),
     };
     this.data.visitors.unshift(created);
     this.logActivity(`${created.firstName} ${created.lastName}`, 'Nouveau compte visiteur créé', created.email, 'securite');
-    const { passwordHash: _ph, salt: _s, ...pub } = created;
+    const { passwordHash: _ph, salt: _s, firebaseUid: _fu, ...pub } = created;
     return pub;
+  }
+
+  public findOrCreateVisitorFromFirebase(input: {
+    uid: string;
+    email?: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: string;
+    country?: string;
+  }): VisitorMemberRecord {
+    const cleanEmail = (input.email || '').trim().toLowerCase();
+    const cleanCountry = input.country ? input.country.trim().toUpperCase() : '';
+    let existing =
+      this.findVisitorByFirebaseUid(input.uid) ||
+      (cleanEmail ? this.findVisitorByEmail(cleanEmail) : undefined);
+
+    if (existing) {
+      let dirty = false;
+      if (existing.firebaseUid !== input.uid) {
+        existing.firebaseUid = input.uid;
+        dirty = true;
+      }
+      if (cleanEmail && !existing.email) {
+        existing.email = cleanEmail;
+        dirty = true;
+      }
+      if (input.firstName?.trim() && (!existing.firstName || existing.firstName === 'Membre')) {
+        existing.firstName = input.firstName.trim();
+        dirty = true;
+      }
+      if (input.lastName?.trim() && (!existing.lastName || existing.lastName === 'Sanctuaire')) {
+        existing.lastName = input.lastName.trim();
+        dirty = true;
+      }
+      if (input.phone?.trim() && !existing.phone) {
+        existing.phone = input.phone.trim();
+        dirty = true;
+      }
+      if (input.address?.trim() && !existing.address) {
+        existing.address = input.address.trim();
+        dirty = true;
+      }
+      if (cleanCountry && !existing.country) {
+        existing.country = cleanCountry;
+        dirty = true;
+      }
+      if (dirty) this.save();
+      return existing;
+    }
+
+    const displayParts = (input.name || '').trim().split(/\s+/).filter(Boolean);
+    const fallbackFirst =
+      input.firstName?.trim() ||
+      displayParts[0] ||
+      (cleanEmail ? cleanEmail.split('@')[0] : 'Membre');
+    const fallbackLast =
+      input.lastName?.trim() ||
+      (displayParts.length > 1 ? displayParts.slice(1).join(' ') : 'Sanctuaire');
+    const randomCreds = hashPassword(crypto.randomBytes(24).toString('hex'));
+
+    const created: VisitorMemberRecord = {
+      id: makeId('vis'),
+      firstName: fallbackFirst,
+      lastName: fallbackLast,
+      email: cleanEmail || `${input.uid}@firebase.local`,
+      phone: input.phone?.trim() || '',
+      address: input.address?.trim() || '',
+      ...(cleanCountry ? { country: cleanCountry } : {}),
+      passwordHash: randomCreds.hash,
+      salt: randomCreds.salt,
+      firebaseUid: input.uid,
+      createdAt: new Date().toISOString(),
+    };
+    this.data.visitors.unshift(created);
+    this.logActivity(
+      `${created.firstName} ${created.lastName}`,
+      'Compte visiteur synchronisé via Firebase Auth',
+      created.email,
+      'securite',
+    );
+    return created;
   }
 
   public updateVisitorProfile(
     id: string,
-    patch: { firstName: string; lastName: string; phone: string; address: string },
+    patch: { firstName: string; lastName: string; phone: string; address: string; country?: string },
   ): VisitorMemberPublic | null {
     const v = this.findVisitorById(id);
     if (!v) return null;
@@ -1709,9 +1904,21 @@ class CmsStore {
     v.lastName = patch.lastName.trim() || v.lastName;
     v.phone = patch.phone.trim();
     v.address = patch.address.trim();
+    if (patch.country !== undefined) {
+      const cleanCountry = patch.country.trim().toUpperCase();
+      if (cleanCountry) v.country = cleanCountry;
+    }
     this.save();
     const { passwordHash: _ph, salt: _s, ...pub } = v;
     return pub;
+  }
+
+  private sanitizeOrderForPublic(order: Order): Order {
+    if (order.invoice && order.invoice.status !== 'Envoyée') {
+      const { invoice: _draft, ...rest } = order;
+      return rest;
+    }
+    return order;
   }
 
   public getOrdersForVisitor(visitor: VisitorMemberRecord): Order[] {
@@ -1719,14 +1926,16 @@ class CmsStore {
     const normPhone = visitor.phone.replace(/\s+/g, '');
     return [...this.data.orders]
       .filter((o) => {
-        const emailMatch = o.customerEmail && o.customerEmail.toLowerCase() === normEmail;
-        const phoneMatch = normPhone && o.customerPhone.replace(/\s+/g, '') === normPhone;
-        return Boolean(emailMatch || phoneMatch);
+        const visitorMatch = Boolean(o.visitorId && o.visitorId === visitor.id);
+        const emailMatch = Boolean(o.customerEmail && o.customerEmail.toLowerCase() === normEmail);
+        const phoneMatch = Boolean(normPhone && o.customerPhone.replace(/\s+/g, '') === normPhone);
+        return visitorMatch || emailMatch || phoneMatch;
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((o) => this.sanitizeOrderForPublic(o));
   }
 
-  public trackOrder(orderNumberInput: string, contactInput: string): Order | null {
+  public trackOrder(orderNumberInput: string, contactInput: string): PublicOrderTrackingInfo | null {
     const cleanNum = orderNumberInput.trim().toUpperCase().replace(/^#/, '');
     const cleanContact = contactInput.trim().toLowerCase();
     const cleanPhone = contactInput.replace(/\s+/g, '');
@@ -1736,7 +1945,24 @@ class CmsStore {
       const phoneOk = o.customerPhone.replace(/\s+/g, '') === cleanPhone;
       return Boolean(emailOk || phoneOk);
     });
-    return found || null;
+    if (!found) return null;
+    return {
+      id: found.id,
+      orderNumber: found.orderNumber,
+      createdAt: found.createdAt,
+      updatedAt: found.updatedAt,
+      status: found.status,
+      customerFirstName: found.customerFirstName,
+      customerLastName: found.customerLastName,
+      history: found.history.map((entry) => ({
+        status: entry.status,
+        date: entry.date,
+        note: /^Facture\s/i.test(entry.note)
+          ? 'Dossier mis à jour par notre équipe.'
+          : entry.note,
+        actor: entry.actor,
+      })),
+    };
   }
 
   public toggleArticleLike(articleId: string, actorKey: string): { article: Article; liked: boolean } | null {
@@ -1800,6 +2026,106 @@ class CmsStore {
     const [removed] = this.data.testimonials.splice(idx, 1);
     this.logActivity(actorName, 'Témoignage supprimé', removed.authorName, 'contenu');
     return true;
+  }
+
+  public getYoutubeSyncSettings(): NonNullable<SiteSettings['youtubeSync']> {
+    if (!this.data.settings.youtubeSync) {
+      this.data.settings.youtubeSync = {
+        channelUrl: '',
+        channelId: '',
+        autoSync: true,
+        lastSyncAt: null,
+      };
+    }
+    return this.data.settings.youtubeSync;
+  }
+
+  public updateYoutubeSyncSettings(patch: {
+    channelUrl?: string;
+    channelId?: string;
+    autoSync?: boolean;
+  }): NonNullable<SiteSettings['youtubeSync']> {
+    const current = this.getYoutubeSyncSettings();
+    if (typeof patch.channelUrl === 'string') {
+      current.channelUrl = patch.channelUrl.trim();
+      if (current.channelUrl) {
+        this.data.settings.socials.youtube = current.channelUrl;
+      }
+    }
+    if (typeof patch.channelId === 'string') {
+      current.channelId = patch.channelId.trim();
+    }
+    if (typeof patch.autoSync === 'boolean') {
+      current.autoSync = patch.autoSync;
+    }
+    this.save();
+    return current;
+  }
+
+  public syncChannelVideos(
+    entries: Array<{
+      youtubeId: string;
+      title: string;
+      description: string;
+      thumbnail: string;
+      youtubeUrl: string;
+      publishedAt?: string;
+    }>,
+    channelUrl: string,
+    channelId: string,
+    actorName: string,
+  ): { added: VideoItem[]; total: number; youtubeSync: NonNullable<SiteSettings['youtubeSync']> } {
+    const syncCfg = this.getYoutubeSyncSettings();
+    if (channelUrl.trim()) {
+      syncCfg.channelUrl = channelUrl.trim();
+      this.data.settings.socials.youtube = channelUrl.trim();
+    }
+    if (channelId.trim()) {
+      syncCfg.channelId = channelId.trim();
+    }
+    syncCfg.lastSyncAt = new Date().toISOString();
+
+    const existingIds = new Set(this.data.videos.map((v) => v.youtubeId));
+    const newEntries = entries.filter((e) => e.youtubeId && !existingIds.has(e.youtubeId));
+
+    const added: VideoItem[] = [];
+    if (newEntries.length > 0) {
+      // Place newest synced videos at top of sortOrder, shifting existing orders down
+      this.data.videos.forEach((v) => {
+        v.sortOrder += newEntries.length;
+      });
+      newEntries.forEach((entry, index) => {
+        const created: VideoItem = {
+          id: makeId('vid'),
+          title: entry.title.trim() || `Vidéo (${entry.youtubeId})`,
+          youtubeUrl: entry.youtubeUrl || `https://www.youtube.com/watch?v=${entry.youtubeId}`,
+          youtubeId: entry.youtubeId,
+          thumbnail: entry.thumbnail || `https://i.ytimg.com/vi/${entry.youtubeId}/hqdefault.jpg`,
+          description: entry.description.trim(),
+          duration: '',
+          visible: true,
+          featured: false,
+          sortOrder: index + 1,
+          createdAt: entry.publishedAt || new Date().toISOString(),
+        };
+        added.push(created);
+      });
+      this.data.videos = [...added, ...this.data.videos];
+      this.logActivity(
+        actorName,
+        `Chaîne YouTube synchronisée (+${added.length} vidéo${added.length > 1 ? 's' : ''})`,
+        channelId || channelUrl,
+        'contenu',
+      );
+    } else {
+      this.save();
+    }
+
+    return {
+      added,
+      total: this.data.videos.length,
+      youtubeSync: syncCfg,
+    };
   }
 }
 

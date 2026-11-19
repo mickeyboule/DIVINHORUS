@@ -1,8 +1,9 @@
 import { ArrowRight, Heart, MessageSquarePlus, Play, Star } from 'lucide-react';
-import { formatDateFr } from '../../lib/format';
-import type { Product, PublicBootstrapData, VideoItem } from '../../types/cms';
 import { ProductCard } from '../../components/ProductCard';
 import { SafeImage } from '../../components/SafeImage';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { formatDateFr } from '../../lib/format';
+import type { Product, PublicBootstrapData, VideoItem } from '../../types/cms';
 
 interface HomePageProps {
   data: PublicBootstrapData;
@@ -23,7 +24,9 @@ export function HomePage({
   onToggleArticleLike,
   onOpenTestimonialModal,
 }: HomePageProps) {
-  const { siteContent, settings, products, categories, articles, articleCategories, videos, testimonials } = data;
+  const { lang, t } = useLanguage();
+  const { siteContent, settings, products, categories, articles, articleCategories, videos, testimonials } =
+    data;
   const { hero, master, homeSections } = siteContent;
 
   const featuredProducts = homeSections.featuredProductIds
@@ -42,7 +45,7 @@ export function HomePage({
     .filter((v): v is VideoItem => Boolean(v));
   const displayVideos = featuredVideos.length > 0 ? featuredVideos : videos.slice(0, 2);
 
-  const featuredTestimonials = testimonials.filter((t) => t.featured);
+  const featuredTestimonials = testimonials.filter((tst) => tst.featured);
   const displayTestimonials =
     (featuredTestimonials.length > 0 ? featuredTestimonials : testimonials).slice(0, 3);
 
@@ -63,25 +66,19 @@ export function HomePage({
                 </div>
               </div>
               <div className="lg:col-span-7 flex flex-col justify-center py-2">
-                <p className="text-xs font-medium tracking-wide text-[#2A4036]">
-                  {master.title}
-                </p>
+                <p className="text-xs font-medium tracking-wide text-[#2A4036]">{master.title}</p>
                 <h2 className="mt-2 font-display text-3xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
                   {master.name}
                 </h2>
-                <p className="mt-6 text-base text-[#3F3E3A] leading-relaxed">
-                  {master.shortBio}
-                </p>
-                <p className="mt-4 text-base text-[#5C5A55] leading-relaxed">
-                  {master.approach}
-                </p>
+                <p className="mt-6 text-base text-[#3F3E3A] leading-relaxed">{master.shortBio}</p>
+                <p className="mt-4 text-base text-[#5C5A55] leading-relaxed">{master.approach}</p>
                 <div className="mt-8">
                   <button
                     type="button"
                     onClick={() => onNavigate('/a-propos')}
                     className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#141413] border border-[#D4D0C8] rounded-lg hover:border-[#141413] hover:bg-[#FAF9F6] transition-colors"
                   >
-                    <span>{master.buttonLabel || 'En savoir plus'}</span>
+                    <span>{master.buttonLabel || t('common.learnMore')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -110,7 +107,7 @@ export function HomePage({
                 onClick={() => onNavigate('/boutique')}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
               >
-                <span>Voir toute la boutique</span>
+                <span>{t('home.viewAllShop')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -142,7 +139,7 @@ export function HomePage({
                   {homeSections.featuredArticlesTitle}
                 </h2>
                 <p className="mt-2 text-sm sm:text-base text-[#5C5A55]">
-                  Réflexions et textes publiés régulièrement pour nourrir votre cheminement.
+                  {t('home.articlesSubtitle')}
                 </p>
               </div>
               <button
@@ -150,7 +147,7 @@ export function HomePage({
                 onClick={() => onNavigate('/communaute')}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
               >
-                <span>Voir toute la communauté</span>
+                <span>{t('home.viewAllCommunity')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -178,9 +175,9 @@ export function HomePage({
                     </button>
                     <div className="p-5 flex-1 flex flex-col">
                       <div className="flex items-center gap-2 text-xs text-[#6B6860]">
-                        <span>{cat?.name || 'Enseignement'}</span>
+                        <span>{cat?.name || t('home.teachingFallback')}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{formatDateFr(article.publishedAt)}</span>
+                        <span>{formatDateFr(article.publishedAt, lang)}</span>
                       </div>
                       <button
                         type="button"
@@ -200,22 +197,20 @@ export function HomePage({
                           onClick={() => onNavigate(`/communaute/${article.slug}`)}
                           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
                         >
-                          <span>Lire l’article</span>
+                          <span>{t('home.readArticle')}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => onToggleArticleLike(article.id)}
-                          aria-label={`Aimer ${article.title}`}
+                          aria-label={t('home.likeArticleAria', { title: article.title })}
                           className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
                             isLiked
                               ? 'text-[#8A2E2E] bg-red-50'
                               : 'text-[#5C5A55] hover:text-[#141413] hover:bg-[#EFECE6]'
                           }`}
                         >
-                          <Heart
-                            className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`}
-                          />
+                          <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
                           <span className="font-mono tabular-nums">{article.likesCount || 0}</span>
                         </button>
                       </div>
@@ -239,7 +234,7 @@ export function HomePage({
                   {homeSections.featuredVideosTitle}
                 </h2>
                 <p className="mt-2 text-sm sm:text-base text-[#5C5A55]">
-                  Entretiens filmés et séances de méditation accessibles directement depuis le site.
+                  {t('home.videosSubtitle')}
                 </p>
               </div>
               <button
@@ -247,7 +242,7 @@ export function HomePage({
                 onClick={() => onNavigate('/communaute?tab=videos')}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
               >
-                <span>Toutes les vidéos</span>
+                <span>{t('home.allVideos')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -296,7 +291,7 @@ export function HomePage({
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
                       >
                         <Play className="w-3.5 h-3.5" />
-                        <span>Lire la vidéo</span>
+                        <span>{t('home.playVideo')}</span>
                       </button>
                     </div>
                   </div>
@@ -315,10 +310,10 @@ export function HomePage({
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
               <div className="max-w-2xl">
                 <h2 className="font-display text-3xl sm:text-4xl font-semibold text-[#141413] tracking-tight">
-                  {homeSections.featuredTestimonialsTitle || 'Paroles & Témoignages'}
+                  {homeSections.featuredTestimonialsTitle || t('home.allTestimonials')}
                 </h2>
                 <p className="mt-2 text-sm sm:text-base text-[#5C5A55]">
-                  Retours d’expérience partagés par celles et ceux qui suivent les enseignements ou reçoivent nos objets.
+                  {t('home.testimonialsSubtitle')}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -328,14 +323,14 @@ export function HomePage({
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2A4036] hover:bg-[#20322A] rounded-lg transition-colors whitespace-nowrap"
                 >
                   <MessageSquarePlus className="w-3.5 h-3.5" />
-                  <span>Laisser un témoignage</span>
+                  <span>{t('home.leaveTestimonial')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => onNavigate('/communaute?tab=testimonials')}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap"
                 >
-                  <span>Tous les avis</span>
+                  <span>{t('home.allTestimonials')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -343,7 +338,7 @@ export function HomePage({
 
             {displayTestimonials.length === 0 ? (
               <div className="bg-[#FAF9F6] border border-[#E6E4DF] rounded-xl p-10 text-center text-sm text-[#5C5A55]">
-                Soyez la première personne à partager votre témoignage.
+                {t('home.emptyTestimonials')}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -364,15 +359,15 @@ export function HomePage({
                         ))}
                       </div>
                       <p className="text-sm text-[#2B2A27] leading-relaxed">
-                        « {item.content} »
+                        {lang === 'en' ? `"${item.content}"` : `« ${item.content} »`}
                       </p>
                     </div>
                     <div className="mt-5 pt-4 border-t border-[#E6E4DF]">
                       <p className="text-sm font-semibold text-[#141413]">{item.authorName}</p>
                       <p className="text-xs text-[#6B6860] mt-0.5">
-                        {item.authorLocation || 'Membre de la communauté'}
+                        {item.authorLocation || t('home.communityMember')}
                         <span aria-hidden="true"> · </span>
-                        {formatDateFr(item.createdAt)}
+                        {formatDateFr(item.createdAt, lang)}
                       </p>
                     </div>
                   </article>
@@ -393,11 +388,9 @@ export function HomePage({
       {hero.visible && (
         <section className="relative bg-[#181917] text-white overflow-hidden">
           <div className="absolute inset-0">
-            <SafeImage
-              src={hero.image}
-              alt={hero.title}
-              className="w-full h-full object-cover"
-            />
+            {hero.image && (
+              <SafeImage src={hero.image} alt={hero.title} className="w-full h-full object-cover" />
+            )}
             <div className="absolute inset-0 bg-gradient-to-r from-[#141413]/85 via-[#141413]/60 to-[#141413]/25" />
           </div>
 
@@ -418,14 +411,14 @@ export function HomePage({
                   onClick={() => onNavigate(hero.primaryButtonTarget || '/boutique')}
                   className="px-6 py-3 bg-[#2A4036] hover:bg-[#20322A] text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
                 >
-                  {hero.primaryButtonLabel || 'Découvrir la boutique'}
+                  {hero.primaryButtonLabel || t('nav.shop')}
                 </button>
                 <button
                   type="button"
                   onClick={() => onNavigate(hero.secondaryButtonTarget || '/communaute')}
                   className="px-6 py-3 bg-white/12 hover:bg-white/20 backdrop-blur-xs text-white border border-white/25 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
                 >
-                  {hero.secondaryButtonLabel || 'Rejoindre la communauté'}
+                  {hero.secondaryButtonLabel || t('nav.community')}
                 </button>
               </div>
             </div>

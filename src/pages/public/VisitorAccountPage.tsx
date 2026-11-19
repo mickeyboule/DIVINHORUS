@@ -1,19 +1,40 @@
 import {
   ArrowRight,
+  Check,
   CheckCircle2,
+  Copy,
   Eye,
   EyeOff,
+  FileText,
   Heart,
   LogOut,
+  MessageCircle,
   Package,
   Save,
   User,
+  X,
 } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { CountrySelect } from '../../components/CountrySelect';
+import { EmailVerificationScreen } from '../../components/EmailVerificationScreen';
+import { InvoicePreview } from '../../components/InvoicePreview';
 import { SafeImage } from '../../components/SafeImage';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { visitorApi } from '../../lib/api';
-import { formatDateFr, formatDateTimeFr, formatPrice } from '../../lib/format';
+import { formatCountryWithFlag } from '../../lib/countries';
+import { formatAmountWithCurrency, getCurrencyOptionByCode } from '../../lib/currency';
+import { EmailNotVerifiedError } from '../../lib/firebase';
+import {
+  formatDateFr,
+  formatDateTimeFr,
+  getInvoicePaymentStatusLabel,
+  getOrderStatusStyle,
+} from '../../lib/format';
+import { getCountryDisplayName } from '../../lib/shipping';
+import { buildOrderWhatsappUrl } from '../../lib/whatsapp';
 import type {
+  AdminUserPublic,
   Article,
   Order,
   SiteSettings,
@@ -26,6 +47,7 @@ interface VisitorAccountPageProps {
   articles: Article[];
   settings: SiteSettings;
   onAuthSuccess: (visitor: VisitorMemberPublic, orders: Order[]) => void;
+  onAdminAuthSuccess: (admin: AdminUserPublic) => Promise<void>;
   onProfileUpdated: (visitor: VisitorMemberPublic, orders: Order[]) => void;
   onLogout: () => Promise<void>;
   onNavigate: (path: string) => void;
@@ -38,15 +60,20 @@ export function VisitorAccountPage({
   articles,
   settings,
   onAuthSuccess,
+  onAdminAuthSuccess,
   onProfileUpdated,
   onLogout,
   onNavigate,
   onNotify,
 }: VisitorAccountPageProps) {
+  const { formatClientPrice } = useCurrency();
+  const { lang, t } = useLanguage();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
   const [authError, setAuthError] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   // Login / Register state
   const [email, setEmail] = useState('');
@@ -54,6 +81,7 @@ export function VisitorAccountPage({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState('');
   const [address, setAddress] = useState('');
 
   // Logged-in workspace tabs
@@ -61,13 +89,45 @@ export function VisitorAccountPage({
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
     visitorOrders[0]?.id || null,
   );
+  const [invoiceOrderModal, setInvoiceOrderModal] = useState<Order | null>(null);
+  const [copiedOrderLinkId, setCopiedOrderLinkId] = useState<string | null>(null);
 
   // Profile editing state
   const [profFirst, setProfFirst] = useState(visitorUser?.firstName || '');
   const [profLast, setProfLast] = useState(visitorUser?.lastName || '');
   const [profPhone, setProfPhone] = useState(visitorUser?.phone || '');
+  const [profCountry, setProfCountry] = useState(visitorUser?.country || '');
   const [profAddress, setProfAddress] = useState(visitorUser?.address || '');
   const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (visitorUser) {
+      setProfFirst(visitorUser.firstName || '');
+      setProfLast(visitorUser.lastName || '');
+      setProfPhone(visitorUser.phone || '');
+      setProfCountry(visitorUser.country || '');
+      setProfAddress(visitorUser.address || '');
+    } else {
+      setProfFirst('');
+      setProfLast('');
+      setProfPhone('');
+      setProfCountry('');
+      setProfAddress('');
+    }
+  }, [
+    visitorUser?.id,
+    visitorUser?.firstName,
+    visitorUser?.lastName,
+    visitorUser?.phone,
+    visitorUser?.country,
+    visitorUser?.address,
+  ]);
+
+  useEffect(() => {
+    if (visitorOrders.length > 0 && !expandedOrderId) {
+      setExpandedOrderId(visitorOrders[0].id);
+    }
+  }, [visitorOrders, expandedOrderId]);
 
   const handleAuthSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,16 +135,26 @@ export function VisitorAccountPage({
     setLoading(true);
     try {
       if (authMode === 'login') {
-        const res = await visitorApi.login(email.trim(), password.trim());
+        const res = await visitorApi.unifiedLogin(email.trim(), password.trim());
+        if (res.role === 'admin') {
+          await onAdminAuthSuccess(res.admin);
+          return;
+        }
         setProfFirst(res.visitor.firstName);
         setProfLast(res.visitor.lastName);
         setProfPhone(res.visitor.phone);
+        setProfCountry(res.visitor.country || '');
         setProfAddress(res.visitor.address);
         onAuthSuccess(res.visitor, res.orders);
-        onNotify('success', `Bienvenue, ${res.visitor.firstName}.`);
+        onNotify('success', t('account.welcomeBack', { name: res.visitor.firstName }));
       } else {
+        if (!country.trim()) {
+          setAuthError(t('account.errSelectCountry'));
+          setLoading(false);
+          return;
+        }
         if (password.trim().length < 6) {
-          setAuthError('Le mot de passe doit contenir au moins 6 caractères.');
+          setAuthError(t('account.errPasswordLength'));
           setLoading(false);
           return;
         }
@@ -93,20 +163,46 @@ export function VisitorAccountPage({
           lastName: lastName.trim(),
           email: email.trim(),
           phone: phone.trim(),
+          country: country.trim().toUpperCase(),
           address: address.trim(),
           password: password.trim(),
         });
-        setProfFirst(res.visitor.firstName);
-        setProfLast(res.visitor.lastName);
-        setProfPhone(res.visitor.phone);
-        setProfAddress(res.visitor.address);
-        onAuthSuccess(res.visitor, res.orders);
-        onNotify('success', 'Votre espace visiteur a bien été créé.');
+        setPassword('');
+        setVerificationEmail(res.email);
       }
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+      if (err instanceof EmailNotVerifiedError) {
+        setPassword('');
+        setAuthError('');
+        setVerificationEmail(err.email || email.trim());
+        return;
+      }
+      setAuthError(err instanceof Error ? err.message : t('account.errGeneric'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSocialAuth = async (provider: 'google' | 'facebook') => {
+    setAuthError('');
+    setSocialLoading(provider);
+    try {
+      const res = await visitorApi.signInWithProvider(provider);
+      if (res.role === 'admin') {
+        await onAdminAuthSuccess(res.admin);
+        return;
+      }
+      setProfFirst(res.visitor.firstName);
+      setProfLast(res.visitor.lastName);
+      setProfPhone(res.visitor.phone);
+      setProfCountry(res.visitor.country || '');
+      setProfAddress(res.visitor.address);
+      onAuthSuccess(res.visitor, res.orders);
+      onNotify('success', t('account.welcomeBack', { name: res.visitor.firstName }));
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : t('account.errSocial'));
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -118,30 +214,59 @@ export function VisitorAccountPage({
         firstName: profFirst,
         lastName: profLast,
         phone: profPhone,
+        country: profCountry,
         address: profAddress,
       });
       onProfileUpdated(res.visitor, res.orders);
-      onNotify('success', 'Vos coordonnées ont été mises à jour.');
+      onNotify('success', t('account.profileUpdated'));
     } catch (err) {
-      onNotify('error', err instanceof Error ? err.message : 'Erreur lors de la mise à jour.');
+      onNotify('error', err instanceof Error ? err.message : t('account.profileUpdateError'));
     } finally {
       setSavingProfile(false);
     }
   };
 
   if (!visitorUser) {
+    if (verificationEmail) {
+      return (
+        <div className="bg-[#FAF9F6] min-h-[75vh] py-12 sm:py-16">
+          <div className="max-w-lg mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8">
+              <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+                {t('account.kicker')}
+              </p>
+              <h1 className="mt-2 font-display text-4xl font-semibold text-[#141413]">
+                {t('account.verifyEmailTitle')}
+              </h1>
+            </div>
+
+            <EmailVerificationScreen
+              email={verificationEmail}
+              onGoToLogin={() => {
+                setEmail(verificationEmail);
+                setPassword('');
+                setAuthError('');
+                setAuthMode('login');
+                setVerificationEmail(null);
+              }}
+            />
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-[#FAF9F6] min-h-[75vh] py-12 sm:py-16">
         <div className="max-w-lg mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <p className="text-xs font-medium text-[#2A4036] tracking-wide">
-              Espace Visiteur
+              {t('account.kicker')}
             </p>
             <h1 className="mt-2 font-display text-4xl font-semibold text-[#141413]">
-              {authMode === 'login' ? 'Se connecter' : 'Créer votre compte'}
+              {authMode === 'login' ? t('account.loginTitle') : t('account.registerTitle')}
             </h1>
             <p className="mt-2 text-sm text-[#5C5A55]">
-              Suivez l’avancement de vos commandes, retrouvez vos articles aimés et simplifiez vos prochaines demandes.
+              {t('account.subtitle')}
             </p>
           </div>
 
@@ -159,7 +284,7 @@ export function VisitorAccountPage({
                     : 'text-[#5C5A55] hover:text-[#141413]'
                 }`}
               >
-                Connexion
+                {t('account.loginTab')}
               </button>
               <button
                 type="button"
@@ -173,7 +298,7 @@ export function VisitorAccountPage({
                     : 'text-[#5C5A55] hover:text-[#141413]'
                 }`}
               >
-                Créer un compte
+                {t('account.registerTab')}
               </button>
             </div>
 
@@ -189,52 +314,67 @@ export function VisitorAccountPage({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                        Prénom <span className="text-red-700">*</span>
+                        {t('account.firstName')} <span className="text-red-700">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="Claire"
+                        placeholder={t('account.firstNamePlaceholder')}
                         className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                        Nom <span className="text-red-700">*</span>
+                        {t('account.lastName')} <span className="text-red-700">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Morel"
+                        placeholder={t('account.lastNamePlaceholder')}
                         className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                       />
                     </div>
                   </div>
                   <div>
+                    <label
+                      htmlFor="register-country"
+                      className="block text-xs font-medium text-[#3F3E3A] mb-1"
+                    >
+                      {t('account.country')} <span className="text-red-700">*</span>
+                    </label>
+                    <CountrySelect
+                      id="register-country"
+                      value={country}
+                      onChange={setCountry}
+                      required
+                      placeholder={t('account.countryPlaceholder')}
+                    />
+                  </div>
+                  <div>
                     <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                      Téléphone (recommandé pour relier vos commandes)
+                      {t('account.phoneRecommended')}
                     </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+33 6 12 34 56 78"
+                      placeholder={t('account.phonePlaceholder')}
                       className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                      Adresse habituelle (facultatif)
+                      {t('account.usualAddressOptional')}
                     </label>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="14 Rue des Archives, 75004 Paris"
+                      placeholder={t('account.addressPlaceholder')}
                       className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                     />
                   </div>
@@ -243,21 +383,21 @@ export function VisitorAccountPage({
 
               <div>
                 <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                  Adresse email <span className="text-red-700">*</span>
+                  {t('account.emailAddress')} <span className="text-red-700">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="claire.morel@exemple.fr"
+                  placeholder={t('account.emailPlaceholder')}
                   className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-[#3F3E3A] mb-1">
-                  Mot de passe <span className="text-red-700">*</span>
+                  {t('account.password')} <span className="text-red-700">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -265,13 +405,15 @@ export function VisitorAccountPage({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={authMode === 'register' ? '6 caractères minimum' : '••••••••'}
+                    placeholder={
+                      authMode === 'register' ? t('account.passwordMinPlaceholder') : '••••••••'
+                    }
                     className="w-full pl-3 pr-10 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                    aria-label={showPassword ? t('account.hide') : t('account.show')}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6860] hover:text-[#141413]"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -281,36 +423,80 @@ export function VisitorAccountPage({
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || socialLoading !== null}
                 className="w-full py-2.5 px-4 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 {loading
-                  ? 'Chargement...'
+                  ? t('account.loading')
                   : authMode === 'login'
-                    ? 'Accéder à mon espace'
-                    : 'Créer mon espace visiteur'}
+                    ? t('account.accessSpace')
+                    : t('account.createSpace')}
               </button>
             </form>
 
-            {authMode === 'login' && (
-              <div className="mt-5 pt-4 border-t border-[#EFECE6] text-xs text-[#5C5A55] space-y-2">
-                <p className="font-medium text-[#141413]">Compte visiteur de démonstration :</p>
-                <p className="font-mono text-[11px]">
-                  claire.morel@exemple.fr / Visiteur2026
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail('claire.morel@exemple.fr');
-                    setPassword('Visiteur2026');
-                    setAuthError('');
-                  }}
-                  className="text-xs font-semibold text-[#2A4036] hover:underline"
-                >
-                  Pré-remplir les identifiants de démonstration
-                </button>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-[#E6E4DF]" />
               </div>
-            )}
+              <div className="relative flex justify-center">
+                <span className="bg-white px-3 text-[11px] font-medium text-[#6B6860] uppercase tracking-wider">
+                  {t('account.or')}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                disabled={loading || socialLoading !== null}
+                onClick={() => void handleSocialAuth('google')}
+                className="w-full py-2.5 px-4 bg-white hover:bg-[#FAF9F6] border border-[#D9D6CF] hover:border-[#141413] disabled:opacity-50 text-[#141413] text-sm font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2.5"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
+                  />
+                </svg>
+                <span>
+                  {socialLoading === 'google'
+                    ? t('account.googleLoading')
+                    : authMode === 'register'
+                      ? t('account.googleSignup')
+                      : t('account.googleContinue')}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                disabled={loading || socialLoading !== null}
+                onClick={() => void handleSocialAuth('facebook')}
+                className="w-full py-2.5 px-4 bg-[#1877F2] hover:bg-[#166FE5] disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2.5"
+              >
+                <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z" />
+                </svg>
+                <span>
+                  {socialLoading === 'facebook'
+                    ? t('account.facebookLoading')
+                    : authMode === 'register'
+                      ? t('account.facebookSignup')
+                      : t('account.facebookContinue')}
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 text-center">
@@ -319,7 +505,7 @@ export function VisitorAccountPage({
               onClick={() => onNavigate('/suivi-commande')}
               className="text-xs font-medium text-[#5C5A55] hover:text-[#141413] underline"
             >
-              Suivre une commande sans compte avec son numéro
+              {t('account.trackWithoutAccount')}
             </button>
           </div>
         </div>
@@ -337,11 +523,18 @@ export function VisitorAccountPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-[#E6E4DF]">
           <div>
-            <p className="text-xs font-medium text-[#2A4036] tracking-wide">Espace Visiteur</p>
+            <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+              {t('account.kicker')}
+            </p>
             <h1 className="mt-1 font-display text-3xl sm:text-4xl font-semibold text-[#141413]">
-              Bonjour, {visitorUser.firstName} {visitorUser.lastName}
+              {t('account.hello', {
+                name: `${visitorUser.firstName} ${visitorUser.lastName}`.trim(),
+              })}
             </h1>
-            <p className="mt-1 text-sm text-[#5C5A55]">{visitorUser.email}</p>
+            <p className="mt-1 text-sm text-[#5C5A55]">
+              {visitorUser.email}
+              {visitorUser.country ? ` · ${formatCountryWithFlag(visitorUser.country, lang)}` : ''}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -349,7 +542,7 @@ export function VisitorAccountPage({
               onClick={() => onNavigate('/suivi-commande')}
               className="px-4 py-2 text-xs font-medium bg-white border border-[#D9D6CF] rounded-lg hover:border-[#141413] transition-colors"
             >
-              Rechercher une autre commande
+              {t('account.searchOtherOrder')}
             </button>
             <button
               type="button"
@@ -357,7 +550,7 @@ export function VisitorAccountPage({
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#5C5A55] hover:text-red-700 bg-white border border-[#D9D6CF] rounded-lg transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Déconnexion</span>
+              <span>{t('account.logout')}</span>
             </button>
           </div>
         </div>
@@ -374,7 +567,9 @@ export function VisitorAccountPage({
             }`}
           >
             <Package className="w-3.5 h-3.5" />
-            <span className="tabular-nums">Mes commandes ({visitorOrders.length})</span>
+            <span className="tabular-nums">
+              {t('account.tabOrders', { count: visitorOrders.length })}
+            </span>
           </button>
           <button
             type="button"
@@ -386,7 +581,9 @@ export function VisitorAccountPage({
             }`}
           >
             <Heart className="w-3.5 h-3.5" />
-            <span className="tabular-nums">Articles aimés ({likedArticles.length})</span>
+            <span className="tabular-nums">
+              {t('account.tabLikes', { count: likedArticles.length })}
+            </span>
           </button>
           <button
             type="button"
@@ -394,6 +591,7 @@ export function VisitorAccountPage({
               setProfFirst(visitorUser.firstName);
               setProfLast(visitorUser.lastName);
               setProfPhone(visitorUser.phone);
+              setProfCountry(visitorUser.country || '');
               setProfAddress(visitorUser.address);
               setActiveTab('profile');
             }}
@@ -404,7 +602,7 @@ export function VisitorAccountPage({
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>Mes coordonnées</span>
+            <span>{t('account.tabProfile')}</span>
           </button>
         </div>
 
@@ -415,17 +613,17 @@ export function VisitorAccountPage({
               <div className="bg-white border border-[#E6E4DF] rounded-xl p-10 text-center">
                 <Package className="w-7 h-7 mx-auto text-[#8A877E] mb-2" />
                 <p className="text-sm font-medium text-[#141413]">
-                  Aucune commande associée à ce compte pour le moment.
+                  {t('account.noOrdersTitle')}
                 </p>
                 <p className="mt-1 text-xs text-[#5C5A55]">
-                  Vos futures demandes effectuées avec votre email ou téléphone apparaîtront ici automatiquement.
+                  {t('account.noOrdersDesc')}
                 </p>
                 <button
                   type="button"
                   onClick={() => onNavigate('/boutique')}
                   className="mt-5 px-5 py-2.5 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
                 >
-                  Découvrir la boutique
+                  {t('account.discoverShop')}
                 </button>
               </div>
             ) : (
@@ -443,26 +641,41 @@ export function VisitorAccountPage({
                     >
                       <div>
                         <p className="text-xs font-mono tabular-nums text-[#5C5A55]">
-                          #{ord.orderNumber} · {formatDateFr(ord.createdAt)}
+                          #{ord.orderNumber} · {formatDateFr(ord.createdAt, lang)}
                         </p>
                         <p className="text-sm font-semibold text-[#141413] mt-0.5">
                           {ord.items.map((i) => `${i.quantity} × ${i.productName}`).join(', ')}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                         <span className="text-sm font-mono tabular-nums font-semibold text-[#141413]">
-                          {formatPrice(ord.indicativeTotal, settings.general.currencySymbol)}
+                          {formatClientPrice(ord.indicativeTotal)}
                         </span>
-                        <span className="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#EFECE6] text-[#2A4036]">
-                          {ord.status}
-                        </span>
+                        {ord.invoice?.status === 'Envoyée' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-md bg-[#2A4036]/10 text-[#2A4036] border border-[#2A4036]/25">
+                            <FileText className="w-3 h-3" />
+                            <span>{t('account.invoiceReady')}</span>
+                          </span>
+                        )}
+                        {(() => {
+                          const st = getOrderStatusStyle(ord.status, lang);
+                          return (
+                            <span
+                              className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${st.bg} ${st.text} ${st.border}`}
+                            >
+                              {st.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </button>
 
                     {isExpanded && (
                       <div className="px-6 py-5 border-t border-[#EFECE6] bg-[#FAF9F6] grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                         <div>
-                          <p className="font-semibold text-[#141413] mb-2">Détail des objets</p>
+                          <p className="font-semibold text-[#141413] mb-2">
+                            {t('account.itemsDetail')}
+                          </p>
                           <div className="space-y-2">
                             {ord.items.map((item) => (
                               <div key={item.productId} className="flex items-center justify-between">
@@ -470,30 +683,87 @@ export function VisitorAccountPage({
                                   {item.quantity} × {item.productName}
                                 </span>
                                 <span className="font-mono tabular-nums text-[#141413]">
-                                  {formatPrice(
-                                    item.unitPrice * item.quantity,
-                                    settings.general.currencySymbol,
-                                  )}
+                                  {formatClientPrice(item.unitPrice * item.quantity)}
                                 </span>
                               </div>
                             ))}
                           </div>
+                          {typeof ord.shippingFee === 'number' && (
+                            <div className="mt-3 pt-2.5 border-t border-[#E6E4DF] space-y-1">
+                              <div className="flex items-center justify-between text-[#5C5A55]">
+                                <span>{t('account.productsSubtotal')}</span>
+                                <span className="font-mono tabular-nums text-[#141413]">
+                                  {formatClientPrice(
+                                    ord.subtotal ??
+                                      Math.max(0, ord.indicativeTotal - ord.shippingFee),
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-[#5C5A55]">
+                                <span>
+                                  {t('account.delivery', {
+                                    country: getCountryDisplayName(ord.customerCountry, lang),
+                                  })}
+                                </span>
+                                <span className="font-mono tabular-nums text-[#141413]">
+                                  {ord.shippingFee === 0
+                                    ? t('account.freeShipping')
+                                    : formatClientPrice(ord.shippingFee)}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between font-semibold text-[#141413] pt-1">
+                                <span>{t('account.grandTotal')}</span>
+                                <span className="font-mono tabular-nums">
+                                  {formatClientPrice(ord.indicativeTotal)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                           <p className="mt-3 pt-3 border-t border-[#E6E4DF] text-[#5C5A55]">
-                            <strong className="text-[#141413]">Livraison :</strong> {ord.deliveryAddress}
+                            <strong className="text-[#141413]">{t('account.deliveryLabel')}</strong>{' '}
+                            {ord.deliveryAddress}
                           </p>
+                          {ord.invoice?.status === 'Envoyée' && (
+                            <div className="mt-4 p-3.5 rounded-lg bg-white border border-[#2A4036]/30 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-semibold text-[#141413]">
+                                  {t('account.invoiceNum', { num: ord.invoice.invoiceNumber })}
+                                </span>
+                                <span className="text-[11px] font-medium text-[#2A4036]">
+                                  {getInvoicePaymentStatusLabel(ord.invoice.paymentStatus, lang)}
+                                </span>
+                              </div>
+                              <p className="text-[#5C5A55]">
+                                <strong className="text-[#141413]">
+                                  {t('account.paymentMethod')}
+                                </strong>{' '}
+                                {ord.invoice.paymentMethod}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setInvoiceOrderModal(ord)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg transition-colors"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>{t('account.viewInvoicePay')}</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <div>
-                          <p className="font-semibold text-[#141413] mb-2">Suivi des étapes</p>
+                          <p className="font-semibold text-[#141413] mb-2">
+                            {t('account.stepsTracking')}
+                          </p>
                           <div className="space-y-2.5">
                             {ord.history.map((h, i) => (
                               <div key={i} className="flex items-start gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-[#2A4036] shrink-0 mt-0.5" />
                                 <div>
                                   <p className="font-medium text-[#141413]">
-                                    {h.status}{' '}
+                                    {getOrderStatusStyle(h.status, lang).label}{' '}
                                     <span className="font-normal font-mono tabular-nums text-[#6B6860]">
-                                      · {formatDateTimeFr(h.date)}
+                                      · {formatDateTimeFr(h.date, lang)}
                                     </span>
                                   </p>
                                   <p className="text-[#5C5A55]">{h.note}</p>
@@ -501,6 +771,70 @@ export function VisitorAccountPage({
                               </div>
                             ))}
                           </div>
+
+                          {(() => {
+                            const formattedTotal =
+                              typeof ord.displayTotal === 'number' && ord.displayCurrencySymbol
+                                ? formatAmountWithCurrency(
+                                    ord.displayTotal,
+                                    ord.displayCurrencySymbol,
+                                    getCurrencyOptionByCode(
+                                      ord.displayCurrencyCode,
+                                      ord.displayCurrencySymbol,
+                                    ).decimals,
+                                    lang,
+                                  )
+                                : formatClientPrice(ord.indicativeTotal);
+                            const { whatsappUrl, adminOrderUrl } = buildOrderWhatsappUrl(
+                              ord,
+                              settings,
+                              formattedTotal,
+                              undefined,
+                              lang,
+                            );
+                            return (
+                              <div className="mt-4 pt-4 border-t border-[#E6E4DF] flex flex-wrap items-center gap-2">
+                                <a
+                                  href={whatsappUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#128C7E] hover:bg-[#0E7367] text-white text-xs font-semibold rounded-lg transition-colors"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <span>{t('account.notifyWhatsapp')}</span>
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                      void navigator.clipboard.writeText(adminOrderUrl);
+                                    }
+                                    setCopiedOrderLinkId(ord.id);
+                                    setTimeout(
+                                      () =>
+                                        setCopiedOrderLinkId((prev) =>
+                                          prev === ord.id ? null : prev,
+                                        ),
+                                      2000,
+                                    );
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#D9D6CF] hover:border-[#141413] text-[#141413] text-xs font-medium rounded-lg"
+                                >
+                                  {copiedOrderLinkId === ord.id ? (
+                                    <>
+                                      <Check className="w-3.5 h-3.5 text-[#2A4036]" />
+                                      <span>{t('account.linkCopied')}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3.5 h-3.5" />
+                                      <span>{t('account.copyLink')}</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}
@@ -518,17 +852,17 @@ export function VisitorAccountPage({
               <div className="bg-white border border-[#E6E4DF] rounded-xl p-10 text-center">
                 <Heart className="w-7 h-7 mx-auto text-[#8A877E] mb-2" />
                 <p className="text-sm font-medium text-[#141413]">
-                  Vous n’avez pas encore enregistré d’article favori.
+                  {t('account.noLikesTitle')}
                 </p>
                 <p className="mt-1 text-xs text-[#5C5A55]">
-                  Cliquez sur le cœur sur n’importe quel enseignement dans la Communauté pour le retrouver ici.
+                  {t('account.noLikesDesc')}
                 </p>
                 <button
                   type="button"
                   onClick={() => onNavigate('/communaute')}
                   className="mt-5 px-5 py-2.5 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
                 >
-                  Explorer la communauté
+                  {t('account.exploreCommunity')}
                 </button>
               </div>
             ) : (
@@ -551,7 +885,9 @@ export function VisitorAccountPage({
                     </button>
                     <div className="p-4 flex-1 flex flex-col justify-between">
                       <div>
-                        <p className="text-[11px] text-[#6B6860]">{formatDateFr(art.publishedAt)}</p>
+                        <p className="text-[11px] text-[#6B6860]">
+                          {formatDateFr(art.publishedAt, lang)}
+                        </p>
                         <h3 className="mt-1 font-display text-xl font-semibold text-[#141413]">
                           {art.title}
                         </h3>
@@ -561,7 +897,7 @@ export function VisitorAccountPage({
                         onClick={() => onNavigate(`/communaute/${art.slug}`)}
                         className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
                       >
-                        <span>Relire l’enseignement</span>
+                        <span>{t('account.readAgain')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -579,11 +915,13 @@ export function VisitorAccountPage({
             className="mt-6 max-w-xl bg-white border border-[#E6E4DF] rounded-xl p-6 space-y-4 text-xs"
           >
             <h2 className="text-base font-semibold text-[#141413]">
-              Mes coordonnées de livraison et de contact
+              {t('account.profileHeading')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block font-medium text-[#3F3E3A] mb-1">Prénom</label>
+                <label className="block font-medium text-[#3F3E3A] mb-1">
+                  {t('account.firstName')}
+                </label>
                 <input
                   type="text"
                   required
@@ -593,7 +931,9 @@ export function VisitorAccountPage({
                 />
               </div>
               <div>
-                <label className="block font-medium text-[#3F3E3A] mb-1">Nom</label>
+                <label className="block font-medium text-[#3F3E3A] mb-1">
+                  {t('account.lastName')}
+                </label>
                 <input
                   type="text"
                   required
@@ -604,7 +944,20 @@ export function VisitorAccountPage({
               </div>
             </div>
             <div>
-              <label className="block font-medium text-[#3F3E3A] mb-1">Téléphone</label>
+              <label htmlFor="profile-country" className="block font-medium text-[#3F3E3A] mb-1">
+                {t('account.country')}
+              </label>
+              <CountrySelect
+                id="profile-country"
+                value={profCountry}
+                onChange={setProfCountry}
+                placeholder={t('account.countryPlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-[#3F3E3A] mb-1">
+                {t('account.phone')}
+              </label>
               <input
                 type="tel"
                 value={profPhone}
@@ -613,7 +966,9 @@ export function VisitorAccountPage({
               />
             </div>
             <div>
-              <label className="block font-medium text-[#3F3E3A] mb-1">Adresse habituelle</label>
+              <label className="block font-medium text-[#3F3E3A] mb-1">
+                {t('account.usualAddress')}
+              </label>
               <input
                 type="text"
                 value={profAddress}
@@ -627,11 +982,54 @@ export function VisitorAccountPage({
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white font-semibold rounded-lg"
             >
               <Save className="w-4 h-4" />
-              <span>{savingProfile ? 'Enregistrement...' : 'Enregistrer mes coordonnées'}</span>
+              <span>{savingProfile ? t('common.saving') : t('account.saveProfile')}</span>
             </button>
           </form>
         )}
       </div>
+
+      {invoiceOrderModal && invoiceOrderModal.invoice && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('account.invoiceModalAria', {
+            invoiceNumber: invoiceOrderModal.invoice.invoiceNumber,
+          })}
+        >
+          <div
+            className="fixed inset-0 bg-black/50 no-print"
+            onClick={() => setInvoiceOrderModal(null)}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 w-full max-w-4xl max-h-[90vh] bg-[#FAF9F6] border border-[#E3E3E6] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="px-6 py-4 bg-white border-b border-[#E3E3E6] flex items-center justify-between no-print">
+              <h3 className="text-base font-semibold text-[#141413]">
+                {t('account.invoiceModalTitle', {
+                  invoiceNumber: invoiceOrderModal.invoice.invoiceNumber,
+                  orderNumber: invoiceOrderModal.orderNumber,
+                })}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setInvoiceOrderModal(null)}
+                aria-label={t('common.close')}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5C5A55] hover:bg-[#F3F2EE]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+              <InvoicePreview
+                invoice={invoiceOrderModal.invoice}
+                orderNumber={invoiceOrderModal.orderNumber}
+                settings={settings}
+                showPrintButton
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
