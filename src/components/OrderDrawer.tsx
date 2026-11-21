@@ -412,6 +412,12 @@ export function OrderDrawer({
       if (effectiveAddress && !deliveryAddress.trim()) setDeliveryAddress(effectiveAddress);
       await completeCheckoutAfterAuth(res.visitor, res.orders, authCountry.trim().toUpperCase());
     } catch (err) {
+      if (err instanceof EmailNotVerifiedError) {
+        setAuthPassword('');
+        setAuthMode('login');
+        setAuthError(err.message);
+        return;
+      }
       const msg = err instanceof Error ? err.message : t('account.errGeneric');
       setAuthError(msg);
       if (

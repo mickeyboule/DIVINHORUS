@@ -170,6 +170,14 @@ export function canUseFirestoreAdmin(): boolean {
   return isBootstrapAdminEmail(user.email);
 }
 
+export function requireFirestoreAdmin(): void {
+  if (!canUseFirestoreAdmin()) {
+    throw new Error(
+      'Session administrateur Firebase requise. Veuillez vous reconnecter avec votre compte Google ou e-mail vérifié.',
+    );
+  }
+}
+
 export function canUseFirestoreVisitor(): boolean {
   const user = auth.currentUser;
   if (!user) return false;
@@ -1177,6 +1185,89 @@ export async function loadAdminFromFirestore(
       // Ignore storage restrictions
     }
 
+    const mappedOrders = ordSnap.docs
+      .map((d) => mapOrder(d.data()))
+      .filter((o) => !DEMO_ORDER_IDS.has(o.id))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    const mappedCustomers = custSnap.docs
+      .map((d) => mapCustomer(d.data()))
+      .filter((c) => !DEMO_CUSTOMER_IDS.has(c.id));
+
+    // Reconcile any order placed directly into Firestore into the CRM customers collection
+    const customerMap = new Map<string, Customer>(mappedCustomers.map((c) => [c.id, c]));
+    const orderAggByCustomer = new Map<
+      string,
+      {
+        count: number;
+        total: number;
+        lastOrderAt: string;
+        latestOrder: Order;
+      }
+    >();
+    for (const ord of mappedOrders) {
+      const cid = sanitizeFirestoreId(ord.customerId || `cust_${ord.visitorId || ord.id}`, 'cust');
+      const prev = orderAggByCustomer.get(cid);
+      if (!prev) {
+        orderAggByCustomer.set(cid, {
+          count: 1,
+          total: ord.indicativeTotal || 0,
+          lastOrderAt: ord.createdAt,
+          latestOrder: ord,
+        });
+      } else {
+        prev.count += 1;
+        prev.total = Math.round((prev.total + (ord.indicativeTotal || 0)) * 100) / 100;
+        if (ord.createdAt > prev.lastOrderAt) {
+          prev.lastOrderAt = ord.createdAt;
+          prev.latestOrder = ord;
+        }
+      }
+    }
+
+    const customersToSync: Customer[] = [];
+    for (const [cid, agg] of orderAggByCustomer.entries()) {
+      const existingCust = customerMap.get(cid);
+      if (!existingCust) {
+        const createdCust: Customer = {
+          id: cid,
+          firstName: agg.latestOrder.customerFirstName || 'Client',
+          lastName: agg.latestOrder.customerLastName || 'Boutique',
+          phone: agg.latestOrder.customerPhone || '',
+          email: agg.latestOrder.customerEmail || '',
+          country: agg.latestOrder.customerCountry || '',
+          address: agg.latestOrder.deliveryAddress || '',
+          notes: '',
+          createdAt: agg.latestOrder.createdAt,
+          lastOrderAt: agg.lastOrderAt,
+          orderCount: agg.count,
+          totalIndicative: agg.total,
+        };
+        customerMap.set(cid, createdCust);
+        customersToSync.push(createdCust);
+      } else if (
+        existingCust.orderCount < agg.count ||
+        existingCust.lastOrderAt !== agg.lastOrderAt ||
+        existingCust.totalIndicative !== agg.total
+      ) {
+        const updatedCust: Customer = {
+          ...existingCust,
+          orderCount: Math.max(existingCust.orderCount, agg.count),
+          totalIndicative: Math.max(existingCust.totalIndicative, agg.total),
+          lastOrderAt: agg.lastOrderAt || existingCust.lastOrderAt,
+        };
+        customerMap.set(cid, updatedCust);
+        customersToSync.push(updatedCust);
+      }
+    }
+    if (customersToSync.length > 0) {
+      void Promise.all(customersToSync.map((c) => saveCustomerToFirestore(c))).catch(() => {});
+    }
+
+    const finalCustomers = Array.from(customerMap.values()).sort((a, b) =>
+      (b.lastOrderAt || b.createdAt).localeCompare(a.lastOrderAt || a.createdAt),
+    );
+
     return {
       categories: catSnap.docs
         .map((d) => mapCategory(d.data()))
@@ -1186,14 +1277,8 @@ export async function loadAdminFromFirestore(
         .map((d) => mapProduct(d.data()))
         .filter((p) => !DEMO_PRODUCT_IDS.has(p.id))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      orders: ordSnap.docs
-        .map((d) => mapOrder(d.data()))
-        .filter((o) => !DEMO_ORDER_IDS.has(o.id))
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      customers: custSnap.docs
-        .map((d) => mapCustomer(d.data()))
-        .filter((c) => !DEMO_CUSTOMER_IDS.has(c.id))
-        .sort((a, b) => (b.lastOrderAt || b.createdAt).localeCompare(a.lastOrderAt || a.createdAt)),
+      orders: mappedOrders,
+      customers: finalCustomers,
       articleCategories: artCatSnap.docs.map((d) => mapArticleCategory(d.data())),
       articles: artSnap.docs
         .map((d) => mapArticle(d.data()))
@@ -1370,7 +1455,7 @@ export async function migrateBootstrapToFirestore(seed: AdminBootstrapData): Pro
 // ---------------- ADMIN FIRESTORE CRUD WRITERS ----------------
 
 export async function saveCategoryToFirestore(cat: Category): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(cat.id, 'cat');
   const ref = doc(db, 'categories', id);
   const updatable = buildCategoryUpdatable({ ...cat, id });
@@ -1387,7 +1472,7 @@ export async function saveCategoryToFirestore(cat: Category): Promise<void> {
 }
 
 export async function deleteCategoryFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'cat');
   try {
     await deleteDoc(doc(db, 'categories', cleanId));
@@ -1397,7 +1482,7 @@ export async function deleteCategoryFromFirestore(id: string): Promise<void> {
 }
 
 export async function saveProductToFirestore(prod: Product): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(prod.id, 'prod');
   const ref = doc(db, 'products', id);
   const updatable = buildProductUpdatable({ ...prod, id });
@@ -1414,7 +1499,7 @@ export async function saveProductToFirestore(prod: Product): Promise<void> {
 }
 
 export async function deleteProductFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'prod');
   try {
     await deleteDoc(doc(db, 'products', cleanId));
@@ -1424,7 +1509,7 @@ export async function deleteProductFromFirestore(id: string): Promise<void> {
 }
 
 export async function saveArticleCategoryToFirestore(cat: ArticleCategory): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(cat.id, 'art_cat');
   const ref = doc(db, 'article_categories', id);
   const updatable = buildArticleCategoryUpdatable({ ...cat, id });
@@ -1441,7 +1526,7 @@ export async function saveArticleCategoryToFirestore(cat: ArticleCategory): Prom
 }
 
 export async function deleteArticleCategoryFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'art_cat');
   try {
     await deleteDoc(doc(db, 'article_categories', cleanId));
@@ -1451,7 +1536,7 @@ export async function deleteArticleCategoryFromFirestore(id: string): Promise<vo
 }
 
 export async function saveArticleToFirestore(art: Article): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(art.id, 'art');
   const ref = doc(db, 'articles', id);
   const updatable = buildArticleUpdatable({ ...art, id });
@@ -1468,7 +1553,7 @@ export async function saveArticleToFirestore(art: Article): Promise<void> {
 }
 
 export async function deleteArticleFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'art');
   try {
     await deleteDoc(doc(db, 'articles', cleanId));
@@ -1478,7 +1563,7 @@ export async function deleteArticleFromFirestore(id: string): Promise<void> {
 }
 
 export async function saveVideoToFirestore(vid: VideoItem): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(vid.id, 'vid');
   const ref = doc(db, 'videos', id);
   const updatable = buildVideoUpdatable({ ...vid, id });
@@ -1495,7 +1580,7 @@ export async function saveVideoToFirestore(vid: VideoItem): Promise<void> {
 }
 
 export async function deleteVideoFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'vid');
   try {
     await deleteDoc(doc(db, 'videos', cleanId));
@@ -1505,7 +1590,7 @@ export async function deleteVideoFromFirestore(id: string): Promise<void> {
 }
 
 export async function saveTestimonialToFirestore(item: Testimonial): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(item.id, 'test');
   const ref = doc(db, 'testimonials', id);
   const updatable = buildTestimonialUpdatable({ ...item, id });
@@ -1527,7 +1612,7 @@ export async function saveTestimonialToFirestore(item: Testimonial): Promise<voi
 }
 
 export async function deleteTestimonialFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'test');
   try {
     await deleteDoc(doc(db, 'testimonials', cleanId));
@@ -1537,7 +1622,7 @@ export async function deleteTestimonialFromFirestore(id: string): Promise<void> 
 }
 
 export async function saveMediaToFirestore(media: MediaItem, uploadedByUid?: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(media.id, 'med');
   const ref = doc(db, 'media', id);
   const uid = uploadedByUid || auth.currentUser?.uid || 'admin';
@@ -1548,7 +1633,9 @@ export async function saveMediaToFirestore(media: MediaItem, uploadedByUid?: str
     : 'site';
 
   const safeUrl = clampString(media.url || '', MAX_MEDIA_URL_LEN);
-  if (!safeUrl) return;
+  if (!safeUrl) {
+    throw new Error('URL ou image média vide.');
+  }
 
   const updatable = {
     name: clampString(media.name || 'Média', 200, 'Média'),
@@ -1576,7 +1663,7 @@ export async function saveMediaToFirestore(media: MediaItem, uploadedByUid?: str
 }
 
 export async function deleteMediaFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'med');
   try {
     await deleteDoc(doc(db, 'media', cleanId));
@@ -1586,7 +1673,7 @@ export async function deleteMediaFromFirestore(id: string): Promise<void> {
 }
 
 export async function saveCustomerToFirestore(customer: Customer): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(customer.id, 'cust');
   const ref = doc(db, 'customers', id);
   const updatable = buildCustomerUpdatable({ ...customer, id });
@@ -1603,7 +1690,7 @@ export async function saveCustomerToFirestore(customer: Customer): Promise<void>
 }
 
 export async function deleteCustomerFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'cust');
   try {
     await deleteDoc(doc(db, 'customers', cleanId));
@@ -1613,7 +1700,7 @@ export async function deleteCustomerFromFirestore(id: string): Promise<void> {
 }
 
 export async function upsertOrderAdminToFirestore(order: Order): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const { id, payload, safeHistory, validStatus } = buildOrderPayload(order);
   const orderNumber = sanitizeFirestoreId(String(payload.orderNumber), 'CMD');
   const orderRef = doc(db, 'orders', id);
@@ -1670,7 +1757,7 @@ export async function upsertOrderAdminToFirestore(order: Order): Promise<void> {
 }
 
 export async function saveSiteContentToFirestore(content: SiteContent): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const ref = doc(db, 'site_content', 'main');
   const updatable = buildSiteContentUpdatable(content);
   try {
@@ -1686,7 +1773,7 @@ export async function saveSiteContentToFirestore(content: SiteContent): Promise<
 }
 
 export async function saveSiteSettingsToFirestore(settings: SiteSettings): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const ref = doc(db, 'site_settings', 'public');
   const updatable = buildSiteSettingsUpdatable(settings);
   try {
@@ -1702,7 +1789,7 @@ export async function saveSiteSettingsToFirestore(settings: SiteSettings): Promi
 }
 
 export async function markMessageReadInFirestore(id: string, read: boolean): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'msg');
   try {
     const ref = doc(db, 'contact_messages', cleanId);
@@ -1716,7 +1803,7 @@ export async function markMessageReadInFirestore(id: string, read: boolean): Pro
 }
 
 export async function deleteMessageFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'msg');
   try {
     await deleteDoc(doc(db, 'contact_messages', cleanId));
@@ -1988,7 +2075,7 @@ export async function getTestimonialFromFirestore(id: string): Promise<Testimoni
 }
 
 export async function createAdminMemberInFirestore(admin: AdminUserPublic): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const id = sanitizeFirestoreId(admin.id, 'adm');
   try {
     await setDoc(doc(db, 'admins', id), {
@@ -2005,7 +2092,7 @@ export async function createAdminMemberInFirestore(admin: AdminUserPublic): Prom
 }
 
 export async function deleteAdminMemberFromFirestore(id: string): Promise<void> {
-  if (!canUseFirestoreAdmin()) return;
+  requireFirestoreAdmin();
   const cleanId = sanitizeFirestoreId(id, 'adm');
   try {
     await deleteDoc(doc(db, 'admins', cleanId));
