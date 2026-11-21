@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
+import { LoadingSplash } from './components/LoadingSplash';
 import { OrderDrawer, type BasketItem } from './components/OrderDrawer';
 import { TestimonialModal } from './components/TestimonialModal';
 import { ToastStack, type ToastItem } from './components/Toast';
@@ -512,11 +513,7 @@ export default function App() {
     const siteName = adminData?.settings.general.siteName || publicData?.settings.general.siteName || 'DIVIN HORUS';
 
     if (adminChecking) {
-      return (
-        <div className="min-h-screen bg-[#F6F6F7] flex items-center justify-center text-sm text-[#5C5A55]">
-          {t('app.verifyingSession')}
-        </div>
-      );
+      return <LoadingSplash message={t('app.verifyingSession')} siteName={siteName} />;
     }
 
     if (!adminUser) {
@@ -533,11 +530,7 @@ export default function App() {
     }
 
     if (!adminData) {
-      return (
-        <div className="min-h-screen bg-[#F6F6F7] flex items-center justify-center text-sm text-[#5C5A55]">
-          {t('app.loadingAdmin')}
-        </div>
-      );
+      return <LoadingSplash message={t('app.loadingAdmin')} siteName={siteName} />;
     }
 
     const newOrdersCount = adminData.orders.filter((o) => o.status === 'Nouvelle').length;
@@ -802,9 +795,10 @@ export default function App() {
   // ---------------- PUBLIC SITE RENDER ----------------
   if (publicLoading) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center text-sm text-[#5C5A55]">
-        {t('app.loadingSite')}
-      </div>
+      <LoadingSplash
+        message={t('app.loadingSite')}
+        siteName={publicData?.settings.general.siteName || 'DIVIN HORUS'}
+      />
     );
   }
 
@@ -818,7 +812,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => void fetchPublic()}
-          className="mt-5 px-5 py-2.5 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
+          className="mt-5 px-5 py-2.5 bg-[#8F6B18] text-white text-xs font-semibold rounded-lg"
         >
           {t('app.retry')}
         </button>

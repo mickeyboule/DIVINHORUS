@@ -263,12 +263,12 @@ export function AdminVideosView({
             value={channelUrl}
             onChange={(e) => setChannelUrl(e.target.value)}
             placeholder="https://www.youtube.com/channel/UC... ou identifiant UC... ou @VotreChaine"
-            className="flex-1 px-3.5 py-2.5 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+            className="flex-1 px-3.5 py-2.5 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
           />
           <button
             type="submit"
             disabled={syncingChannel}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg whitespace-nowrap"
           >
             <RefreshCw className={`w-4 h-4 ${syncingChannel ? 'animate-spin' : ''}`} />
             <span>{syncingChannel ? 'Synchronisation...' : 'Synchroniser la chaîne'}</span>
@@ -355,7 +355,7 @@ export function AdminVideosView({
                 onClick={() => handleToggleVisible(vid)}
                 className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border ${
                   vid.visible
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    ? 'bg-[#FBF6EA] text-[#7A5C12] border-[#E5D3A1]'
                     : 'bg-stone-100 text-stone-600 border-stone-200'
                 }`}
               >
@@ -523,7 +523,7 @@ export function AdminVideosView({
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg"
+                className="px-4 py-2 text-xs font-semibold bg-[#8F6B18] text-white rounded-lg"
               >
                 {saving ? 'Enregistrement...' : 'Enregistrer la vidéo'}
               </button>

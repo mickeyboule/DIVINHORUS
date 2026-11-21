@@ -108,7 +108,7 @@ export function TestimonialModal({
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder={t('testimonialModal.yourNamePlaceholder')}
-                className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
               />
             </div>
             <div>
@@ -120,7 +120,7 @@ export function TestimonialModal({
                 value={authorLocation}
                 onChange={(e) => setAuthorLocation(e.target.value)}
                 placeholder={t('testimonialModal.locationPlaceholder')}
-                className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ export function TestimonialModal({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t('testimonialModal.testimonialPlaceholder')}
-              className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none resize-none"
+              className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none resize-none"
             />
           </div>
 
@@ -180,7 +180,7 @@ export function TestimonialModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white rounded-lg font-semibold"
+              className="px-5 py-2 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white rounded-lg font-semibold"
             >
               {submitting ? t('testimonialModal.submitting') : t('testimonialModal.submit')}
             </button>

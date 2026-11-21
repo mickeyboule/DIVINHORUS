@@ -645,36 +645,86 @@ export const publicApi = {
       : serverData || createDefaultPublicBootstrap();
 
     if (
-      bootstrap.videos.length === 0 &&
       bootstrap.settings.youtubeSync?.autoSync !== false &&
       bootstrap.settings.youtubeSync?.channelId
     ) {
+      const channelId = bootstrap.settings.youtubeSync.channelId;
+      const lastSyncMs = bootstrap.settings.youtubeSync.lastSyncAt
+        ? Date.parse(bootstrap.settings.youtubeSync.lastSyncAt)
+        : 0;
+      const cacheKey = `dh_yt_public_feed_${channelId}`;
+      let entries: ParsedYoutubeFeedEntry[] | null = null;
+
       try {
-        const feedRes = await fetchYoutubeFeedEntriesClient(
-          `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(
-            bootstrap.settings.youtubeSync.channelId,
-          )}`,
-        );
-        if (feedRes && feedRes.entries.length > 0) {
-          bootstrap = {
-            ...bootstrap,
-            videos: feedRes.entries.map((entry, idx) => ({
-              id: `yt_${entry.youtubeId}`,
-              title: entry.title,
-              youtubeUrl: entry.youtubeUrl,
-              youtubeId: entry.youtubeId,
-              thumbnail: entry.thumbnail,
-              description: entry.description,
-              duration: '',
-              visible: true,
-              featured: idx < 3,
-              sortOrder: idx + 1,
-              createdAt: entry.publishedAt,
-            })),
+        const cachedRaw = sessionStorage.getItem(cacheKey);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw) as {
+            ts: number;
+            entries: ParsedYoutubeFeedEntry[];
           };
+          if (Date.now() - cached.ts < 1000 * 60 * 3 && Array.isArray(cached.entries)) {
+            entries = cached.entries;
+          }
         }
       } catch {
-        // Keep empty videos list if feed unreachable
+        // Ignore storage restrictions
+      }
+
+      if (!entries) {
+        try {
+          const feedRes = await fetchYoutubeFeedEntriesClient(
+            `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`,
+          );
+          if (feedRes && feedRes.entries.length > 0) {
+            entries = feedRes.entries;
+            try {
+              sessionStorage.setItem(
+                cacheKey,
+                JSON.stringify({ ts: Date.now(), entries }),
+              );
+            } catch {
+              // Ignore storage restrictions
+            }
+          }
+        } catch {
+          // Keep existing videos list if feed unreachable
+        }
+      }
+
+      if (entries && entries.length > 0) {
+        const existingIds = new Set(bootstrap.videos.map((v) => v.youtubeId));
+        const cutoffMs = lastSyncMs > 0 ? lastSyncMs - 1000 * 60 * 60 : 0;
+        const freshEntries = entries.filter((entry) => {
+          if (existingIds.has(entry.youtubeId)) return false;
+          if (bootstrap.videos.length === 0) return true;
+          if (!lastSyncMs) return false;
+          const pubMs = Date.parse(entry.publishedAt);
+          return !Number.isNaN(pubMs) && pubMs > cutoffMs;
+        });
+
+        if (freshEntries.length > 0) {
+          const freshVideos: VideoItem[] = freshEntries.map((entry, idx) => ({
+            id: `yt_${entry.youtubeId}`,
+            title: entry.title,
+            youtubeUrl: entry.youtubeUrl,
+            youtubeId: entry.youtubeId,
+            thumbnail: entry.thumbnail,
+            description: entry.description,
+            duration: '',
+            visible: true,
+            featured: bootstrap.videos.length === 0 && idx < 3,
+            sortOrder: idx + 1,
+            createdAt: entry.publishedAt,
+          }));
+          const shifted = bootstrap.videos.map((v) => ({
+            ...v,
+            sortOrder: v.sortOrder + freshVideos.length,
+          }));
+          bootstrap = {
+            ...bootstrap,
+            videos: [...freshVideos, ...shifted],
+          };
+        }
       }
     }
 

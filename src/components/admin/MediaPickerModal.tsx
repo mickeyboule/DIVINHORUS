@@ -97,7 +97,7 @@ export function MediaPickerModal({
             ))}
           </div>
 
-          <label className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-[#2A4036] hover:bg-[#20322A] text-white rounded-lg cursor-pointer">
+          <label className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-[#8F6B18] hover:bg-[#735613] text-white rounded-lg cursor-pointer">
             <Upload className="w-3.5 h-3.5" />
             <span>{uploading ? 'Téléversement...' : 'Téléverser une image'}</span>
             <input
@@ -123,7 +123,7 @@ export function MediaPickerModal({
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.url)}
-                className="group text-left border border-[#E3E3E6] rounded-lg overflow-hidden hover:border-[#2A4036] transition-colors bg-[#FAF9F6]"
+                className="group text-left border border-[#E3E3E6] rounded-lg overflow-hidden hover:border-[#8F6B18] transition-colors bg-[#FAF9F6]"
               >
                 <div className="relative aspect-[4/3] bg-[#EFECE6] overflow-hidden">
                   <SafeImage
@@ -131,7 +131,7 @@ export function MediaPickerModal({
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform"
                   />
-                  <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#2A4036] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#8F6B18] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Check className="w-3.5 h-3.5" />
                   </span>
                 </div>

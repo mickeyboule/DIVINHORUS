@@ -91,7 +91,7 @@ export class FirebaseErrorBoundary extends Component<{ children: ReactNode }, Er
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#2A4036] text-white text-sm font-semibold rounded-lg hover:bg-[#20322A]"
+              className="px-4 py-2 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg hover:bg-[#735613]"
             >
               Actualiser la page
             </button>

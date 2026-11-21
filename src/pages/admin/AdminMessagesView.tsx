@@ -85,7 +85,7 @@ export function AdminMessagesView({
                     </>
                   ) : (
                     <>
-                      <MailCheck className="w-3.5 h-3.5 text-[#2A4036]" /> Marquer lu
+                      <MailCheck className="w-3.5 h-3.5 text-[#8F6B18]" /> Marquer lu
                     </>
                   )}
                 </button>

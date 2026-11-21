@@ -90,7 +90,7 @@ export function CountrySelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none flex items-center justify-between gap-2 text-left"
+        className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none flex items-center justify-between gap-2 text-left"
       >
         <span className={selected ? 'text-[#141413] flex items-center gap-2 truncate' : 'text-[#8A877E] truncate'}>
           {selected ? (
@@ -122,7 +122,7 @@ export function CountrySelect({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('countrySelect.searchPlaceholder')}
-                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
               />
               {query && (
                 <button
@@ -159,7 +159,7 @@ export function CountrySelect({
                         setOpen(false);
                       }}
                       className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between gap-2 hover:bg-[#FAF9F6] transition-colors ${
-                        isSelected ? 'bg-[#2A4036]/8 font-semibold text-[#141413]' : 'text-[#3F3E3A]'
+                        isSelected ? 'bg-[#8F6B18]/8 font-semibold text-[#141413]' : 'text-[#3F3E3A]'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 min-w-0">
@@ -168,7 +168,7 @@ export function CountrySelect({
                         </span>
                         <span className="truncate">{country.name}</span>
                       </span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-[#2A4036] shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#8F6B18] shrink-0" />}
                     </button>
                   </li>
                 );

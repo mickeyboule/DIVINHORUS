@@ -126,7 +126,7 @@ export function AdminTestimonialsView({
                     }
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium border ${
                       item.status === 'Publié'
-                        ? 'bg-[#2A4036]/8 border-[#2A4036]/30 text-[#2A4036]'
+                        ? 'bg-[#8F6B18]/8 border-[#8F6B18]/30 text-[#8F6B18]'
                         : 'bg-[#F6F6F7] border-[#E3E3E6] text-[#5C5A55]'
                     }`}
                   >

@@ -110,7 +110,7 @@ export function OrderTrackingPage({
     <div className="bg-[#FAF9F6] min-h-[75vh] py-12 sm:py-16">
       <div className="max-w-[960px] mx-auto px-4 sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+          <p className="text-xs font-medium text-[#8F6B18] tracking-wide">
             {t('tracking.kicker')}
           </p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
@@ -137,7 +137,7 @@ export function OrderTrackingPage({
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
                 placeholder={t('tracking.orderNumberPlaceholder')}
-                className="w-full px-3.5 py-2.5 text-sm font-mono bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#2A4036] focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-sm font-mono bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#8F6B18] focus:outline-none"
               />
             </div>
             <div>
@@ -150,7 +150,7 @@ export function OrderTrackingPage({
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder={t('tracking.contactPlaceholder')}
-                className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#2A4036] focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:bg-white focus:border-[#8F6B18] focus:outline-none"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ export function OrderTrackingPage({
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
             >
               <Search className="w-4 h-4" />
               <span>{loading ? t('tracking.searching') : t('tracking.submit')}</span>
@@ -174,7 +174,7 @@ export function OrderTrackingPage({
             <button
               type="button"
               onClick={() => onNavigate('/mon-compte')}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2A4036] hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#8F6B18] hover:underline"
             >
               <UserCheck className="w-3.5 h-3.5" />
               <span>
@@ -239,7 +239,7 @@ export function OrderTrackingPage({
                         key={step.status}
                         className={`p-3.5 rounded-lg border transition-colors ${
                           isCurrent
-                            ? 'bg-[#2A4036]/6 border-[#2A4036]'
+                            ? 'bg-[#8F6B18]/6 border-[#8F6B18]'
                             : reached
                               ? 'bg-[#FAF9F6] border-[#D9D6CF]'
                               : 'bg-white border-[#EFECE6] opacity-55'
@@ -247,7 +247,7 @@ export function OrderTrackingPage({
                       >
                         <div className="flex items-center gap-2">
                           {reached ? (
-                            <CheckCircle2 className="w-4 h-4 text-[#2A4036] shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-[#8F6B18] shrink-0" />
                           ) : (
                             <Clock className="w-4 h-4 text-[#8A877E] shrink-0" />
                           )}

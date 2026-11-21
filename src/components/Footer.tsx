@@ -59,7 +59,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.home')}
                 </button>
@@ -68,7 +68,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/boutique')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.shop')}
                 </button>
@@ -77,7 +77,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/communaute')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.community')}
                 </button>
@@ -86,7 +86,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/a-propos')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.about')}
                 </button>
@@ -95,7 +95,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/contact')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.contact')}
                 </button>
@@ -104,7 +104,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/suivi-commande')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.trackOrder')}
                 </button>
@@ -113,7 +113,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/mon-compte')}
-                  className="text-[#141413] hover:text-[#2A4036] transition-colors"
+                  className="text-[#141413] hover:text-[#8F6B18] transition-colors"
                 >
                   {t('nav.myAccountFull')}
                 </button>
@@ -134,7 +134,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
               <p>{settings.contact.email}</p>
             </div>
             {socials.length > 0 && (
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-[#2A4036]">
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-[#8F6B18]">
                 {socials.map((s) => (
                   <a
                     key={s.label}
@@ -162,7 +162,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
             <LanguageSwitcher variant="compact" />
             {autoEnabled && (
               <div className="inline-flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#2A4036]" />
+                <Globe className="w-3.5 h-3.5 text-[#8F6B18]" />
                 <label htmlFor="footer-country-currency" className="sr-only">
                   {t('footer.countryCurrencyLabel')}
                 </label>
@@ -170,7 +170,7 @@ export function Footer({ onNavigate, settings }: FooterProps) {
                   id="footer-country-currency"
                   value={countryOption.countryCode}
                   onChange={(e) => setCountryOverride(e.target.value)}
-                  className="bg-white border border-[#D9D6CF] rounded-md px-2 py-1 text-xs text-[#141413] focus:border-[#2A4036] focus:outline-none"
+                  className="bg-white border border-[#D9D6CF] rounded-md px-2 py-1 text-xs text-[#141413] focus:border-[#8F6B18] focus:outline-none"
                 >
                   {availableCountries.map((opt) => (
                     <option key={opt.countryCode} value={opt.countryCode}>

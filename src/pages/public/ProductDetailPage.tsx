@@ -39,7 +39,7 @@ export function ProductDetailPage({
         <button
           type="button"
           onClick={() => onNavigate('/boutique')}
-          className="mt-6 px-5 py-2.5 bg-[#2A4036] text-white text-sm font-semibold rounded-lg"
+          className="mt-6 px-5 py-2.5 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg"
         >
           {t('product.backToShop')}
         </button>
@@ -95,7 +95,7 @@ export function ProductDetailPage({
                     onClick={() => setSelectedImageIdx(idx)}
                     className={`aspect-[4/3] rounded-lg overflow-hidden border transition-all ${
                       idx === selectedImageIdx
-                        ? 'border-[#2A4036] ring-2 ring-[#2A4036]/20'
+                        ? 'border-[#8F6B18] ring-2 ring-[#8F6B18]/20'
                         : 'border-[#E6E4DF] opacity-75 hover:opacity-100'
                     }`}
                   >
@@ -189,7 +189,7 @@ export function ProductDetailPage({
                 type="button"
                 disabled={unavailable}
                 onClick={() => onOrderProduct(product, qty)}
-                className="w-full py-3.5 px-5 bg-[#2A4036] hover:bg-[#20322A] disabled:bg-stone-300 disabled:text-stone-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="w-full py-3.5 px-5 bg-[#8F6B18] hover:bg-[#735613] disabled:bg-stone-300 disabled:text-stone-600 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 {unavailable ? t('product.temporarilyUnavailable') : t('product.order')}
               </button>

@@ -88,7 +88,7 @@ export function AdminLoginPage({ siteName, onSuccess, onBackPublic }: AdminLogin
         ) : (
           <div className="bg-white border border-[#E3E3E6] rounded-xl p-7 sm:p-8 shadow-xs">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-[#2A4036] text-white flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-[#8F6B18] text-white flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5" />
               </div>
               <div>
@@ -151,7 +151,7 @@ export function AdminLoginPage({ siteName, onSuccess, onBackPublic }: AdminLogin
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('account.emailPlaceholder')}
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                 />
               </div>
 
@@ -166,7 +166,7 @@ export function AdminLoginPage({ siteName, onSuccess, onBackPublic }: AdminLogin
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t('admin.passwordPlaceholder')}
-                    className="w-full pl-3.5 pr-10 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                    className="w-full pl-3.5 pr-10 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                   />
                   <button
                     type="button"
@@ -184,7 +184,7 @@ export function AdminLoginPage({ siteName, onSuccess, onBackPublic }: AdminLogin
               <button
                 type="submit"
                 disabled={loading || googleLoading}
-                className="w-full py-2.5 px-4 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="w-full py-2.5 px-4 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 {loading ? t('admin.loggingIn') : t('admin.loginSubmit')}
               </button>

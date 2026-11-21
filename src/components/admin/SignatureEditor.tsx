@@ -149,7 +149,7 @@ export function SignatureEditor({
                 onClick={() => onChange({ ...value, type: m.id })}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-colors ${
                   active
-                    ? 'bg-[#2A4036] text-white'
+                    ? 'bg-[#8F6B18] text-white'
                     : 'bg-white border border-[#E3E3E6] text-[#5C5A55] hover:text-[#141413]'
                 }`}
               >
@@ -193,7 +193,7 @@ export function SignatureEditor({
       {value.type === 'image' && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <label className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#2A4036] hover:bg-[#20322A] text-white rounded-lg cursor-pointer">
+            <label className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#8F6B18] hover:bg-[#735613] text-white rounded-lg cursor-pointer">
               <Upload className="w-3.5 h-3.5" />
               <span>{uploading ? 'Import en cours...' : 'Importer une image de signature'}</span>
               <input
@@ -264,7 +264,7 @@ export function SignatureEditor({
 
       {value.type === 'text' && (
         <div className="bg-white border border-[#E3E3E6] rounded-lg p-4 text-center">
-          <p className="font-display italic text-2xl text-[#2A4036]">
+          <p className="font-display italic text-2xl text-[#8F6B18]">
             {value.signerName || 'Signature'}
           </p>
           {value.signerRole && (

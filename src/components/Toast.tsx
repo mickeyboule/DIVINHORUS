@@ -30,7 +30,7 @@ export function ToastStack({
           }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-[#E5B84B] shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
           )}

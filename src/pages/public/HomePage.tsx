@@ -66,7 +66,7 @@ export function HomePage({
                 </div>
               </div>
               <div className="lg:col-span-7 flex flex-col justify-center py-2">
-                <p className="text-xs font-medium tracking-wide text-[#2A4036]">{master.title}</p>
+                <p className="text-xs font-medium tracking-wide text-[#8F6B18]">{master.title}</p>
                 <h2 className="mt-2 font-display text-3xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
                   {master.name}
                 </h2>
@@ -105,7 +105,7 @@ export function HomePage({
               <button
                 type="button"
                 onClick={() => onNavigate('/boutique')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8F6B18] hover:underline whitespace-nowrap shrink-0"
               >
                 <span>{t('home.viewAllShop')}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function HomePage({
               <button
                 type="button"
                 onClick={() => onNavigate('/communaute')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8F6B18] hover:underline whitespace-nowrap shrink-0"
               >
                 <span>{t('home.viewAllCommunity')}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -184,7 +184,7 @@ export function HomePage({
                         onClick={() => onNavigate(`/communaute/${article.slug}`)}
                         className="mt-2 text-left"
                       >
-                        <h3 className="font-display text-2xl font-semibold text-[#141413] leading-snug group-hover:text-[#2A4036] transition-colors">
+                        <h3 className="font-display text-2xl font-semibold text-[#141413] leading-snug group-hover:text-[#8F6B18] transition-colors">
                           {article.title}
                         </h3>
                       </button>
@@ -195,7 +195,7 @@ export function HomePage({
                         <button
                           type="button"
                           onClick={() => onNavigate(`/communaute/${article.slug}`)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8F6B18] hover:underline"
                         >
                           <span>{t('home.readArticle')}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -240,7 +240,7 @@ export function HomePage({
               <button
                 type="button"
                 onClick={() => onNavigate('/communaute?tab=videos')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8F6B18] hover:underline whitespace-nowrap shrink-0"
               >
                 <span>{t('home.allVideos')}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -288,7 +288,7 @@ export function HomePage({
                       <button
                         type="button"
                         onClick={() => onPlayVideo(video)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2A4036] hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8F6B18] hover:underline"
                       >
                         <Play className="w-3.5 h-3.5" />
                         <span>{t('home.playVideo')}</span>
@@ -320,7 +320,7 @@ export function HomePage({
                 <button
                   type="button"
                   onClick={onOpenTestimonialModal}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2A4036] hover:bg-[#20322A] rounded-lg transition-colors whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#8F6B18] hover:bg-[#735613] rounded-lg transition-colors whitespace-nowrap"
                 >
                   <MessageSquarePlus className="w-3.5 h-3.5" />
                   <span>{t('home.leaveTestimonial')}</span>
@@ -328,7 +328,7 @@ export function HomePage({
                 <button
                   type="button"
                   onClick={() => onNavigate('/communaute?tab=testimonials')}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A4036] hover:underline whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8F6B18] hover:underline whitespace-nowrap"
                 >
                   <span>{t('home.allTestimonials')}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -386,7 +386,7 @@ export function HomePage({
     <div>
       {/* Hero Section */}
       {hero.visible && (
-        <section className="relative bg-[#181917] text-white overflow-hidden">
+        <section className="relative bg-[#181612] text-white overflow-hidden">
           <div className="absolute inset-0">
             {hero.image && (
               <SafeImage src={hero.image} alt={hero.title} className="w-full h-full object-cover" />
@@ -409,7 +409,7 @@ export function HomePage({
                 <button
                   type="button"
                   onClick={() => onNavigate(hero.primaryButtonTarget || '/boutique')}
-                  className="px-6 py-3 bg-[#2A4036] hover:bg-[#20322A] text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
+                  className="px-6 py-3 bg-[#8F6B18] hover:bg-[#735613] text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
                 >
                   {hero.primaryButtonLabel || t('nav.shop')}
                 </button>

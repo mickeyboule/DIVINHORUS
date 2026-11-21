@@ -61,11 +61,11 @@ export function WelcomeAnnouncementModal({
     announcement.type === 'important' ? Megaphone : announcement.type === 'info' ? Info : Sun;
 
   const kickerColor =
-    announcement.type === 'important' ? 'text-[#8C3B2B]' : 'text-[#2A4036]';
+    announcement.type === 'important' ? 'text-[#8C3B2B]' : 'text-[#8F6B18]';
   const ctaButtonClass =
     announcement.type === 'important'
       ? 'bg-[#141413] hover:bg-[#2A2A28] text-white'
-      : 'bg-[#2A4036] hover:bg-[#20322A] text-white';
+      : 'bg-[#8F6B18] hover:bg-[#735613] text-white';
 
   return (
     <div

@@ -193,7 +193,7 @@ export function AdminSiteContentView({
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Enregistrement...' : 'Publier les modifications'}</span>
@@ -302,7 +302,7 @@ export function AdminSiteContentView({
                   }}
                   className={`px-3.5 py-2.5 rounded-lg border text-left font-medium transition-colors ${
                     announcementDraft.type === opt.id
-                      ? 'bg-[#2A4036] text-white border-[#2A4036]'
+                      ? 'bg-[#8F6B18] text-white border-[#8F6B18]'
                       : 'bg-[#FAF9F6] text-[#3F3E3A] border-[#D9D6CF] hover:border-[#141413]'
                   }`}
                 >
@@ -1112,7 +1112,7 @@ export function AdminSiteContentView({
               <button
                 type="button"
                 onClick={addFaqItem}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#141413] text-white font-semibold rounded-lg hover:bg-[#2A4036] transition-colors self-start"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#141413] text-white font-semibold rounded-lg hover:bg-[#8F6B18] transition-colors self-start"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Ajouter une question</span>
@@ -1314,7 +1314,7 @@ export function AdminSiteContentView({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
         >
           <Save className="w-4 h-4" />
           <span>{saving ? 'Enregistrement...' : 'Publier les modifications'}</span>

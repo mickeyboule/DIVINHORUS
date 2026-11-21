@@ -144,7 +144,7 @@ export function AdminLayout({
   };
 
   const SidebarContent = (
-    <div className="flex flex-col h-full bg-[#161817] text-stone-200 select-none">
+    <div className="flex flex-col h-full bg-[#181511] text-stone-200 select-none">
       <div className="h-16 px-5 border-b border-white/10 flex items-center justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white truncate">{siteName}</p>
@@ -175,7 +175,7 @@ export function AdminLayout({
                     onClick={() => handleNav(item.id)}
                     className={`w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       active
-                        ? 'bg-[#2A4036] text-white'
+                        ? 'bg-[#8F6B18] text-white'
                         : 'text-stone-300 hover:bg-white/8 hover:text-white'
                     }`}
                   >
@@ -296,7 +296,7 @@ export function AdminLayout({
                 type="button"
                 onClick={handleConnectFirebase}
                 disabled={connectingFirebase}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold shrink-0 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold shrink-0 transition-colors"
               >
                 <Cloud className="w-4 h-4" />
                 <span>

@@ -52,7 +52,7 @@ export function ShopPage({
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         {/* Page Header */}
         <div className="max-w-2xl">
-          <p className="text-xs font-medium text-[#2A4036] tracking-wide">{t('shop.kicker')}</p>
+          <p className="text-xs font-medium text-[#8F6B18] tracking-wide">{t('shop.kicker')}</p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
             {activeCategory ? activeCategory.name : t('shop.allProductsTitle')}
           </h1>
@@ -73,7 +73,7 @@ export function ShopPage({
               onClick={() => setSelectedCategoryId('all')}
               className={`px-3.5 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                 selectedCategoryId === 'all'
-                  ? 'bg-[#2A4036] text-white'
+                  ? 'bg-[#8F6B18] text-white'
                   : 'bg-white border border-[#E6E4DF] text-[#5C5A55] hover:text-[#141413]'
               }`}
             >
@@ -88,7 +88,7 @@ export function ShopPage({
                   onClick={() => setSelectedCategoryId(cat.id)}
                   className={`px-3.5 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                     selectedCategoryId === cat.id
-                      ? 'bg-[#2A4036] text-white'
+                      ? 'bg-[#8F6B18] text-white'
                       : 'bg-white border border-[#E6E4DF] text-[#5C5A55] hover:text-[#141413]'
                   }`}
                 >
@@ -106,7 +106,7 @@ export function ShopPage({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('shop.searchPlaceholder')}
-                className="w-full sm:w-60 pl-9 pr-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                className="w-full sm:w-60 pl-9 pr-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
               />
             </div>
 
@@ -114,7 +114,7 @@ export function ShopPage({
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'featured' | 'price-asc' | 'price-desc')}
               aria-label={t('shop.sortAria')}
-              className="px-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg text-[#141413] focus:border-[#2A4036] focus:outline-none"
+              className="px-3 py-2 text-sm bg-white border border-[#E6E4DF] rounded-lg text-[#141413] focus:border-[#8F6B18] focus:outline-none"
             >
               <option value="featured">{t('shop.sortFeatured')}</option>
               <option value="price-asc">{t('shop.sortPriceAsc')}</option>
@@ -122,8 +122,8 @@ export function ShopPage({
             </select>
 
             {autoEnabled && (
-              <div className="relative flex items-center bg-white border border-[#E6E4DF] rounded-lg px-2.5 py-2 focus-within:border-[#2A4036]">
-                <Globe className="w-4 h-4 text-[#2A4036] shrink-0 mr-2" />
+              <div className="relative flex items-center bg-white border border-[#E6E4DF] rounded-lg px-2.5 py-2 focus-within:border-[#8F6B18]">
+                <Globe className="w-4 h-4 text-[#8F6B18] shrink-0 mr-2" />
                 <label htmlFor="shop-country-currency" className="sr-only">
                   {t('shop.countryCurrencyAria')}
                 </label>
@@ -157,7 +157,7 @@ export function ShopPage({
                 setSelectedCategoryId('all');
                 setSearch('');
               }}
-              className="mt-5 px-4 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg hover:bg-[#20322A]"
+              className="mt-5 px-4 py-2 text-xs font-semibold bg-[#8F6B18] text-white rounded-lg hover:bg-[#735613]"
             >
               {t('shop.resetFilters')}
             </button>

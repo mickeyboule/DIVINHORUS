@@ -183,7 +183,7 @@ export function AdminCustomersView({
               placeholder={
                 viewTab === 'customers' ? 'Rechercher un client...' : 'Rechercher un compte inscrit...'
               }
-              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#E3E3E6] rounded-lg focus:border-[#2A4036] focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#E3E3E6] rounded-lg focus:border-[#8F6B18] focus:outline-none"
             />
           </div>
           <button
@@ -192,7 +192,7 @@ export function AdminCustomersView({
               setCreateDraft(EMPTY_CUSTOMER_FORM);
               setCreateOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#8F6B18] hover:bg-[#735613] text-white text-xs font-semibold rounded-lg whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span>Ajouter un client</span>
@@ -206,7 +206,7 @@ export function AdminCustomersView({
           onClick={() => setViewTab('customers')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
             viewTab === 'customers'
-              ? 'bg-[#2A4036] text-white'
+              ? 'bg-[#8F6B18] text-white'
               : 'bg-white border border-[#E3E3E6] text-[#5C5A55] hover:text-[#141413]'
           }`}
         >
@@ -218,7 +218,7 @@ export function AdminCustomersView({
           onClick={() => setViewTab('visitors')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
             viewTab === 'visitors'
-              ? 'bg-[#2A4036] text-white'
+              ? 'bg-[#8F6B18] text-white'
               : 'bg-white border border-[#E3E3E6] text-[#5C5A55] hover:text-[#141413]'
           }`}
         >
@@ -276,7 +276,7 @@ export function AdminCustomersView({
                           e.stopPropagation();
                           openCustomer(cust);
                         }}
-                        className="text-xs font-semibold text-[#2A4036] hover:underline"
+                        className="text-xs font-semibold text-[#8F6B18] hover:underline"
                       >
                         Fiche client
                       </button>
@@ -466,7 +466,7 @@ export function AdminCustomersView({
               <button
                 type="submit"
                 disabled={creating}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>{creating ? 'Enregistrement...' : 'Enregistrer le client'}</span>
@@ -588,7 +588,7 @@ export function AdminCustomersView({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>{saving ? 'Enregistrement...' : 'Enregistrer la fiche client'}</span>
@@ -646,7 +646,7 @@ export function AdminCustomersView({
                               setSelectedId(null);
                               onInspectOrder(ord.id);
                             }}
-                            className="text-xs font-semibold text-[#2A4036] hover:underline shrink-0"
+                            className="text-xs font-semibold text-[#8F6B18] hover:underline shrink-0"
                           >
                             Ouvrir
                           </button>

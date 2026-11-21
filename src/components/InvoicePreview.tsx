@@ -86,7 +86,7 @@ async function generateInvoicePdfBlob(
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.setTextColor(42, 64, 54);
+  doc.setTextColor(143, 107, 24);
   doc.text(pdfSafeText(labels.officialInvoice.toUpperCase()), pageWidth - margin, y - 2, {
     align: 'right',
   });
@@ -118,7 +118,7 @@ async function generateInvoicePdfBlob(
     doc.text(pdfSafeText(contactLine), margin, y);
   }
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(42, 64, 54);
+  doc.setTextColor(143, 107, 24);
   doc.text(pdfSafeText(labels.paymentStatusLabel), pageWidth - margin, y, { align: 'right' });
 
   y += 7;
@@ -257,7 +257,7 @@ async function generateInvoicePdfBlob(
   y += 5.5;
 
   if (invoice.discount > 0) {
-    doc.setTextColor(6, 95, 70);
+    doc.setTextColor(122, 92, 18);
     doc.text(pdfSafeText(labels.discount), margin + contentWidth * 0.55, y);
     doc.text(pdfSafeText(`- ${fmt(invoice.discount)}`), pageWidth - margin - 3, y, {
       align: 'right',
@@ -270,7 +270,7 @@ async function generateInvoicePdfBlob(
   y += 6;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setTextColor(42, 64, 54);
+  doc.setTextColor(143, 107, 24);
   doc.text(pdfSafeText(labels.totalDue), margin + contentWidth * 0.55, y);
   doc.text(pdfSafeText(fmt(invoice.total)), pageWidth - margin - 3, y, { align: 'right' });
   y += 10;
@@ -288,7 +288,7 @@ async function generateInvoicePdfBlob(
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
-  doc.setTextColor(42, 64, 54);
+  doc.setTextColor(143, 107, 24);
   doc.text(pdfSafeText(labels.paymentMethodLine), margin + 4, y + 6);
   if (invoice.paymentDetails) {
     doc.setFont('helvetica', 'normal');
@@ -322,7 +322,7 @@ async function generateInvoicePdfBlob(
     } else {
       doc.setFont('helvetica', 'bolditalic');
       doc.setFontSize(12);
-      doc.setTextColor(42, 64, 54);
+      doc.setTextColor(143, 107, 24);
       doc.text(
         pdfSafeText(invoice.signature.signerName || settings.general.siteName),
         sigX + sigW / 2,
@@ -508,7 +508,7 @@ export function InvoicePreview({
               type="button"
               onClick={handleDownloadPdf}
               disabled={downloading}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{downloading ? t('invoice.downloadingBtn') : t('invoice.downloadPdfBtn')}</span>
@@ -541,7 +541,7 @@ export function InvoicePreview({
                     onClick={() => setShareMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#141413] hover:bg-[#FAF9F6]"
                   >
-                    <Mail className="w-3.5 h-3.5 text-[#2A4036]" />
+                    <Mail className="w-3.5 h-3.5 text-[#8F6B18]" />
                     <span>{t('invoice.shareEmail')}</span>
                   </a>
                   <button
@@ -551,8 +551,8 @@ export function InvoicePreview({
                   >
                     {copiedSummary ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-700" />
-                        <span className="text-emerald-800 font-medium">
+                        <Check className="w-3.5 h-3.5 text-[#8F6B18]" />
+                        <span className="text-[#7A5C12] font-medium">
                           {t('invoice.shareCopied')}
                         </span>
                       </>
@@ -570,7 +570,7 @@ export function InvoicePreview({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#141413] hover:bg-[#2A4036] text-white text-xs font-semibold rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#141413] hover:bg-[#8F6B18] text-white text-xs font-semibold rounded-lg transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>{t('invoice.printBtn')}</span>
@@ -613,7 +613,7 @@ export function InvoicePreview({
           </div>
 
           <div className="sm:text-right space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#2A4036]">
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#8F6B18]">
               {t('invoice.officialInvoice')}
             </p>
             <h2 className="text-xl font-mono font-semibold tabular-nums">
@@ -626,7 +626,7 @@ export function InvoicePreview({
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-semibold ${
                   isPaid
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    ? 'bg-[#FBF6EA] text-[#7A5C12] border-[#E5D3A1]'
                     : invoice.paymentStatus === 'Partiellement payée'
                       ? 'bg-amber-50 text-amber-800 border-amber-200'
                       : 'bg-stone-100 text-stone-800 border-stone-300'
@@ -744,22 +744,22 @@ export function InvoicePreview({
               </span>
             </div>
             {invoice.discount > 0 && (
-              <div className="flex items-center justify-between text-emerald-800">
+              <div className="flex items-center justify-between text-[#7A5C12]">
                 <span>{t('invoice.discount')}</span>
                 <span className="font-mono tabular-nums">− {fmt(invoice.discount)}</span>
               </div>
             )}
             <div className="pt-2 border-t border-[#E3E3E6] flex items-center justify-between text-base font-semibold text-[#141413]">
               <span>{t('invoice.totalDue')}</span>
-              <span className="font-mono tabular-nums text-[#2A4036]">{fmt(invoice.total)}</span>
+              <span className="font-mono tabular-nums text-[#8F6B18]">{fmt(invoice.total)}</span>
             </div>
           </div>
         </div>
 
         {/* Payment Method & Signature */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-          <div className="md:col-span-7 bg-[#FAF9F6] border border-[#2A4036]/25 rounded-lg p-4 space-y-2 text-xs">
-            <div className="flex items-center gap-2 text-[#2A4036] font-semibold">
+          <div className="md:col-span-7 bg-[#FAF9F6] border border-[#8F6B18]/25 rounded-lg p-4 space-y-2 text-xs">
+            <div className="flex items-center gap-2 text-[#8F6B18] font-semibold">
               <CreditCard className="w-4 h-4 shrink-0" />
               <span>{t('invoice.paymentMethod', { method: invoice.paymentMethod })}</span>
             </div>
@@ -791,7 +791,7 @@ export function InvoicePreview({
                 </div>
               ) : (
                 <div className="py-3">
-                  <p className="font-display italic text-2xl text-[#2A4036]">
+                  <p className="font-display italic text-2xl text-[#8F6B18]">
                     {invoice.signature.signerName || settings.general.siteName}
                   </p>
                 </div>

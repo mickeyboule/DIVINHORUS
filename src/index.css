@@ -24,13 +24,56 @@
   }
 
   *:focus-visible {
-    outline: 2px solid #2A4036;
+    outline: 2px solid #8F6B18;
     outline-offset: 2px;
   }
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+@keyframes dh-horus-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.96;
+  }
+  50% {
+    transform: scale(1.035);
+    opacity: 1;
+  }
+}
+
+@keyframes dh-horus-halo {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+@keyframes dh-gold-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+.dh-horus-breathe {
+  animation: dh-horus-breathe 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.dh-horus-halo {
+  animation: dh-horus-halo 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.dh-gold-shimmer {
+  animation: dh-gold-shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

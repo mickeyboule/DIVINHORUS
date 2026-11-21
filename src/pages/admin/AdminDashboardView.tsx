@@ -320,7 +320,7 @@ export function AdminDashboardView({
                   onClick={() => setPeriod(key)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
                     active
-                      ? 'bg-[#2A4036] text-white'
+                      ? 'bg-[#8F6B18] text-white'
                       : 'text-[#5C5A55] hover:text-[#141413]'
                   }`}
                 >
@@ -342,7 +342,7 @@ export function AdminDashboardView({
           <button
             type="button"
             onClick={() => onNavigateSection('products')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg hover:bg-[#20322A] whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-[#8F6B18] text-white rounded-lg hover:bg-[#735613] whitespace-nowrap shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Ajouter un produit</span>
@@ -355,7 +355,7 @@ export function AdminDashboardView({
         <button
           type="button"
           onClick={() => onNavigateSection('orders')}
-          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#2A4036] transition-colors"
+          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#8F6B18] transition-colors"
         >
           <p className="text-xs font-medium text-[#5C5A55]">
             Volume indicatif ({PERIOD_LABELS[period]})
@@ -371,7 +371,7 @@ export function AdminDashboardView({
         <button
           type="button"
           onClick={() => onNavigateSection('orders')}
-          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#2A4036] transition-colors"
+          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#8F6B18] transition-colors"
         >
           <p className="text-xs font-medium text-[#5C5A55]">
             Demandes de commande ({PERIOD_LABELS[period]})
@@ -388,7 +388,7 @@ export function AdminDashboardView({
         <button
           type="button"
           onClick={() => onNavigateSection('customers')}
-          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#2A4036] transition-colors"
+          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#8F6B18] transition-colors"
         >
           <p className="text-xs font-medium text-[#5C5A55]">
             Panier moyen &amp; confirmation
@@ -404,7 +404,7 @@ export function AdminDashboardView({
         <button
           type="button"
           onClick={() => onNavigateSection('articles')}
-          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#2A4036] transition-colors"
+          className="bg-white border border-[#E3E3E6] rounded-xl p-5 text-left hover:border-[#8F6B18] transition-colors"
         >
           <p className="text-xs font-medium text-[#5C5A55]">
             Audience &amp; Communauté
@@ -508,8 +508,8 @@ export function AdminDashboardView({
                       className={`w-full rounded-t transition-colors ${
                         val > 0
                           ? isHovered
-                            ? 'bg-[#1D2D26]'
-                            : 'bg-[#2A4036]'
+                            ? 'bg-[#735613]'
+                            : 'bg-[#8F6B18]'
                           : isHovered
                           ? 'bg-[#DEDAD0]'
                           : 'bg-[#EFECE6]'
@@ -559,7 +559,7 @@ export function AdminDashboardView({
                   row.status === 'Annulée'
                     ? 'bg-[#B42318]'
                     : row.status === 'Terminée' || row.status === 'Confirmée'
-                    ? 'bg-[#2A4036]'
+                    ? 'bg-[#8F6B18]'
                     : row.status === 'En expédition'
                     ? 'bg-indigo-600'
                     : row.status === 'En cours'
@@ -588,7 +588,7 @@ export function AdminDashboardView({
           <button
             type="button"
             onClick={() => onNavigateSection('orders')}
-            className="mt-6 pt-4 border-t border-[#F0EFEA] w-full flex items-center justify-between text-xs font-semibold text-[#2A4036] hover:underline"
+            className="mt-6 pt-4 border-t border-[#F0EFEA] w-full flex items-center justify-between text-xs font-semibold text-[#8F6B18] hover:underline"
           >
             <span>Gérer les commandes</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -612,7 +612,7 @@ export function AdminDashboardView({
             <button
               type="button"
               onClick={() => onNavigateSection('categories')}
-              className="text-xs font-semibold text-[#2A4036] hover:underline whitespace-nowrap"
+              className="text-xs font-semibold text-[#8F6B18] hover:underline whitespace-nowrap"
             >
               Catégories →
             </button>
@@ -640,7 +640,7 @@ export function AdminDashboardView({
                   <div className="h-1.5 rounded-full bg-[#F1F0EC] overflow-hidden">
                     <div
                       style={{ width: `${cat.revenue > 0 ? Math.max(6, cat.pctOfTop) : 0}%` }}
-                      className="h-full bg-[#2A4036] rounded-full"
+                      className="h-full bg-[#8F6B18] rounded-full"
                     />
                   </div>
                 </div>
@@ -663,7 +663,7 @@ export function AdminDashboardView({
             <button
               type="button"
               onClick={() => onNavigateSection('articles')}
-              className="text-xs font-semibold text-[#2A4036] hover:underline whitespace-nowrap"
+              className="text-xs font-semibold text-[#8F6B18] hover:underline whitespace-nowrap"
             >
               Communauté →
             </button>
@@ -723,7 +723,7 @@ export function AdminDashboardView({
             <button
               type="button"
               onClick={() => onNavigateSection('orders')}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#2A4036] hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#8F6B18] hover:underline"
             >
               <span>Toutes les commandes</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -776,7 +776,7 @@ export function AdminDashboardView({
                         <button
                           type="button"
                           onClick={() => onInspectOrder(order.id)}
-                          className="text-xs font-semibold text-[#2A4036] hover:underline"
+                          className="text-xs font-semibold text-[#8F6B18] hover:underline"
                         >
                           Consulter
                         </button>
@@ -817,7 +817,7 @@ export function AdminDashboardView({
                       {formatPrice(prod.price, currency)} · {units} unité{units > 1 ? 's' : ''}
                     </p>
                   </div>
-                  <span className="font-mono tabular-nums text-xs font-semibold text-[#2A4036] shrink-0">
+                  <span className="font-mono tabular-nums text-xs font-semibold text-[#8F6B18] shrink-0">
                     {formatPrice(revenue, currency)}
                   </span>
                 </div>

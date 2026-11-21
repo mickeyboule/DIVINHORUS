@@ -10,7 +10,7 @@ export function EmailVerificationScreen({ email, onGoToLogin }: EmailVerificatio
   const { t } = useLanguage();
   return (
     <div className="bg-white border border-[#E6E4DF] rounded-xl p-6 sm:p-8 shadow-xs text-center space-y-5">
-      <div className="w-12 h-12 rounded-full bg-[#2A4036]/10 text-[#2A4036] flex items-center justify-center mx-auto">
+      <div className="w-12 h-12 rounded-full bg-[#8F6B18]/10 text-[#8F6B18] flex items-center justify-center mx-auto">
         <MailCheck className="w-6 h-6" strokeWidth={1.75} />
       </div>
 
@@ -28,7 +28,7 @@ export function EmailVerificationScreen({ email, onGoToLogin }: EmailVerificatio
       <button
         type="button"
         onClick={onGoToLogin}
-        className="w-full py-2.5 px-4 bg-[#2A4036] hover:bg-[#20322A] text-white text-sm font-semibold rounded-lg transition-colors"
+        className="w-full py-2.5 px-4 bg-[#8F6B18] hover:bg-[#735613] text-white text-sm font-semibold rounded-lg transition-colors"
       >
         {t('emailVerify.goToLogin')}
       </button>

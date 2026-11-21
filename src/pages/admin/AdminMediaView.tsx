@@ -117,7 +117,7 @@ export function AdminMediaView({
         </div>
 
         <div className="lg:col-span-3">
-          <label className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold bg-[#2A4036] hover:bg-[#20322A] text-white rounded-lg cursor-pointer">
+          <label className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold bg-[#8F6B18] hover:bg-[#735613] text-white rounded-lg cursor-pointer">
             <Upload className="w-4 h-4" />
             <span>{uploading ? 'Envoi...' : 'Téléverser un fichier'}</span>
             <input
@@ -200,7 +200,7 @@ export function AdminMediaView({
                 <button
                   type="button"
                   onClick={() => handleCopy(item)}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2A4036] hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-[#8F6B18] hover:underline"
                 >
                   {copiedId === item.id ? (
                     <>

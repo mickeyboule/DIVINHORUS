@@ -141,7 +141,7 @@ export function AdminArticlesView({
               featured: false,
             })
           }
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg self-start"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#8F6B18] hover:bg-[#735613] text-white text-xs font-semibold rounded-lg self-start"
         >
           <Plus className="w-4 h-4" />
           <span>Rédiger un article</span>
@@ -198,7 +198,7 @@ export function AdminArticlesView({
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
+              className="px-4 py-2 bg-[#8F6B18] text-white text-xs font-semibold rounded-lg"
             >
               Ajouter
             </button>
@@ -255,7 +255,7 @@ export function AdminArticlesView({
                     onClick={() => handleToggleStatus(art)}
                     className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border ${
                       art.status === 'Publié'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        ? 'bg-[#FBF6EA] text-[#7A5C12] border-[#E5D3A1]'
                         : 'bg-amber-50 text-amber-800 border-amber-200'
                     }`}
                   >
@@ -422,7 +422,7 @@ export function AdminArticlesView({
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg"
+                className="px-5 py-2 text-xs font-semibold bg-[#8F6B18] text-white rounded-lg"
               >
                 {saving ? 'Enregistrement...' : 'Enregistrer l’article'}
               </button>

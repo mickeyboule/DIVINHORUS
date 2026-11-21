@@ -62,9 +62,9 @@ export function getOrderStatusStyle(
       };
     case 'Confirmée':
       return {
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-800',
-        border: 'border-emerald-200',
+        bg: 'bg-[#FBF6EA]',
+        text: 'text-[#7A5C12]',
+        border: 'border-[#E5D3A1]',
         label: lang === 'en' ? 'Confirmed' : 'Confirmée',
       };
     case 'En expédition':
@@ -101,7 +101,7 @@ export function getAvailabilityLabel(
   switch (availability) {
     case 'En stock':
       return {
-        textClass: 'text-[#2A4036]',
+        textClass: 'text-[#8F6B18]',
         label: lang === 'en' ? 'Available' : 'Disponible',
       };
     case 'Sur commande':

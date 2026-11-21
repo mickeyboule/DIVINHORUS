@@ -481,7 +481,7 @@ export function OrderDrawer({
           {confirmedOrder ? (
             <div className="bg-white border border-[#E6E4DF] rounded-xl p-6 space-y-5">
               <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-6 h-6 text-[#2A4036] shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-6 h-6 text-[#8F6B18] shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-mono text-[#5C5A55] tabular-nums">
                     {t('orderDrawer.refLabel', { orderNumber: confirmedOrder.orderNumber })}
@@ -584,7 +584,7 @@ export function OrderDrawer({
                   lang,
                 );
                 return (
-                  <div className="rounded-xl bg-[#F3F8F5] border border-[#2A4036]/25 p-4 space-y-3">
+                  <div className="rounded-xl bg-[#FBF6EA] border border-[#8F6B18]/25 p-4 space-y-3">
                     <div>
                       <p className="text-xs font-semibold text-[#141413]">
                         {t('orderDrawer.whatsappTitle')}
@@ -611,7 +611,7 @@ export function OrderDrawer({
                         >
                           {copiedField === 'code' ? (
                             <>
-                              <Check className="w-3 h-3 text-[#2A4036]" />
+                              <Check className="w-3 h-3 text-[#8F6B18]" />
                               <span>{t('common.copied')}</span>
                             </>
                           ) : (
@@ -627,7 +627,7 @@ export function OrderDrawer({
                           <span className="text-[10px] text-[#6B6860] block">
                             {t('orderDrawer.directLink')}
                           </span>
-                          <span className="font-mono text-[11px] text-[#2A4036] block truncate">
+                          <span className="font-mono text-[11px] text-[#8F6B18] block truncate">
                             {adminOrderUrl}
                           </span>
                         </div>
@@ -638,7 +638,7 @@ export function OrderDrawer({
                         >
                           {copiedField === 'link' ? (
                             <>
-                              <Check className="w-3 h-3 text-[#2A4036]" />
+                              <Check className="w-3 h-3 text-[#8F6B18]" />
                               <span>{t('common.copied')}</span>
                             </>
                           ) : (
@@ -675,7 +675,7 @@ export function OrderDrawer({
                       `/suivi-commande?num=${encodeURIComponent(ord.orderNumber)}&contact=${encodeURIComponent(contact)}`,
                     );
                   }}
-                  className="w-full py-2.5 px-4 bg-[#2A4036] text-white text-sm font-semibold rounded-lg hover:bg-[#20322A] transition-colors"
+                  className="w-full py-2.5 px-4 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg hover:bg-[#735613] transition-colors"
                 >
                   {t('orderDrawer.trackOrderBtn')}
                 </button>
@@ -697,7 +697,7 @@ export function OrderDrawer({
                     setAuthStepOpen(false);
                     setAuthError('');
                   }}
-                  className="text-xs font-medium text-[#2A4036] hover:underline"
+                  className="text-xs font-medium text-[#8F6B18] hover:underline"
                 >
                   {t('orderDrawer.authBackToOrder')}
                 </button>
@@ -706,8 +706,8 @@ export function OrderDrawer({
                 </span>
               </div>
 
-              <div className="rounded-xl bg-[#F3F8F5] border border-[#2A4036]/25 p-4 flex items-start gap-3">
-                <Lock className="w-4 h-4 text-[#2A4036] shrink-0 mt-0.5" />
+              <div className="rounded-xl bg-[#FBF6EA] border border-[#8F6B18]/25 p-4 flex items-start gap-3">
+                <Lock className="w-4 h-4 text-[#8F6B18] shrink-0 mt-0.5" />
                 <p className="text-xs text-[#141413] leading-relaxed">
                   {t('orderDrawer.authBanner')}
                 </p>
@@ -758,7 +758,7 @@ export function OrderDrawer({
                           setAuthError('');
                           setSuggestSwitchToLogin(false);
                         }}
-                        className="font-semibold text-[#2A4036] underline"
+                        className="font-semibold text-[#8F6B18] underline"
                       >
                         {t('orderDrawer.authExistingSwitch')}
                       </button>
@@ -780,7 +780,7 @@ export function OrderDrawer({
                             value={authFirstName}
                             onChange={(e) => setAuthFirstName(e.target.value)}
                             placeholder={t('account.firstNamePlaceholder')}
-                            className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                            className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                           />
                         </div>
                         <div>
@@ -793,7 +793,7 @@ export function OrderDrawer({
                             value={authLastName}
                             onChange={(e) => setAuthLastName(e.target.value)}
                             placeholder={t('account.lastNamePlaceholder')}
-                            className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                            className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                           />
                         </div>
                       </div>
@@ -821,7 +821,7 @@ export function OrderDrawer({
                           value={authPhone}
                           onChange={(e) => setAuthPhone(e.target.value)}
                           placeholder={t('account.phonePlaceholder')}
-                          className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                          className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                         />
                       </div>
                       <div>
@@ -833,7 +833,7 @@ export function OrderDrawer({
                           value={authAddress}
                           onChange={(e) => setAuthAddress(e.target.value)}
                           placeholder={t('account.addressPlaceholder')}
-                          className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                          className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                         />
                       </div>
                     </>
@@ -849,7 +849,7 @@ export function OrderDrawer({
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                       placeholder={t('account.emailPlaceholder')}
-                      className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                      className="w-full px-3 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                     />
                   </div>
 
@@ -868,7 +868,7 @@ export function OrderDrawer({
                             ? t('account.passwordMinPlaceholder')
                             : '••••••••'
                         }
-                        className="w-full pl-3 pr-10 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                        className="w-full pl-3 pr-10 py-2 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                       />
                       <button
                         type="button"
@@ -888,7 +888,7 @@ export function OrderDrawer({
                   <button
                     type="submit"
                     disabled={authLoading || authSocialLoading !== null || submitting}
-                    className="w-full py-2.5 px-4 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                    className="w-full py-2.5 px-4 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
                   >
                     {authLoading || submitting
                       ? t('orderDrawer.authProcessing')
@@ -985,7 +985,7 @@ export function OrderDrawer({
                 </div>
                 <div className="mb-3 flex items-center justify-between gap-2 bg-white border border-[#E6E4DF] rounded-lg px-3 py-2 text-xs">
                   <span className="inline-flex items-center gap-1.5 text-[#5C5A55]">
-                    <Globe className="w-3.5 h-3.5 text-[#2A4036]" />
+                    <Globe className="w-3.5 h-3.5 text-[#8F6B18]" />
                     <span>
                       {autoEnabled
                         ? t('orderDrawer.countryCurrencyLabel')
@@ -1081,7 +1081,7 @@ export function OrderDrawer({
                         const prod = availableToAdd.find((p) => p.id === e.target.value);
                         if (prod) onAddProduct(prod);
                       }}
-                      className="w-full text-xs bg-white border border-[#E6E4DF] rounded-lg px-3 py-2 text-[#5C5A55] focus:border-[#2A4036] focus:outline-none"
+                      className="w-full text-xs bg-white border border-[#E6E4DF] rounded-lg px-3 py-2 text-[#5C5A55] focus:border-[#8F6B18] focus:outline-none"
                     >
                       <option value="">{t('orderDrawer.addOtherProductOption')}</option>
                       {availableToAdd.map((p) => (
@@ -1133,7 +1133,7 @@ export function OrderDrawer({
                     {t('orderDrawer.yourDetails')}
                   </h3>
                   {visitorUser ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2A4036]">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#8F6B18]">
                       <UserCheck className="w-3.5 h-3.5" />
                       <span>
                         {t('orderDrawer.authSignedInAs', {
@@ -1145,10 +1145,10 @@ export function OrderDrawer({
                     <button
                       type="button"
                       onClick={() => openAuthPrompt('login')}
-                      className="text-[11px] text-[#5C5A55] hover:text-[#2A4036]"
+                      className="text-[11px] text-[#5C5A55] hover:text-[#8F6B18]"
                     >
                       {t('orderDrawer.alreadyHaveAccount')}{' '}
-                      <span className="font-semibold underline text-[#2A4036]">
+                      <span className="font-semibold underline text-[#8F6B18]">
                         {t('orderDrawer.signInShortcut')}
                       </span>
                     </button>
@@ -1156,7 +1156,7 @@ export function OrderDrawer({
                 </div>
 
                 {authReadyBanner && visitorUser && (
-                  <div className="p-3 rounded-lg bg-[#F3F8F5] border border-[#2A4036]/25 text-xs text-[#2A4036] flex items-start gap-2">
+                  <div className="p-3 rounded-lg bg-[#FBF6EA] border border-[#8F6B18]/25 text-xs text-[#8F6B18] flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>{t('orderDrawer.authReadyBanner')}</span>
                   </div>
@@ -1179,7 +1179,7 @@ export function OrderDrawer({
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder={t('orderDrawer.firstNamePlaceholder')}
-                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -1192,7 +1192,7 @@ export function OrderDrawer({
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder={t('orderDrawer.lastNamePlaceholder')}
-                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1208,7 +1208,7 @@ export function OrderDrawer({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder={t('account.phonePlaceholder')}
-                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -1226,7 +1226,7 @@ export function OrderDrawer({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t('account.emailPlaceholder')}
-                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                      className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1241,7 +1241,7 @@ export function OrderDrawer({
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
                     placeholder={t('orderDrawer.deliveryAddressPlaceholder')}
-                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none"
                   />
                   <p className="text-[11px] text-[#6B6860] mt-1">
                     {t('orderDrawer.servedZones', { zones: settings.orderSettings.deliveryZones })}
@@ -1257,7 +1257,7 @@ export function OrderDrawer({
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t('orderDrawer.messagePlaceholder')}
-                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none resize-none"
+                    className="w-full px-3 py-2 text-sm bg-white border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:outline-none resize-none"
                   />
                 </div>
               </form>
@@ -1272,7 +1272,7 @@ export function OrderDrawer({
               type="submit"
               form="order-request-form"
               disabled={submitting || items.length === 0}
-              className="w-full py-3 px-4 bg-[#2A4036] text-white text-sm font-semibold rounded-lg hover:bg-[#20322A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 px-4 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg hover:bg-[#735613] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? t('orderDrawer.submitting') : t('orderDrawer.submit')}
             </button>

@@ -159,7 +159,7 @@ export function AdminOrdersView({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher par numéro, client, téléphone ou produit..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[#FAF9F6] border border-[#E3E3E6] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[#FAF9F6] border border-[#E3E3E6] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none"
             />
           </div>
 
@@ -228,7 +228,7 @@ export function AdminOrdersView({
                           {st.label}
                         </span>
                         {order.invoice?.status === 'Envoyée' && (
-                          <span className="inline-block px-1.5 py-0.5 rounded border border-[#2A4036]/30 bg-[#2A4036]/8 text-[#2A4036] text-[10px] font-medium">
+                          <span className="inline-block px-1.5 py-0.5 rounded border border-[#8F6B18]/30 bg-[#8F6B18]/8 text-[#8F6B18] text-[10px] font-medium">
                             Facturée
                           </span>
                         )}
@@ -251,7 +251,7 @@ export function AdminOrdersView({
                           e.stopPropagation();
                           openOrder(order);
                         }}
-                        className="text-xs font-semibold text-[#2A4036] hover:underline"
+                        className="text-xs font-semibold text-[#8F6B18] hover:underline"
                       >
                         Détails
                       </button>
@@ -457,17 +457,17 @@ export function AdminOrdersView({
                   type="button"
                   disabled={saving}
                   onClick={handleSaveOrder}
-                  className="w-full py-2.5 px-4 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+                  className="w-full py-2.5 px-4 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
                 >
                   {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </button>
               </div>
 
               {/* Invoice & Payment Method Card */}
-              <div className="bg-[#FAF9F6] border border-[#2A4036]/25 rounded-xl p-4 space-y-3">
+              <div className="bg-[#FAF9F6] border border-[#8F6B18]/25 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#2A4036]" />
+                    <FileText className="w-4 h-4 text-[#8F6B18]" />
                     <h4 className="text-xs font-semibold text-[#141413]">
                       Facture &amp; Moyen de paiement
                     </h4>
@@ -476,7 +476,7 @@ export function AdminOrdersView({
                     <span
                       className={`px-2 py-0.5 rounded border text-[10px] font-semibold ${
                         selectedOrder.invoice.status === 'Envoyée'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          ? 'bg-[#FBF6EA] text-[#7A5C12] border-[#E5D3A1]'
                           : 'bg-amber-50 text-amber-800 border-amber-200'
                       }`}
                     >
@@ -519,7 +519,7 @@ export function AdminOrdersView({
                 <button
                   type="button"
                   onClick={() => setInvoiceOrderTarget(selectedOrder)}
-                  className="w-full py-2.5 px-4 bg-[#141413] hover:bg-[#2A4036] text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 bg-[#141413] hover:bg-[#8F6B18] text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>

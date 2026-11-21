@@ -81,7 +81,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
             <div className="lg:col-span-7 flex flex-col justify-center">
-              <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+              <p className="text-xs font-medium text-[#8F6B18] tracking-wide">
                 {t('about.kicker', { siteName: data.settings.general.siteName })}
               </p>
               <h1 className="mt-3 font-display text-4xl sm:text-5xl font-semibold text-[#141413] leading-[1.12] tracking-tight [text-wrap:balance]">
@@ -94,7 +94,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                 <button
                   type="button"
                   onClick={() => onNavigate('/boutique')}
-                  className="px-5 py-2.5 bg-[#2A4036] text-white text-sm font-semibold rounded-lg hover:bg-[#20322A] transition-colors whitespace-nowrap shrink-0"
+                  className="px-5 py-2.5 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg hover:bg-[#735613] transition-colors whitespace-nowrap shrink-0"
                 >
                   {t('about.discoverCreations')}
                 </button>
@@ -175,7 +175,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
               {/* Left Sticky Intro & Controls */}
               <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
                 <div>
-                  <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+                  <p className="text-xs font-medium text-[#8F6B18] tracking-wide">
                     {t('about.faqKicker')}
                   </p>
                   <h2 className="mt-2 font-display text-3xl sm:text-4xl font-semibold text-[#141413] leading-tight [text-wrap:balance]">
@@ -199,7 +199,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={t('about.faqSearchPlaceholder')}
-                      className="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg text-[#141413] placeholder:text-[#8A877E] focus:outline-none focus:border-[#2A4036]"
+                      className="w-full pl-10 pr-9 py-2.5 text-sm bg-white border border-[#D9D6CF] rounded-lg text-[#141413] placeholder:text-[#8A877E] focus:outline-none focus:border-[#8F6B18]"
                     />
                     {searchQuery && (
                       <button
@@ -233,8 +233,8 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                           onClick={() => setSelectedCategory(cat)}
                           className={`px-3.5 py-2 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
                             active
-                              ? 'bg-[#2A4036] border-[#2A4036] text-white'
-                              : 'bg-white border-[#E6E4DF] text-[#5C5A55] hover:border-[#2A4036] hover:text-[#141413]'
+                              ? 'bg-[#8F6B18] border-[#8F6B18] text-white'
+                              : 'bg-white border-[#E6E4DF] text-[#5C5A55] hover:border-[#8F6B18] hover:text-[#141413]'
                           }`}
                         >
                           <span>{getCategoryLabel(cat)}</span>
@@ -259,7 +259,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                   <button
                     type="button"
                     onClick={() => onNavigate('/contact')}
-                    className="mt-2 text-xs font-semibold text-[#2A4036] hover:underline whitespace-nowrap"
+                    className="mt-2 text-xs font-semibold text-[#8F6B18] hover:underline whitespace-nowrap"
                   >
                     {t('about.faqWriteTo', { siteName: data.settings.general.siteName })}
                   </button>
@@ -278,7 +278,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                     <button
                       type="button"
                       onClick={toggleAllFiltered}
-                      className="text-xs font-medium text-[#2A4036] hover:underline whitespace-nowrap shrink-0"
+                      className="text-xs font-medium text-[#8F6B18] hover:underline whitespace-nowrap shrink-0"
                     >
                       {allFilteredOpen ? t('about.faqCollapseAll') : t('about.faqExpandAll')}
                     </button>
@@ -298,7 +298,7 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                           setSearchQuery('');
                           setSelectedCategory('Toutes');
                         }}
-                        className="px-4 py-2 text-xs font-semibold bg-[#2A4036] text-white rounded-lg hover:bg-[#20322A] transition-colors"
+                        className="px-4 py-2 text-xs font-semibold bg-[#8F6B18] text-white rounded-lg hover:bg-[#735613] transition-colors"
                       >
                         {t('about.faqResetFilters')}
                       </button>
@@ -324,22 +324,22 @@ export function AboutPage({ data, onNavigate }: AboutPageProps) {
                             aria-expanded={isOpen}
                             aria-controls={panelId}
                             onClick={() => toggleItem(item.id)}
-                            className="w-full text-left flex items-start justify-between gap-6 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A4036] rounded-md"
+                            className="w-full text-left flex items-start justify-between gap-6 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8F6B18] rounded-md"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 text-xs text-[#6B6860] mb-1.5">
                                 <span className="font-mono tabular-nums">{numberLabel}</span>
                                 <span aria-hidden="true">·</span>
-                                <span className="font-medium text-[#2A4036]">
+                                <span className="font-medium text-[#8F6B18]">
                                   {translateFaqCategory(item.category, lang)}
                                 </span>
                               </div>
-                              <h3 className="text-base sm:text-lg font-semibold text-[#141413] group-hover:text-[#2A4036] transition-colors leading-snug">
+                              <h3 className="text-base sm:text-lg font-semibold text-[#141413] group-hover:text-[#8F6B18] transition-colors leading-snug">
                                 {item.question}
                               </h3>
                             </div>
                             <span
-                              className={`mt-2 w-8 h-8 rounded-lg border border-[#E6E4DF] bg-white flex items-center justify-center shrink-0 text-[#5C5A55] group-hover:border-[#2A4036] group-hover:text-[#2A4036] transition-all duration-200 ${
+                              className={`mt-2 w-8 h-8 rounded-lg border border-[#E6E4DF] bg-white flex items-center justify-center shrink-0 text-[#5C5A55] group-hover:border-[#8F6B18] group-hover:text-[#8F6B18] transition-all duration-200 ${
                                 isOpen ? 'rotate-180 bg-[#EFECE6]' : ''
                               }`}
                             >

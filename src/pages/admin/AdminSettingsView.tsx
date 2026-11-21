@@ -213,7 +213,7 @@ export function AdminSettingsView({
               onClick={() =>
                 void persistSettings(draft, undefined, currencyChanged && convertCatalogPrices)
               }
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Enregistrement...' : 'Enregistrer les paramètres'}</span>
@@ -985,7 +985,7 @@ export function AdminSettingsView({
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2A4036] hover:bg-[#20322A] text-white text-xs font-semibold rounded-lg"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#8F6B18] hover:bg-[#735613] text-white text-xs font-semibold rounded-lg"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Enregistrement...' : 'Enregistrer les paramètres'}</span>
@@ -1067,7 +1067,7 @@ export function AdminSettingsView({
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2A4036] text-white font-semibold rounded-lg"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#8F6B18] text-white font-semibold rounded-lg"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Créer l’accès</span>
@@ -1115,7 +1115,7 @@ export function AdminSettingsView({
               <button
                 type="submit"
                 disabled={savingOwnProfile}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white font-semibold rounded-lg"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white font-semibold rounded-lg"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>

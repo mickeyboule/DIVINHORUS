@@ -33,7 +33,7 @@ export function ArticleDetailPage({
         <button
           type="button"
           onClick={() => onNavigate('/communaute')}
-          className="mt-6 px-5 py-2.5 bg-[#2A4036] text-white text-sm font-semibold rounded-lg"
+          className="mt-6 px-5 py-2.5 bg-[#8F6B18] text-white text-sm font-semibold rounded-lg"
         >
           {t('articleDetail.backToCommunity')}
         </button>
@@ -62,7 +62,7 @@ export function ArticleDetailPage({
 
         <header>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#6B6860]">
-            <span className="font-medium text-[#2A4036]">
+            <span className="font-medium text-[#8F6B18]">
               {category?.name || t('articleDetail.teachingFallback')}
             </span>
             <span aria-hidden="true">·</span>
@@ -147,7 +147,7 @@ export function ArticleDetailPage({
           <button
             type="button"
             onClick={() => onNavigate('/communaute')}
-            className="text-xs font-semibold text-[#2A4036] hover:underline"
+            className="text-xs font-semibold text-[#8F6B18] hover:underline"
           >
             {t('articleDetail.backToTeachings')}
           </button>
@@ -190,7 +190,7 @@ export function ArticleDetailPage({
                       onClick={() => onNavigate(`/communaute/${item.slug}`)}
                       className="mt-2 text-left"
                     >
-                      <h3 className="font-display text-xl font-semibold text-[#141413] hover:text-[#2A4036]">
+                      <h3 className="font-display text-xl font-semibold text-[#141413] hover:text-[#8F6B18]">
                         {item.title}
                       </h3>
                     </button>
@@ -198,7 +198,7 @@ export function ArticleDetailPage({
                       <button
                         type="button"
                         onClick={() => onNavigate(`/communaute/${item.slug}`)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#2A4036] hover:underline"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#8F6B18] hover:underline"
                       >
                         <span>{t('articleDetail.readArticle')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />

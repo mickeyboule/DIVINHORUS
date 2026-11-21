@@ -102,7 +102,7 @@ export function Header({
                 {active && (
                   <span
                     aria-hidden="true"
-                    className="absolute left-0 right-0 -bottom-0.5 h-[1.5px] bg-[#2A4036]"
+                    className="absolute left-0 right-0 -bottom-0.5 h-[1.5px] bg-[#8F6B18]"
                   />
                 )}
               </button>
@@ -118,7 +118,7 @@ export function Header({
             className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
               currentPath.startsWith('/mon-compte')
                 ? 'bg-[#EFECE6] border-[#D4D0C8] text-[#141413]'
-                : 'bg-white border-[#E6E4DF] text-[#3F3E3A] hover:border-[#2A4036] hover:text-[#141413]'
+                : 'bg-white border-[#E6E4DF] text-[#3F3E3A] hover:border-[#8F6B18] hover:text-[#141413]'
             }`}
           >
             <User className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -133,7 +133,7 @@ export function Header({
           >
             <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.75} />
             {basketCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#2A4036] text-white text-[10px] font-semibold tabular-nums flex items-center justify-center leading-none">
+              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#8F6B18] text-white text-[10px] font-semibold tabular-nums flex items-center justify-center leading-none">
                 {basketCount}
               </span>
             )}
@@ -206,7 +206,7 @@ export function Header({
                 setMobileOpen(false);
                 onOpenOrderDrawer();
               }}
-              className="mt-2 w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#2A4036] rounded-lg hover:bg-[#20322A] transition-colors"
+              className="mt-2 w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#8F6B18] rounded-lg hover:bg-[#735613] transition-colors"
             >
               {t('header.mobileOrderCta', { count: basketCount })}
             </button>

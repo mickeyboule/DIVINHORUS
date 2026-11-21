@@ -45,7 +45,7 @@ export function ContactPage({ data }: ContactPageProps) {
     <div className="bg-[#FAF9F6] py-12 sm:py-20">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium text-[#2A4036] tracking-wide">
+          <p className="text-xs font-medium text-[#8F6B18] tracking-wide">
             {t('contact.kicker')}
           </p>
           <h1 className="mt-2 font-display text-4xl sm:text-5xl font-semibold text-[#141413] tracking-tight">
@@ -59,7 +59,7 @@ export function ContactPage({ data }: ContactPageProps) {
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white border border-[#E6E4DF] rounded-xl p-6 space-y-5">
               <div className="flex items-start gap-3.5">
-                <MapPin className="w-5 h-5 text-[#2A4036] shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-[#8F6B18] shrink-0 mt-0.5" />
                 <div>
                   <h2 className="text-sm font-semibold text-[#141413]">
                     {t('contact.addressTitle')}
@@ -73,7 +73,7 @@ export function ContactPage({ data }: ContactPageProps) {
               </div>
 
               <div className="flex items-start gap-3.5 pt-4 border-t border-[#F0EFEA]">
-                <Phone className="w-5 h-5 text-[#2A4036] shrink-0 mt-0.5" />
+                <Phone className="w-5 h-5 text-[#8F6B18] shrink-0 mt-0.5" />
                 <div>
                   <h2 className="text-sm font-semibold text-[#141413]">
                     {t('contact.phoneTitle')}
@@ -83,7 +83,7 @@ export function ContactPage({ data }: ContactPageProps) {
               </div>
 
               <div className="flex items-start gap-3.5 pt-4 border-t border-[#F0EFEA]">
-                <Mail className="w-5 h-5 text-[#2A4036] shrink-0 mt-0.5" />
+                <Mail className="w-5 h-5 text-[#8F6B18] shrink-0 mt-0.5" />
                 <div>
                   <h2 className="text-sm font-semibold text-[#141413]">
                     {t('contact.emailTitle')}
@@ -103,7 +103,7 @@ export function ContactPage({ data }: ContactPageProps) {
           <div className="lg:col-span-7 bg-white border border-[#E6E4DF] rounded-xl p-6 sm:p-8">
             {sent ? (
               <div className="py-8 text-center space-y-4">
-                <CheckCircle2 className="w-10 h-10 text-[#2A4036] mx-auto" />
+                <CheckCircle2 className="w-10 h-10 text-[#8F6B18] mx-auto" />
                 <h2 className="font-display text-3xl font-semibold text-[#141413]">
                   {t('contact.sentTitle')}
                 </h2>
@@ -113,7 +113,7 @@ export function ContactPage({ data }: ContactPageProps) {
                 <button
                   type="button"
                   onClick={() => setSent(false)}
-                  className="px-5 py-2.5 bg-[#2A4036] text-white text-xs font-semibold rounded-lg"
+                  className="px-5 py-2.5 bg-[#8F6B18] text-white text-xs font-semibold rounded-lg"
                 >
                   {t('contact.sendAnother')}
                 </button>
@@ -141,7 +141,7 @@ export function ContactPage({ data }: ContactPageProps) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t('contact.fullNamePlaceholder')}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none"
+                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none"
                     />
                   </div>
                   <div>
@@ -154,7 +154,7 @@ export function ContactPage({ data }: ContactPageProps) {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t('contact.emailPlaceholder')}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none"
+                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export function ContactPage({ data }: ContactPageProps) {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder={t('contact.phonePlaceholder')}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none"
+                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none"
                     />
                   </div>
                   <div>
@@ -181,7 +181,7 @@ export function ContactPage({ data }: ContactPageProps) {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       placeholder={t('contact.subjectPlaceholder')}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none"
+                      className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
@@ -196,14 +196,14 @@ export function ContactPage({ data }: ContactPageProps) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t('contact.messagePlaceholder')}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:bg-white focus:outline-none resize-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-[#FAF9F6] border border-[#D9D6CF] rounded-lg focus:border-[#8F6B18] focus:bg-white focus:outline-none resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={sending}
-                  className="px-6 py-3 bg-[#2A4036] hover:bg-[#20322A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                  className="px-6 py-3 bg-[#8F6B18] hover:bg-[#735613] disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
                 >
                   {sending ? t('contact.sending') : t('contact.submit')}
                 </button>
