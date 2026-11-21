@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { SafeImage } from '../../components/SafeImage';
 import { adminApi } from '../../lib/api';
@@ -43,6 +43,30 @@ export function AdminVideosView({
   const [syncingChannel, setSyncingChannel] = useState(false);
 
   const sorted = [...videos].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  useEffect(() => {
+    if (!youtubeSync?.autoSync || (!youtubeSync.channelId && !youtubeSync.channelUrl)) return;
+    const lastMs = youtubeSync.lastSyncAt ? Date.parse(youtubeSync.lastSyncAt) : 0;
+    const stale = !lastMs || Date.now() - lastMs > 1000 * 60 * 10;
+    if (!stale) return;
+    let cancelled = false;
+    const target = youtubeSync.channelId || youtubeSync.channelUrl;
+    void adminApi
+      .syncYoutubeChannel(target, true)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.addedCount > 0) {
+          onVideosChanged(res.videos);
+        }
+        onYoutubeSyncChanged?.(res.youtubeSync);
+      })
+      .catch(() => {
+        // Silent in background auto-sync
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [youtubeSync?.autoSync, youtubeSync?.channelId, youtubeSync?.channelUrl, youtubeSync?.lastSyncAt]);
 
   const handleSyncChannel = async (e: FormEvent) => {
     e.preventDefault();
@@ -229,7 +253,7 @@ export function AdminVideosView({
             type="text"
             value={channelUrl}
             onChange={(e) => setChannelUrl(e.target.value)}
-            placeholder="https://www.youtube.com/@VotreChaine ou https://www.youtube.com/channel/UC..."
+            placeholder="https://www.youtube.com/channel/UC... ou identifiant UC... ou @VotreChaine"
             className="flex-1 px-3.5 py-2.5 text-sm border border-[#D9D6CF] rounded-lg focus:border-[#2A4036] focus:outline-none"
           />
           <button
@@ -241,6 +265,12 @@ export function AdminVideosView({
             <span>{syncingChannel ? 'Synchronisation...' : 'Synchroniser la chaîne'}</span>
           </button>
         </div>
+
+        <p className="text-[11px] text-[#6B6860]">
+          Astuce : si votre lien <span className="font-mono">@handle</span> n’est pas reconnu directement, ouvrez votre chaîne YouTube →{' '}
+          <strong className="font-medium text-[#3F3E3A]">Plus / À propos → Partager la chaîne → Copier l’identifiant de la chaîne</strong>{' '}
+          (<span className="font-mono">UC...</span>) et collez-le ci-dessus.
+        </p>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <label className="inline-flex items-center gap-2 cursor-pointer">

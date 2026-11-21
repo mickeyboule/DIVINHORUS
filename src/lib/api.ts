@@ -129,13 +129,347 @@ function clientSlugify(text: string): string {
 
 function extractYoutubeIdClient(rawUrl: string): string {
   const trimmed = rawUrl.trim();
-  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
   if (shortMatch) return shortMatch[1];
-  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
   if (watchMatch) return watchMatch[1];
-  const embedMatch = trimmed.match(/youtube\.com\/(?:embed|shorts|live)\/([a-zA-Z0-9_-]{6,})/);
+  const embedMatch = trimmed.match(/youtube\.com\/(?:embed|shorts|live)\/([a-zA-Z0-9_-]{11})/);
   if (embedMatch) return embedMatch[1];
   return '';
+}
+
+function decodeXmlEntitiesClient(text: string): string {
+  return text
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .trim();
+}
+
+function stripHtmlTagsClient(text: string): string {
+  return text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+interface ParsedYoutubeFeedEntry {
+  youtubeId: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  youtubeUrl: string;
+  publishedAt: string;
+}
+
+function parseYoutubeAtomFeedXml(xml: string): {
+  channelId: string;
+  entries: ParsedYoutubeFeedEntry[];
+} {
+  const channelIdMatch = xml.match(/<yt:channelId>([^<]+)<\/yt:channelId>/);
+  const rawChannelId = channelIdMatch ? channelIdMatch[1].trim() : '';
+  const channelId = rawChannelId
+    ? rawChannelId.startsWith('UC')
+      ? rawChannelId
+      : `UC${rawChannelId}`
+    : '';
+
+  const entries: ParsedYoutubeFeedEntry[] = [];
+  const entryMatches = xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g);
+  for (const m of entryMatches) {
+    const block = m[1];
+    const videoIdMatch = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+    if (!videoIdMatch) continue;
+    const youtubeId = videoIdMatch[1].trim();
+    const titleMatch = block.match(/<title>([\s\S]*?)<\/title>/);
+    const descMatch = block.match(/<media:description>([\s\S]*?)<\/media:description>/);
+    const thumbMatch = block.match(/<media:thumbnail[^>]*url="([^"]+)"/);
+    const pubMatch = block.match(/<published>([^<]+)<\/published>/);
+
+    const rawDesc = descMatch ? decodeXmlEntitiesClient(descMatch[1]) : '';
+    const shortDesc = rawDesc.length > 220 ? `${rawDesc.slice(0, 217).trim()}...` : rawDesc;
+
+    entries.push({
+      youtubeId,
+      title: titleMatch ? decodeXmlEntitiesClient(titleMatch[1]) : `Vidéo (${youtubeId})`,
+      description: shortDesc,
+      thumbnail: thumbMatch ? thumbMatch[1] : `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`,
+      youtubeUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
+      publishedAt: pubMatch ? pubMatch[1].trim() : new Date().toISOString(),
+    });
+  }
+
+  return { channelId, entries };
+}
+
+async function fetchTextWithTimeout(url: string, timeoutMs = 7000): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, { signal: controller.signal });
+    if (!resp.ok) return null;
+    return await resp.text();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchYoutubeFeedEntriesClient(feedUrl: string): Promise<{
+  channelId: string;
+  entries: ParsedYoutubeFeedEntry[];
+} | null> {
+  // 1) AllOrigins raw XML feed (preserves <yt:channelId>, <media:description>, etc.)
+  const xml = await fetchTextWithTimeout(
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
+    7500,
+  );
+  if (xml && xml.includes('<feed') && xml.includes('<yt:videoId>')) {
+    const parsed = parseYoutubeAtomFeedXml(xml);
+    if (parsed.entries.length > 0 || parsed.channelId) {
+      return parsed;
+    }
+  }
+
+  // 2) Fallback rss2json CORS JSON bridge
+  const rawJson = await fetchTextWithTimeout(
+    `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`,
+    7500,
+  );
+  if (rawJson) {
+    try {
+      const data = JSON.parse(rawJson) as {
+        status?: string;
+        feed?: { link?: string };
+        items?: Array<{
+          title?: string;
+          pubDate?: string;
+          link?: string;
+          guid?: string;
+          thumbnail?: string;
+          description?: string;
+        }>;
+      };
+      if (data.status === 'ok' && Array.isArray(data.items)) {
+        const feedChannelMatch = (data.feed?.link || '').match(/\/channel\/(UC[a-zA-Z0-9_-]{20,})/);
+        const entries: ParsedYoutubeFeedEntry[] = [];
+        for (const item of data.items) {
+          const guidId = (item.guid || '').replace(/^yt:video:/, '').trim();
+          const youtubeId =
+            (/^[a-zA-Z0-9_-]{11}$/.test(guidId) ? guidId : '') ||
+            extractYoutubeIdClient(item.link || '');
+          if (!youtubeId) continue;
+          const cleanDesc = stripHtmlTagsClient(item.description || '');
+          const shortDesc = cleanDesc.length > 220 ? `${cleanDesc.slice(0, 217).trim()}...` : cleanDesc;
+          const parsedDate = item.pubDate
+            ? new Date(item.pubDate.replace(' ', 'T') + (item.pubDate.includes('Z') ? '' : 'Z'))
+            : new Date();
+          entries.push({
+            youtubeId,
+            title: (item.title || '').trim() || `Vidéo (${youtubeId})`,
+            description: shortDesc,
+            thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`,
+            youtubeUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
+            publishedAt: Number.isNaN(parsedDate.getTime())
+              ? new Date().toISOString()
+              : parsedDate.toISOString(),
+          });
+        }
+        return {
+          channelId: feedChannelMatch ? feedChannelMatch[1] : '',
+          entries,
+        };
+      }
+    } catch {
+      // Ignore malformed JSON
+    }
+  }
+
+  return null;
+}
+
+async function syncYoutubeChannelClientDirect(
+  rawInput: string,
+  autoSync: boolean,
+): Promise<{
+  addedCount: number;
+  added: VideoItem[];
+  videos: VideoItem[];
+  youtubeSync: NonNullable<SiteSettings['youtubeSync']>;
+}> {
+  const settings = (await getSiteSettingsFromFirestore()) || createDefaultSiteSettings();
+  const savedSync = settings.youtubeSync;
+  let trimmed = (rawInput || savedSync?.channelUrl || '').trim();
+  if (!trimmed) {
+    throw new Error('Veuillez saisir le lien ou l’identifiant de votre chaîne YouTube.');
+  }
+
+  let resolvedChannelId = '';
+  let resolvedChannelUrl = trimmed;
+  let preloadedEntries: ParsedYoutubeFeedEntry[] | null = null;
+
+  // Direct UC... channel ID
+  if (/^UC[a-zA-Z0-9_-]{20,}$/.test(trimmed)) {
+    resolvedChannelId = trimmed;
+    resolvedChannelUrl = `https://www.youtube.com/channel/${trimmed}`;
+  } else {
+    if (trimmed.startsWith('@')) {
+      trimmed = `https://www.youtube.com/${trimmed}`;
+    } else if (!/^https?:\/\//i.test(trimmed)) {
+      trimmed = `https://${trimmed}`;
+    }
+    resolvedChannelUrl = trimmed;
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(trimmed);
+    } catch {
+      throw new Error('Lien de chaîne YouTube invalide.');
+    }
+
+    if (!parsedUrl.hostname.includes('youtube.com') && !parsedUrl.hostname.includes('youtu.be')) {
+      throw new Error('Veuillez indiquer une adresse youtube.com valide.');
+    }
+
+    const directChannelMatch =
+      parsedUrl.pathname.match(/\/channel\/(UC[a-zA-Z0-9_-]{20,})/) ||
+      (parsedUrl.searchParams.get('channel_id') || '').match(/^(UC[a-zA-Z0-9_-]{20,})$/);
+
+    if (directChannelMatch) {
+      resolvedChannelId = directChannelMatch[1];
+    } else {
+      const playlistId = parsedUrl.searchParams.get('list');
+      if (playlistId && /^[a-zA-Z0-9_-]{10,}$/.test(playlistId)) {
+        const playlistFeed = await fetchYoutubeFeedEntriesClient(
+          `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(playlistId)}`,
+        );
+        if (playlistFeed) {
+          preloadedEntries = playlistFeed.entries;
+          resolvedChannelId = playlistFeed.channelId || playlistId;
+        }
+      }
+
+      if (!resolvedChannelId && savedSync?.channelId && /^UC[a-zA-Z0-9_-]{20,}$/.test(savedSync.channelId)) {
+        const normSaved = (savedSync.channelUrl || '').replace(/\/+$/, '').toLowerCase();
+        const normCurrent = trimmed.replace(/\/+$/, '').toLowerCase();
+        if (normSaved === normCurrent) {
+          resolvedChannelId = savedSync.channelId;
+        }
+      }
+
+      // Attempt client-side HTML resolution via CORS bridge
+      if (!resolvedChannelId) {
+        const html = await fetchTextWithTimeout(
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(trimmed)}`,
+          7000,
+        );
+        if (html) {
+          const patterns = [
+            /"channelId"\s*:\s*"(UC[a-zA-Z0-9_-]{20,})"/,
+            /"externalId"\s*:\s*"(UC[a-zA-Z0-9_-]{20,})"/,
+            /itemprop="identifier"\s+content="(UC[a-zA-Z0-9_-]{20,})"/,
+            /https:\/\/www\.youtube\.com\/channel\/(UC[a-zA-Z0-9_-]{20,})/,
+          ];
+          for (const pat of patterns) {
+            const m = html.match(pat);
+            if (m && m[1]) {
+              resolvedChannelId = m[1];
+              break;
+            }
+          }
+        }
+      }
+
+      // Try legacy /user/ or @handle Atom feed (?user=...)
+      if (!resolvedChannelId) {
+        const userOrHandleMatch =
+          parsedUrl.pathname.match(/\/user\/([^/?#]+)/) ||
+          parsedUrl.pathname.match(/\/@([^/?#]+)/) ||
+          parsedUrl.pathname.match(/\/c\/([^/?#]+)/);
+        if (userOrHandleMatch?.[1]) {
+          const userFeed = await fetchYoutubeFeedEntriesClient(
+            `https://www.youtube.com/feeds/videos.xml?user=${encodeURIComponent(userOrHandleMatch[1])}`,
+          );
+          if (userFeed && (userFeed.entries.length > 0 || userFeed.channelId)) {
+            preloadedEntries = userFeed.entries;
+            resolvedChannelId = userFeed.channelId || userOrHandleMatch[1];
+          }
+        }
+      }
+    }
+  }
+
+  if (!resolvedChannelId && !preloadedEntries) {
+    throw new Error(
+      'Sur Firebase Hosting, YouTube bloque la lecture automatique des liens @handle. Collez votre identifiant de chaîne (commençant par UC...) ou le lien /channel/UC... (sur YouTube : À propos → Partager la chaîne → Copier l’identifiant de la chaîne).',
+    );
+  }
+
+  if (!preloadedEntries) {
+    const feedRes = await fetchYoutubeFeedEntriesClient(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(resolvedChannelId)}`,
+    );
+    if (!feedRes) {
+      throw new Error(
+        'Impossible de récupérer le flux RSS de cette chaîne YouTube. Vérifiez l’identifiant UC... et réessayez.',
+      );
+    }
+    preloadedEntries = feedRes.entries;
+    if (feedRes.channelId && feedRes.channelId.startsWith('UC')) {
+      resolvedChannelId = feedRes.channelId;
+    }
+  }
+
+  const existingVideos = await getAllVideosFromFirestore();
+  const existingIds = new Set(existingVideos.map((v) => v.youtubeId));
+  const newEntries = preloadedEntries.filter((e) => e.youtubeId && !existingIds.has(e.youtubeId));
+
+  const now = new Date().toISOString();
+  const added: VideoItem[] = newEntries.map((entry, index) => ({
+    id: makeClientId('vid'),
+    title: entry.title.trim() || `Vidéo (${entry.youtubeId})`,
+    youtubeUrl: entry.youtubeUrl || `https://www.youtube.com/watch?v=${entry.youtubeId}`,
+    youtubeId: entry.youtubeId,
+    thumbnail: entry.thumbnail || `https://i.ytimg.com/vi/${entry.youtubeId}/hqdefault.jpg`,
+    description: entry.description.trim(),
+    duration: '',
+    visible: true,
+    featured: false,
+    sortOrder: index + 1,
+    createdAt: entry.publishedAt || now,
+  }));
+
+  let updatedVideos: VideoItem[];
+  if (added.length > 0) {
+    const shiftedExisting = existingVideos.map((v) => ({
+      ...v,
+      sortOrder: (v.sortOrder || 0) + added.length,
+    }));
+    await Promise.all([
+      ...added.map((v) => saveVideoToFirestore(v)),
+      ...shiftedExisting.map((v) => saveVideoToFirestore(v)),
+    ]);
+    updatedVideos = [...added, ...shiftedExisting].sort((a, b) => a.sortOrder - b.sortOrder);
+  } else {
+    updatedVideos = [...existingVideos].sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  const nextSync: NonNullable<SiteSettings['youtubeSync']> = {
+    channelUrl: resolvedChannelUrl,
+    channelId: resolvedChannelId,
+    autoSync,
+    lastSyncAt: now,
+  };
+  await updateYoutubeSyncInFirestore(nextSync);
+
+  return {
+    addedCount: added.length,
+    added,
+    videos: updatedVideos,
+    youtubeSync: nextSync,
+  };
 }
 
 async function withServerFallback<T>(
@@ -847,12 +1181,19 @@ export const visitorApi = {
       }
       const code = getFirebaseErrorCode(err);
       if (isCredentialFallbackCode(code)) {
-        const res = await request<{ visitor: VisitorMemberPublic; orders: Order[]; token: string }>(
-          '/api/visitor/login',
-          { method: 'POST', body: JSON.stringify({ email: cleanEmail, password: cleanPassword }) },
-        );
-        setStoredVisitorToken(res.token);
-        return res;
+        try {
+          const res = await request<{ visitor: VisitorMemberPublic; orders: Order[]; token: string }>(
+            '/api/visitor/login',
+            { method: 'POST', body: JSON.stringify({ email: cleanEmail, password: cleanPassword }) },
+          );
+          setStoredVisitorToken(res.token);
+          return res;
+        } catch (fallbackErr) {
+          if (fallbackErr instanceof ApiUnavailableError) {
+            throw new Error(translateFirebaseAuthError(err));
+          }
+          throw fallbackErr;
+        }
       }
       if (code) {
         throw new Error(translateFirebaseAuthError(err));
@@ -889,19 +1230,26 @@ export const visitorApi = {
       }
       const code = getFirebaseErrorCode(err);
       if (isCredentialFallbackCode(code)) {
-        const res = await request<
-          | { role: 'admin'; admin: AdminUserPublic; token: string }
-          | { role: 'visitor'; visitor: VisitorMemberPublic; orders: Order[]; token: string }
-        >('/api/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
-        });
-        if (res.role === 'admin') {
-          setStoredAdminToken(res.token);
-        } else {
-          setStoredVisitorToken(res.token);
+        try {
+          const res = await request<
+            | { role: 'admin'; admin: AdminUserPublic; token: string }
+            | { role: 'visitor'; visitor: VisitorMemberPublic; orders: Order[]; token: string }
+          >('/api/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+          });
+          if (res.role === 'admin') {
+            setStoredAdminToken(res.token);
+          } else {
+            setStoredVisitorToken(res.token);
+          }
+          return res;
+        } catch (fallbackErr) {
+          if (fallbackErr instanceof ApiUnavailableError) {
+            throw new Error(translateFirebaseAuthError(err));
+          }
+          throw fallbackErr;
         }
-        return res;
       }
       if (code) {
         throw new Error(translateFirebaseAuthError(err));
@@ -1058,12 +1406,19 @@ export const authApi = {
       }
       const code = getFirebaseErrorCode(err);
       if (isCredentialFallbackCode(code)) {
-        const res = await request<{ admin: AdminUserPublic; token: string }>('/api/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
-        });
-        setStoredAdminToken(res.token);
-        return res.admin;
+        try {
+          const res = await request<{ admin: AdminUserPublic; token: string }>('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+          });
+          setStoredAdminToken(res.token);
+          return res.admin;
+        } catch (fallbackErr) {
+          if (fallbackErr instanceof ApiUnavailableError) {
+            throw new Error(translateFirebaseAuthError(err));
+          }
+          throw fallbackErr;
+        }
       }
       if (code) {
         throw new Error(translateFirebaseAuthError(err));
@@ -1846,30 +2201,51 @@ export const adminApi = {
         if (!youtubeId) {
           throw new Error('Lien YouTube invalide.');
         }
+        const canonicalUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+        let title = '';
+        let thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+        const metaRaw = await fetchTextWithTimeout(
+          `https://noembed.com/embed?url=${encodeURIComponent(canonicalUrl)}`,
+          4500,
+        );
+        if (metaRaw) {
+          try {
+            const meta = JSON.parse(metaRaw) as { title?: string; thumbnail_url?: string };
+            if (meta.title) title = meta.title;
+            if (meta.thumbnail_url) thumbnail = meta.thumbnail_url;
+          } catch {
+            // Keep default fallback metadata
+          }
+        }
         return {
           youtubeId,
-          youtubeUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
-          title: '',
-          thumbnail: `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
+          youtubeUrl: canonicalUrl,
+          title,
+          thumbnail,
         };
       },
     ),
 
   syncYoutubeChannel: async (channelUrl: string, autoSync: boolean) => {
-    const res = await request<{
-      addedCount: number;
-      added: VideoItem[];
-      videos: VideoItem[];
-      youtubeSync: NonNullable<SiteSettings['youtubeSync']>;
-    }>('/api/admin/videos/sync-channel', {
-      method: 'POST',
-      body: JSON.stringify({ channelUrl, autoSync }),
-    });
-    if (canUseFirestoreAdmin()) {
-      await Promise.all(res.added.map((v) => saveVideoToFirestore(v)));
-      await updateYoutubeSyncInFirestore(res.youtubeSync);
-    }
-    return res;
+    return withServerFallback(
+      async () => {
+        const res = await request<{
+          addedCount: number;
+          added: VideoItem[];
+          videos: VideoItem[];
+          youtubeSync: NonNullable<SiteSettings['youtubeSync']>;
+        }>('/api/admin/videos/sync-channel', {
+          method: 'POST',
+          body: JSON.stringify({ channelUrl, autoSync }),
+        });
+        if (canUseFirestoreAdmin()) {
+          await Promise.all(res.added.map((v) => saveVideoToFirestore(v)));
+          await updateYoutubeSyncInFirestore(res.youtubeSync);
+        }
+        return res;
+      },
+      () => syncYoutubeChannelClientDirect(channelUrl, autoSync),
+    );
   },
 
   updateYoutubeSyncSettings: async (patch: { channelUrl?: string; autoSync?: boolean }) => {

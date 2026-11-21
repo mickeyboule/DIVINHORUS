@@ -35,6 +35,7 @@ import type {
   VideoItem,
   VisitorMemberPublic,
 } from '../types/cms';
+import { createDefaultSiteSettings } from './defaultSeed';
 import {
   auth,
   db,
@@ -1685,16 +1686,44 @@ export async function updateYoutubeSyncInFirestore(
 ): Promise<void> {
   if (!canUseFirestoreAdmin()) return;
   const ref = doc(db, 'site_settings', 'public');
+  const safeSync = stripUndefinedDeep({
+    channelUrl: clampString(youtubeSync.channelUrl || '', 500, ''),
+    channelId: clampString(youtubeSync.channelId || '', 64, ''),
+    autoSync: Boolean(youtubeSync.autoSync),
+    lastSyncAt: youtubeSync.lastSyncAt ?? null,
+  });
   try {
     const snap = await getDoc(ref);
     if (snap.exists()) {
+      const existingData = snap.data();
+      const existingSocials =
+        existingData.socials && typeof existingData.socials === 'object'
+          ? (existingData.socials as Record<string, unknown>)
+          : {};
+      const nextSocials = safeSync.channelUrl
+        ? { ...existingSocials, youtube: safeSync.channelUrl }
+        : existingSocials;
       await updateDoc(ref, {
-        youtubeSync: stripUndefinedDeep(youtubeSync),
+        youtubeSync: safeSync,
+        ...(safeSync.channelUrl ? { socials: stripUndefinedDeep(nextSocials) } : {}),
         updatedAt: serverTimestamp(),
+      });
+    } else {
+      const defaults = createDefaultSiteSettings();
+      const fullSettings: SiteSettings = {
+        ...defaults,
+        socials: safeSync.channelUrl
+          ? { ...defaults.socials, youtube: safeSync.channelUrl }
+          : defaults.socials,
+        youtubeSync: safeSync,
+      };
+      await setDoc(ref, {
+        ...buildSiteSettingsUpdatable(fullSettings),
+        createdAt: serverTimestamp(),
       });
     }
   } catch (err) {
-    handleFirestoreError(err, OperationType.UPDATE, 'site_settings/public');
+    handleFirestoreError(err, OperationType.WRITE, 'site_settings/public');
   }
 }
 
