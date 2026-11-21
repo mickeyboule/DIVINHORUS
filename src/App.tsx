@@ -161,12 +161,39 @@ export default function App() {
         knownOrderIdsRef.current = new Set(data.orders.map((o) => o.id));
         adminDataLoadedRef.current = true;
         setAdminData(data);
+
+        const ytSync = data.settings.youtubeSync;
+        if (ytSync?.autoSync && (ytSync.channelId || ytSync.channelUrl)) {
+          const lastMs = ytSync.lastSyncAt ? Date.parse(ytSync.lastSyncAt) : 0;
+          if (!lastMs || Date.now() - lastMs > 1000 * 60 * 10) {
+            void adminApi
+              .syncYoutubeChannel(ytSync.channelUrl || ytSync.channelId, true)
+              .then((syncRes) => {
+                setAdminData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        videos: syncRes.videos,
+                        settings: { ...prev.settings, youtubeSync: syncRes.youtubeSync },
+                      }
+                    : prev,
+                );
+                if (syncRes.addedCount > 0) {
+                  void fetchPublic();
+                }
+              })
+              .catch(() => {
+                // Silent background sync
+              });
+          }
+        }
+
         return data;
       } catch {
         return null;
       }
     },
-    [notify, t],
+    [notify, t, fetchPublic],
   );
 
   useEffect(() => {

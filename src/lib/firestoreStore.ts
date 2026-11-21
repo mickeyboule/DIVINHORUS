@@ -793,11 +793,32 @@ export async function loadPublicFromFirestore(): Promise<PublicBootstrapData | n
     };
     const { cleaned: siteContent } = sanitizeSiteContentForDemo(rawSiteContent);
 
+    const rawSocials = sData.socials as SiteSettings['socials'];
+    const rawSync = sData.youtubeSync as SiteSettings['youtubeSync'] | undefined;
+    const isSyncUnset = !rawSync?.channelUrl && !rawSync?.channelId && !rawSync?.lastSyncAt;
+    const effectiveYoutubeSync: NonNullable<SiteSettings['youtubeSync']> = isSyncUnset
+      ? {
+          channelUrl: 'https://www.youtube.com/@divinorus2425',
+          channelId: 'UCcTs4_-2RGe-jMlWMcPchVw',
+          autoSync: true,
+          lastSyncAt: null,
+        }
+      : {
+          channelUrl: rawSync?.channelUrl || '',
+          channelId: rawSync?.channelId || '',
+          autoSync: rawSync?.autoSync ?? true,
+          lastSyncAt: rawSync?.lastSyncAt ?? null,
+        };
+    const effectiveSocials: SiteSettings['socials'] =
+      isSyncUnset && (!rawSocials?.youtube || rawSocials.youtube === 'https://www.youtube.com')
+        ? { ...rawSocials, youtube: 'https://www.youtube.com/@divinorus2425' }
+        : rawSocials;
+
     const settings: SiteSettings = {
       general: sData.general as SiteSettings['general'],
       contact: sData.contact as SiteSettings['contact'],
-      socials: sData.socials as SiteSettings['socials'],
-      ...(sData.youtubeSync ? { youtubeSync: sData.youtubeSync as SiteSettings['youtubeSync'] } : {}),
+      socials: effectiveSocials,
+      youtubeSync: effectiveYoutubeSync,
       orderSettings: sData.orderSettings as SiteSettings['orderSettings'],
     };
 
@@ -1195,15 +1216,38 @@ export async function loadAdminFromFirestore(
         .filter((m) => !DEMO_MEDIA_IDS.has(m.id) && !isIllustrativeAssetUrl(m.url))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       siteContent: cleanedSiteContent,
-      settings: {
-        general: sData.general as SiteSettings['general'],
-        contact: sData.contact as SiteSettings['contact'],
-        socials: sData.socials as SiteSettings['socials'],
-        ...(sData.youtubeSync
-          ? { youtubeSync: sData.youtubeSync as SiteSettings['youtubeSync'] }
-          : {}),
-        orderSettings: sData.orderSettings as SiteSettings['orderSettings'],
-      },
+      settings: (() => {
+        const rawSocials = sData.socials as SiteSettings['socials'];
+        const rawSync = sData.youtubeSync as SiteSettings['youtubeSync'] | undefined;
+        const isSyncUnset = !rawSync?.channelUrl && !rawSync?.channelId && !rawSync?.lastSyncAt;
+        const effectiveYoutubeSync: NonNullable<SiteSettings['youtubeSync']> = isSyncUnset
+          ? {
+              channelUrl: 'https://www.youtube.com/@divinorus2425',
+              channelId: 'UCcTs4_-2RGe-jMlWMcPchVw',
+              autoSync: true,
+              lastSyncAt: null,
+            }
+          : {
+              channelUrl: rawSync?.channelUrl || '',
+              channelId: rawSync?.channelId || '',
+              autoSync: rawSync?.autoSync ?? true,
+              lastSyncAt: rawSync?.lastSyncAt ?? null,
+            };
+        if (isSyncUnset) {
+          void updateYoutubeSyncInFirestore(effectiveYoutubeSync);
+        }
+        const effectiveSocials: SiteSettings['socials'] =
+          isSyncUnset && (!rawSocials?.youtube || rawSocials.youtube === 'https://www.youtube.com')
+            ? { ...rawSocials, youtube: 'https://www.youtube.com/@divinorus2425' }
+            : rawSocials;
+        return {
+          general: sData.general as SiteSettings['general'],
+          contact: sData.contact as SiteSettings['contact'],
+          socials: effectiveSocials,
+          youtubeSync: effectiveYoutubeSync,
+          orderSettings: sData.orderSettings as SiteSettings['orderSettings'],
+        };
+      })(),
       admins,
       activities: actSnap.docs
         .map((d) => mapActivity(d.data()))

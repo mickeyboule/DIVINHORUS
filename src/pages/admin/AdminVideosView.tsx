@@ -45,6 +45,15 @@ export function AdminVideosView({
   const sorted = [...videos].sort((a, b) => a.sortOrder - b.sortOrder);
 
   useEffect(() => {
+    if (youtubeSync?.channelUrl && !channelUrl) {
+      setChannelUrl(youtubeSync.channelUrl);
+    }
+    if (typeof youtubeSync?.autoSync === 'boolean') {
+      setAutoSync(youtubeSync.autoSync);
+    }
+  }, [youtubeSync?.channelUrl, youtubeSync?.autoSync]);
+
+  useEffect(() => {
     if (!youtubeSync?.autoSync || (!youtubeSync.channelId && !youtubeSync.channelUrl)) return;
     const lastMs = youtubeSync.lastSyncAt ? Date.parse(youtubeSync.lastSyncAt) : 0;
     const stale = !lastMs || Date.now() - lastMs > 1000 * 60 * 10;

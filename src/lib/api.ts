@@ -351,6 +351,17 @@ async function syncYoutubeChannelClientDirect(
         }
       }
 
+      if (!resolvedChannelId) {
+        const handleMatch = parsedUrl.pathname.match(/\/@([^/?#]+)/);
+        const handleKey = handleMatch?.[1]?.toLowerCase() || '';
+        const KNOWN_YOUTUBE_HANDLES: Record<string, string> = {
+          divinorus2425: 'UCcTs4_-2RGe-jMlWMcPchVw',
+        };
+        if (handleKey && KNOWN_YOUTUBE_HANDLES[handleKey]) {
+          resolvedChannelId = KNOWN_YOUTUBE_HANDLES[handleKey];
+        }
+      }
+
       if (!resolvedChannelId && savedSync?.channelId && /^UC[a-zA-Z0-9_-]{20,}$/.test(savedSync.channelId)) {
         const normSaved = (savedSync.channelUrl || '').replace(/\/+$/, '').toLowerCase();
         const normCurrent = trimmed.replace(/\/+$/, '').toLowerCase();
@@ -626,14 +637,48 @@ export const publicApi = {
     ]);
     const fsData = fsRes.status === 'fulfilled' ? fsRes.value : null;
     const serverData = serverRes.status === 'fulfilled' ? serverRes.value : null;
-    if (fsData) {
-      return {
-        ...fsData,
-        ...(serverData?.geo ? { geo: serverData.geo } : {}),
-      };
+    let bootstrap: PublicBootstrapData = fsData
+      ? {
+          ...fsData,
+          ...(serverData?.geo ? { geo: serverData.geo } : {}),
+        }
+      : serverData || createDefaultPublicBootstrap();
+
+    if (
+      bootstrap.videos.length === 0 &&
+      bootstrap.settings.youtubeSync?.autoSync !== false &&
+      bootstrap.settings.youtubeSync?.channelId
+    ) {
+      try {
+        const feedRes = await fetchYoutubeFeedEntriesClient(
+          `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(
+            bootstrap.settings.youtubeSync.channelId,
+          )}`,
+        );
+        if (feedRes && feedRes.entries.length > 0) {
+          bootstrap = {
+            ...bootstrap,
+            videos: feedRes.entries.map((entry, idx) => ({
+              id: `yt_${entry.youtubeId}`,
+              title: entry.title,
+              youtubeUrl: entry.youtubeUrl,
+              youtubeId: entry.youtubeId,
+              thumbnail: entry.thumbnail,
+              description: entry.description,
+              duration: '',
+              visible: true,
+              featured: idx < 3,
+              sortOrder: idx + 1,
+              createdAt: entry.publishedAt,
+            })),
+          };
+        }
+      } catch {
+        // Keep empty videos list if feed unreachable
+      }
     }
-    if (serverData) return serverData;
-    return createDefaultPublicBootstrap();
+
+    return bootstrap;
   },
   createOrder: async (payload: {
     firstName: string;

@@ -285,14 +285,14 @@ function createInitialSeed(): DatabaseSchema {
       country: 'France',
     },
     socials: {
-      youtube: 'https://www.youtube.com',
+      youtube: 'https://www.youtube.com/@divinorus2425',
       tiktok: 'https://www.tiktok.com',
       facebook: '',
       telegram: '',
     },
     youtubeSync: {
-      channelUrl: '',
-      channelId: '',
+      channelUrl: 'https://www.youtube.com/@divinorus2425',
+      channelId: 'UCcTs4_-2RGe-jMlWMcPchVw',
       autoSync: true,
       lastSyncAt: null,
     },

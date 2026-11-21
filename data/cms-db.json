@@ -27,7 +27,203 @@
     }
   ],
   "articles": [],
-  "videos": [],
+  "videos": [
+    {
+      "id": "vid_84c5fa676abb",
+      "title": "La science des lumières",
+      "youtubeUrl": "https://www.youtube.com/watch?v=vyoqKI7xuIA",
+      "youtubeId": "vyoqKI7xuIA",
+      "thumbnail": "https://i3.ytimg.com/vi/vyoqKI7xuIA/hqdefault.jpg",
+      "description": "#argent #chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 1,
+      "createdAt": "2026-11-19T13:10:03+00:00"
+    },
+    {
+      "id": "vid_0135e5d49daa",
+      "title": "Science ancestrale: prières de la fortune",
+      "youtubeUrl": "https://www.youtube.com/watch?v=EtfFZ8TvGzo",
+      "youtubeId": "EtfFZ8TvGzo",
+      "thumbnail": "https://i2.ytimg.com/vi/EtfFZ8TvGzo/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 2,
+      "createdAt": "2026-11-17T11:39:10+00:00"
+    },
+    {
+      "id": "vid_762058e91b0b",
+      "title": "Le grand grimoire de salomon: les clés de pouvoir, et sagesse et de fortune",
+      "youtubeUrl": "https://www.youtube.com/watch?v=9c8XH6-lWm4",
+      "youtubeId": "9c8XH6-lWm4",
+      "thumbnail": "https://i2.ytimg.com/vi/9c8XH6-lWm4/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 3,
+      "createdAt": "2026-11-10T20:40:06+00:00"
+    },
+    {
+      "id": "vid_e58654026d39",
+      "title": "Les 7 lois spirituelles de l’univers",
+      "youtubeUrl": "https://www.youtube.com/watch?v=5G-etdmSJhs",
+      "youtubeId": "5G-etdmSJhs",
+      "thumbnail": "https://i2.ytimg.com/vi/5G-etdmSJhs/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent #succès #miracle #oracle #divin #reussite #mineset #coach",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 4,
+      "createdAt": "2026-11-08T09:38:32+00:00"
+    },
+    {
+      "id": "vid_dcacd9c873a1",
+      "title": "Rituel de fin d’année. Pour vous garantir une année de bonheur et de succès",
+      "youtubeUrl": "https://www.youtube.com/watch?v=taVYMAKG83Y",
+      "youtubeId": "taVYMAKG83Y",
+      "thumbnail": "https://i1.ytimg.com/vi/taVYMAKG83Y/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 5,
+      "createdAt": "2026-11-07T16:56:32+00:00"
+    },
+    {
+      "id": "vid_917898a42556",
+      "title": "Sacra divitiatum: le mystère de la fortune et  de la sagesse",
+      "youtubeUrl": "https://www.youtube.com/watch?v=IggvJe9o2Ys",
+      "youtubeId": "IggvJe9o2Ys",
+      "thumbnail": "https://i2.ytimg.com/vi/IggvJe9o2Ys/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent #fortune #success #comment #sagesse #intelligence",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 6,
+      "createdAt": "2026-10-29T10:52:10+00:00"
+    },
+    {
+      "id": "vid_9325f8e535f1",
+      "title": "Rituel: pacte de richesse",
+      "youtubeUrl": "https://www.youtube.com/watch?v=88bwRmfcP7c",
+      "youtubeId": "88bwRmfcP7c",
+      "thumbnail": "https://i1.ytimg.com/vi/88bwRmfcP7c/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 7,
+      "createdAt": "2026-10-25T10:19:49+00:00"
+    },
+    {
+      "id": "vid_d13b9c4221cc",
+      "title": "La clé de la destinée: mystère des carrefours (legba, eshu, naron samedi)",
+      "youtubeUrl": "https://www.youtube.com/watch?v=lg6hyOihXW8",
+      "youtubeId": "lg6hyOihXW8",
+      "thumbnail": "https://i1.ytimg.com/vi/lg6hyOihXW8/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 8,
+      "createdAt": "2026-10-20T11:47:50+00:00"
+    },
+    {
+      "id": "vid_028b4b72c6ce",
+      "title": "L’éther: sa place et son rôle",
+      "youtubeUrl": "https://www.youtube.com/watch?v=5-pUT2K3jBY",
+      "youtubeId": "5-pUT2K3jBY",
+      "thumbnail": "https://i2.ytimg.com/vi/5-pUT2K3jBY/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 9,
+      "createdAt": "2026-10-04T15:55:25+00:00"
+    },
+    {
+      "id": "vid_6abcde92ef62",
+      "title": "La révélation",
+      "youtubeUrl": "https://www.youtube.com/watch?v=QehZ4rPKziA",
+      "youtubeId": "QehZ4rPKziA",
+      "thumbnail": "https://i2.ytimg.com/vi/QehZ4rPKziA/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 10,
+      "createdAt": "2026-10-01T13:11:29+00:00"
+    },
+    {
+      "id": "vid_4ca80b88271a",
+      "title": "Sacrifices humains, cultes de crânes, esclavage des défunts",
+      "youtubeUrl": "https://www.youtube.com/watch?v=O7iAy9fZA70",
+      "youtubeId": "O7iAy9fZA70",
+      "thumbnail": "https://i4.ytimg.com/vi/O7iAy9fZA70/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité #argent",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 11,
+      "createdAt": "2026-09-30T09:39:34+00:00"
+    },
+    {
+      "id": "vid_23be19ebd2c0",
+      "title": "Des ténèbres à la lumière: Fonctionnement des loges et des pacte",
+      "youtubeUrl": "https://www.youtube.com/watch?v=uKTPf0hNnm0",
+      "youtubeId": "uKTPf0hNnm0",
+      "thumbnail": "https://i2.ytimg.com/vi/uKTPf0hNnm0/hqdefault.jpg",
+      "description": "#chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 12,
+      "createdAt": "2026-09-19T13:57:06+00:00"
+    },
+    {
+      "id": "vid_5dd830f3e90e",
+      "title": "La terre des miracle",
+      "youtubeUrl": "https://www.youtube.com/watch?v=nvLeWuY22D0",
+      "youtubeId": "nvLeWuY22D0",
+      "thumbnail": "https://i3.ytimg.com/vi/nvLeWuY22D0/hqdefault.jpg",
+      "description": "#argent #chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 13,
+      "createdAt": "2026-09-13T08:20:17+00:00"
+    },
+    {
+      "id": "vid_e8cc5d325db7",
+      "title": "Misogynie et misandrie dans la spiritualité",
+      "youtubeUrl": "https://www.youtube.com/watch?v=x1tyKzNIv9o",
+      "youtubeId": "x1tyKzNIv9o",
+      "thumbnail": "https://i1.ytimg.com/vi/x1tyKzNIv9o/hqdefault.jpg",
+      "description": "#argent #chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 14,
+      "createdAt": "2026-09-11T18:49:01+00:00"
+    },
+    {
+      "id": "vid_a22af837377b",
+      "title": "Monde et rite des sirènes",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cKubCXJG8Fw",
+      "youtubeId": "cKubCXJG8Fw",
+      "thumbnail": "https://i4.ytimg.com/vi/cKubCXJG8Fw/hqdefault.jpg",
+      "description": "#argent #chance #chretien #divination #mage #magie #richesse #sorcellerie #spiritual #spiritualité",
+      "duration": "",
+      "visible": true,
+      "featured": false,
+      "sortOrder": 15,
+      "createdAt": "2026-09-05T14:56:28+00:00"
+    }
+  ],
   "media": [],
   "siteContent": {
     "hero": {
@@ -191,7 +387,7 @@
       "country": "France"
     },
     "socials": {
-      "youtube": "https://www.youtube.com",
+      "youtube": "https://www.youtube.com/@divinorus2425",
       "facebook": "",
       "telegram": "",
       "tiktok": "https://www.tiktok.com"
@@ -266,10 +462,10 @@
       "teamWhatsappPhone": ""
     },
     "youtubeSync": {
-      "channelUrl": "",
-      "channelId": "",
+      "channelUrl": "https://www.youtube.com/@divinorus2425",
+      "channelId": "UCcTs4_-2RGe-jMlWMcPchVw",
       "autoSync": true,
-      "lastSyncAt": null
+      "lastSyncAt": "2026-11-21T00:34:06.932Z"
     }
   },
   "admins": [
@@ -285,7 +481,16 @@
       "firebaseUid": "p3UMjQj7bPMPmoH959ILjEqOXiU2"
     }
   ],
-  "activities": [],
+  "activities": [
+    {
+      "id": "act_2244ea1a7883",
+      "actorName": "Synchronisation YouTube",
+      "action": "Chaîne YouTube synchronisée (+15 vidéos)",
+      "target": "UCcTs4_-2RGe-jMlWMcPchVw",
+      "category": "contenu",
+      "createdAt": "2026-11-21T00:34:06.933Z"
+    }
+  ],
   "contactMessages": [],
   "testimonials": [],
   "visitors": [
